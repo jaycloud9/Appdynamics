@@ -1,0 +1,16 @@
+---
+-   hosts: rhos-docker
+    tasks:
+    -   name: Testing for Dataloop image
+        shell: sudo docker ps | grep dataloop; echo $?
+        register: dlcontainer
+        ignore_errors: True
+    -   name: Ensure Docker container installed for monitoring
+        shell: sudo docker run -d -e API_KEY=d2fc7190-7176-4415-b498-814e52423823 --volume=/:/rootfs:ro --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --privileged dataloop/dataloop-docker:centos7
+        when: dlcontainer == 1
+    -   name: Ensure Cron jobs to tidy images
+        #Remove dangliong docker images
+        cron: name="remove dangling images from docker" minute="0" hour="0,4,8,12,16,20" user="root" job="docker rmi $(docker images -f "dangling=true" -q)"
+    -   name: Specific cron for customer1 projects
+        #Remove old images for customer1 project
+        cron: name="Force removal of old images" minute="0" hour="0,4,8,12,16,20" user="root" job="docker images | grep 'customer1' | grep '<none>' | awk '{print $3}' | xargs docker rmi"

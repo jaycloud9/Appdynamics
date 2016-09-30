@@ -1,0 +1,18 @@
+1, build of VMs
+2, Running of Ansible
+DONE - rhos-master playbook 3, Applying our config on top
+    - Currently we use htpasswd as an identiy provider in the master-config.yml (/etc/origin/master/master-config.yml)
+    the content of the htpasswd file is the below
+    ```
+    admin:$apr1$bU5MNQ4/$Ec3mtu7oPu07svr1DdKX7/
+    demo:$apr1$XcO5Bswb$j70iSOBToI26hKZsjtXks0
+    project1:$apr1$Ti2herx2$/DwA.99ak8MF41wb92c84.
+    project2:$apr1$TjitfbsD$vNvJ3P5JdF9cvmIc61Eh7/
+    project3:$apr1$3M0Fx7w6$cLcU1Jyw/aJ6qSAwvQlyX.
+    mking:$apr1$RWIqqGk3$0axIHFjx9DG5sxj3vjtE91
+    ```
+4, build / deploy of Gogs to use mysql with fully configurable /opt/gogs/custome/config/app.ini
+    - Look at fabric8/ gogs 
+DONE - rhos-docker playbook 5, Monitoering : 
+    - ansible rhos-master -m shell -a "sudo docker run -d -e API_KEY=d2fc7190-7176-4415-b498-814e52423823 --volume=/:/rootfs:ro --volume=/var/run:/var/run:rw --volume=/sys:/sys:ro --volume=/var/lib/docker/:/var/lib/docker:ro --privileged dataloop/dataloop-docker:centos7"
+5. Install of dataloop agent on hosts
