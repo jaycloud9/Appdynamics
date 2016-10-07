@@ -1,12 +1,6 @@
 ---
 -   name: Specific cron for customer1 projects
     cron: name="Force removal of old images" minute="0" hour="*" user="root" job="docker images | grep 'customer1' | grep '<none>' | awk '{print $3}' | xargs docker rmi"
--   name: Add cron to re-deploy jenkins test boxes
-    cron: name="Redeploy jenkins" minute="30" hour="*" user="root" job="oc deploy jenkins --latest -n mangement-infra; oc scale --replicas=3 dc jenkins -n management-infra"
--   name: Add cron to re-deploy Ruby Example test boxes
-    cron: name="Redeploy Ruby Example" minute="30" hour="*" user="root" job="oc deploy hello-world --latest -n ms-test; oc scale --replicas=3 dc hello-world -n ms-test"
--   name: Add cron to re-deploy java test boxes
-    cron: name="Redeploy Java Example" minute="30" hour="*" user="root" job="oc deploy java-hello --latest -n ms-test; oc scale --replicas=3 dc java-hello -n ms-test"
 -   name: Clean-Up job - prune images from registry
     cron: name="Prune image registry" minute="0" hour="*/2" user="root" job="oc adm prune images --keep-tag-revisions=5 --confirm --token=$(oc sa get-token cron -n default)"
 -   name: Clean-Up job - prune builds
