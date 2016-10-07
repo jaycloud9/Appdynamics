@@ -1,7 +1,5 @@
 # WARNING!
-# WARNING!
 ### THIS IS UNTESTED 
-# WARNING!
 # WARNING!
 
 ## Pre-Requisites
