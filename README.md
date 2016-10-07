@@ -39,10 +39,10 @@ You will need the following before running the scripts
 - Servers named correctly
 - Ansible hosts file (as ansible/hosts/ansible-hosts-c2)
 - DNS for each load balancer
-..- cluster*X*.temenosgroup.com A record to Loadbalancer with master nodes attached (https, persistant connection by IP & protocol)
-..- apps.cluster*X*.temenosgroup.com A record to Loadbalancer with appcontr nodes attached (https, persistant connection by IP & protocol)
+  - cluster*X*.temenosgroup.com A record to Loadbalancer with master nodes attached (https, persistant connection by IP & protocol)
+  - apps.cluster*X*.temenosgroup.com A record to Loadbalancer with appcontr nodes attached (https, persistant connection by IP & protocol)
 - SSL
-..- Static for cluster*X*.temenosgroup.com
-..- wildcard for apps.cluster*X*.temenosgroup.com
+  - Static for cluster*X*.temenosgroup.com
+  - wildcard for apps.cluster*X*.temenosgroup.com
 
 Once that has been considered, follow [This Readme](deployscripts/README.md)
