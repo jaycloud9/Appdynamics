@@ -4,10 +4,10 @@
 
 ## Pre-Requisites
 
-1, subscribe-hosts.sh
-2, install-prereqs.sh
-3, configure-storage.sh
-4, enable-start-docker.sh
+1. subscribe-hosts.sh
+2. install-prereqs.sh
+3. configure-storage.sh
+4. enable-start-docker.sh
 
 *NB* It will be necessary to find a better way to do the disks (ansible) as each class of host has different requires
 
