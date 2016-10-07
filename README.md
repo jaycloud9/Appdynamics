@@ -1,4 +1,3 @@
-# Temenos-PaaS
 # WARNING!
 
 This repo is temporary, we need to re-factor ansible to use the correct folder structure and roles
@@ -46,4 +45,4 @@ You will need the following before running the scripts
 ..- Static for cluster*X*.temenosgroup.com
 ..- wildcard for apps.cluster*X*.temenosgroup.com
 
-Once that has been considered, follow [This Readme](deploscripts/README.md)
+Once that has been considered, follow [This Readme](deployscripts/README.md)
