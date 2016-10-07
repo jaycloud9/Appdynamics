@@ -1,0 +1,16 @@
+---
+-   hosts: all
+    vars: 
+    -   dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
+    roles:
+    -   {role: ../modules/dataloop-ansible }
+    tasks:
+    -   include: rhos-master.yaml
+        when: "'rhos-master' in {{ group_names }}" 
+    -   include: rhos-docker.yaml
+        when: "'rhos-docker' in {{ group_names }}" 
+    -   include: rhos-appcontr.yaml
+        when: "'rhos-appcontr' in {{ group_names }}" 
+    -   include: rhos-oneoff.yaml
+        when: "'rhos-master-1' in inventory_hostname"
+        
