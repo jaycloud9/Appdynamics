@@ -1,4 +1,9 @@
 # Temenos-PaaS
+# WARNING!
+
+This repo is temporary, we need to re-factor ansible to use the correct folder structure and roles
+
+# Ansible
 
 *Requirements*
 
@@ -25,6 +30,20 @@ ansible-playbook -b playbook/rhos-base.yaml
 ansible-playbook -b ansible-hosts-c2 playbook/rhos-pase.yaml
 ```
 
-# WARNING!
+# Deploying a new Openshift
 
-This repo is temporary, we need to re-factor ansible to use the correct folder structure and roles
+You will need the following before running the scripts
+- Network configured
+- Loadbalancers
+- Servers
+- SSH configuration for the servers
+- Servers named correctly
+- Ansible hosts file (as ansible/hosts/ansible-hosts-c2)
+- DNS for each load balancer
+..- cluster*X*.temenosgroup.com A record to Loadbalancer with master nodes attached (https, persistant connection by IP & protocol)
+..- apps.cluster*X*.temenosgroup.com A record to Loadbalancer with appcontr nodes attached (https, persistant connection by IP & protocol)
+- SSL
+..- Static for cluster*X*.temenosgroup.com
+..- wildcard for apps.cluster*X*.temenosgroup.com
+
+Once that has been considered, follow [This Readme](deploscripts/README.md)
