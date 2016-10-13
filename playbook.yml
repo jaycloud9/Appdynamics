@@ -1,0 +1,13 @@
+---
+
+  - hosts: all
+
+  - hosts: ec2_Tag_tc_formation_instance
+
+  - hosts: ec2_Tag_tc_registry_instance
+
+  - hosts: ec2_Tag_tc_master_instance
+
+  - hosts: ec2_Tag_tc_router_instance
+
+  - hosts: ec2_Tag_tc_controller_instance
