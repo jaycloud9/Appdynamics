@@ -89,8 +89,8 @@ resource "aws_security_group" "tc_allow_local_all_incoming_security_group" {
 resource "aws_instance" "tc_master_instance" {
   count = 3
   tags {
-    Name = "tc_master_instance-${count.index + 1}"
-    Type = "tc_master_instance"
+    Name = "tc-master-instance-${count.index + 1}"
+    Type = "tc-master-instance"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
@@ -104,8 +104,8 @@ resource "aws_instance" "tc_master_instance" {
 resource "aws_instance" "tc_registry_instance" {
   count = 1
   tags {
-    Name = "tc_registry_instance-${count.index + 1}"
-    Type = "tc_registry_instance"
+    Name = "tc-registry-instance-${count.index + 1}"
+    Type = "tc-registry-instance"
   }
   ami = "ami-8b8c57f8"
   instance_type = "c3.4xlarge"
@@ -119,8 +119,8 @@ resource "aws_instance" "tc_registry_instance" {
 resource "aws_instance" "tc_router_instance" {
   count = 2
   tags {
-    Name = "tc_router_instance-${count.index + 1}"
-    Type = "tc_router_instance"
+    Name = "tc-router-instance-${count.index + 1}"
+    Type = "tc-router-instance"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.medium"
@@ -134,8 +134,8 @@ resource "aws_instance" "tc_router_instance" {
 resource "aws_instance" "tc_controller_instance" {
   count = 3
   tags {
-    Name = "tc_controller_instance-${count.index + 1}"
-    Type = "tc_controller_instance"
+    Name = "tc-controller-instance-${count.index + 1}"
+    Type = "tc-controller-instance"
   }
   ami = "ami-8b8c57f8"
   instance_type = "c3.4xlarge"
@@ -149,8 +149,8 @@ resource "aws_instance" "tc_controller_instance" {
 resource "aws_instance" "tc_formation_instance" {
   count = 1
   tags {
-    Name = "tc_formation_instance-${count.index + 1}"
-    Type = "tc_formation_instance"
+    Name = "tc-formation-instance-${count.index + 1}"
+    Type = "tc-formation-instance"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.small"
@@ -162,7 +162,7 @@ resource "aws_instance" "tc_formation_instance" {
 }
 
 resource "aws_elb" "tc_master_instances_elb" {
-  name = "tc_master_instances_elb"
+  name = "tc-master-instances-elb"
   availability_zones = [
     "eu-west-1a"]
   listener {
@@ -189,7 +189,7 @@ resource "aws_elb" "tc_master_instances_elb" {
 }
 
 resource "aws_elb" "tc_router_instances_elb" {
-  name = "tc_router_instances_elb"
+  name = "tc-router-instances-elb"
   availability_zones = [
     "eu-west-1a"]
   listener {
