@@ -2,6 +2,11 @@ provider "aws" {
   region = "eu-west-1"
 }
 
+resource "aws_key_pair" "tc_key_pair" {
+  key_name = "tc_key_pair"
+  public_key = "${file("keys/tc_key.pub")}"
+}
+
 resource "aws_vpc" "tc_vpc" {
   cidr_block = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -11,6 +16,7 @@ resource "aws_vpc" "tc_vpc" {
 resource "aws_subnet" "tc_subnet" {
   vpc_id = "${aws_vpc.tc_vpc.id}"
   cidr_block = "10.0.0.0/24"
+  map_public_ip_on_launch = true
 }
 
 resource "aws_internet_gateway" "tc_internet_gateway" {
@@ -90,9 +96,9 @@ resource "aws_instance" "tc_master_instance" {
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.tc_subnet.id}"
   vpc_security_group_ids = [
-    "${aws_security_group.tc_allow_all_outgoing_security_group}",
-    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group}",
-    "${aws_security_group.tc_allow_local_all_incoming_security_group}"]
+    "${aws_security_group.tc_allow_all_outgoing_security_group.id}",
+    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.tc_allow_local_all_incoming_security_group.id}"]
 }
 
 resource "aws_instance" "tc_registry_instance" {
@@ -105,9 +111,9 @@ resource "aws_instance" "tc_registry_instance" {
   instance_type = "c3.4xlarge"
   subnet_id = "${aws_subnet.tc_subnet.id}"
   vpc_security_group_ids = [
-    "${aws_security_group.tc_allow_all_outgoing_security_group}",
-    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group}",
-    "${aws_security_group.tc_allow_local_all_incoming_security_group}"]
+    "${aws_security_group.tc_allow_all_outgoing_security_group.id}",
+    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.tc_allow_local_all_incoming_security_group.id}"]
 }
 
 resource "aws_instance" "tc_router_instance" {
@@ -120,9 +126,9 @@ resource "aws_instance" "tc_router_instance" {
   instance_type = "t2.medium"
   subnet_id = "${aws_subnet.tc_subnet.id}"
   vpc_security_group_ids = [
-    "${aws_security_group.tc_allow_all_outgoing_security_group}",
-    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group}",
-    "${aws_security_group.tc_allow_local_all_incoming_security_group}"]
+    "${aws_security_group.tc_allow_all_outgoing_security_group.id}",
+    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.tc_allow_local_all_incoming_security_group.id}"]
 }
 
 resource "aws_instance" "tc_controller_instance" {
@@ -135,9 +141,9 @@ resource "aws_instance" "tc_controller_instance" {
   instance_type = "c3.4xlarge"
   subnet_id = "${aws_subnet.tc_subnet.id}"
   vpc_security_group_ids = [
-    "${aws_security_group.tc_allow_all_outgoing_security_group}",
-    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group}",
-    "${aws_security_group.tc_allow_local_all_incoming_security_group}"]
+    "${aws_security_group.tc_allow_all_outgoing_security_group.id}",
+    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.tc_allow_local_all_incoming_security_group.id}"]
 }
 
 resource "aws_instance" "tc_formation_instance" {
@@ -150,21 +156,15 @@ resource "aws_instance" "tc_formation_instance" {
   instance_type = "t2.small"
   subnet_id = "${aws_subnet.tc_subnet.id}"
   vpc_security_group_ids = [
-    "${aws_security_group.tc_allow_all_outgoing_security_group}",
-    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group}",
-    "${aws_security_group.tc_allow_local_all_incoming_security_group}"]
+    "${aws_security_group.tc_allow_all_outgoing_security_group.id}",
+    "${aws_security_group.tc_allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.tc_allow_local_all_incoming_security_group.id}"]
 }
 
 resource "aws_elb" "tc_master_instances_elb" {
   name = "tc_master_instances_elb"
   availability_zones = [
     "eu-west-1a"]
-  listener {
-    instance_port = 8080
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
   listener {
     instance_port = 8080
     instance_protocol = "http"
@@ -183,9 +183,9 @@ resource "aws_elb" "tc_master_instances_elb" {
   connection_draining = true
   connection_draining_timeout = 400
   instances = [
-    "${aws_instance.tc_master_instance}}"]
+    "${aws_instance.tc_master_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.tc_allow_restricted_https_incoming_security_group}"]
+    "${aws_security_group.tc_allow_restricted_https_incoming_security_group.id}"]
 }
 
 resource "aws_elb" "tc_router_instances_elb" {
@@ -216,12 +216,32 @@ resource "aws_elb" "tc_router_instances_elb" {
   connection_draining = true
   connection_draining_timeout = 400
   instances = [
-    "${aws_instance.tc_router_instance}}"]
+    "${aws_instance.tc_router_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.tc_allow_restricted_https_incoming_security_group}"]
+    "${aws_security_group.tc_allow_restricted_https_incoming_security_group.id}"]
 }
 
 resource "aws_route53_zone" "tc_local_route53_zone" {
   name = "temenos.local"
   vpc_id = "${aws_vpc.tc_vpc.id}"
+}
+
+resource "aws_route53_zone" "tc_external_route53_zone" {
+  name = "temenos.cloud"
+}
+
+resource "aws_route53_record" "tc_external_router_route53_zone" {
+  zone_id = "${aws_route53_zone.tc_external_route53_zone.id}"
+  name = "cluster1.${aws_route53_zone.tc_external_route53_zone.name}"
+  type = "CNAME"
+  ttl = "30"
+  records = ["${aws_elb.tc_router_instances_elb.dns_name}"]
+}
+
+resource "aws_route53_record" "tc_external_master_route53_zone" {
+  zone_id = "${aws_route53_zone.tc_external_route53_zone.id}"
+  name = "*.apps.cluster1.${aws_route53_zone.tc_external_route53_zone.name}"
+  type = "CNAME"
+  ttl = "30"
+  records = ["${aws_elb.tc_master_instances_elb.dns_name}"]
 }
