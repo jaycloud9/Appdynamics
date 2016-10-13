@@ -1,0 +1,82 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+ 
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+ansible_ssh_user=ose
+ansible_sudo=true
+ansible_become=yes
+ 
+deployment_type=openshift-enterprise
+
+#Sets node names to hostname rather than IP
+openshift_set_hostname=true
+ 
+# Simple HTPASSWD authentication, for production environments connecting to AD would be recommended
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+ 
+# Native high availbility cluster method with optional load balancer.
+# If no lb group is defined installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=aws-rhos-master-1
+openshift_master_cluster_public_hostname=cluster2.temenosgroup.com
+ 
+openshift_master_api_port=443
+openshift_master_console_port=443
+ 
+## Infrastructure
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+ 
+openshift_master_metrics_public_url=https://metrics.apps.cluster2.temenosgroup.com/hawkular/metrics
+openshift_master_logging_public_url=https://logging.apps.cluster2.temenosgroup.com
+
+osm_use_cockpit=false
+ 
+## ROUTER
+openshift_router_selector="target=router"
+openshift_hosted_router_selector="target=router"
+openshift_hosted_router_replicas=2
+ 
+## REGISTRY
+openshift_registry_selector="purpose=registry"
+openshift_hosted_registry_replicas=1
+openshift_hosted_registry_storage_kind=nfs
+openshift_hosted_registry_storage_host=aws-rhos-master-1
+openshift_hosted_registry_storage_nfs_directory=/exports
+ 
+## Project Defaults
+openshift_master_default_subdomain=apps.cluster2.temenosgroup.com
+osm_default_node_selector="purpose=work"
+ 
+# override the default controller lease ttl
+osm_controller_lease_ttl=10
+ 
+# host group for masters
+[masters]
+aws-rhos-master-1 openshift_hostname=aws-rhos-master-1
+aws-rhos-master-2 openshift_hostname=aws-rhos-master-2
+aws-rhos-master-3 openshift_hostname=aws-rhos-master-3
+
+# host group for etcd
+[etcd]
+aws-rhos-master-1 openshift_hostname=aws-rhos-master-1
+aws-rhos-master-2 openshift_hostname=aws-rhos-master-2
+aws-rhos-master-3 openshift_hostname=aws-rhos-master-3
+
+# host group for nodes, includes region info
+[nodes]
+aws-rhos-master-1 openshift_hostname=aws-rhos-master-1 openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+aws-rhos-master-2 openshift_hostname=aws-rhos-master-2 openshift_node_labels="{'region': 'primary', 'zone': 'middle','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+aws-rhos-master-3 openshift_hostname=aws-rhos-master-3 openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+aws-rhos-approuter1 openshift_hostname=aws-rhos-approuter1 openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'router','purpose':'infra','role':'node'}"
+aws-rhos-approuter2 openshift_hostname=aws-rhos-approuter2 openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
+aws-rhos-registry-1 openshift_hostname=aws-rhos-registry-1 openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'registry','role':'node'}"
+aws-rhos-appcontr-1 openshift_hostname=aws-rhos-appcontr-1 openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
+aws-rhos-appcontr-2 openshift_hostname=aws-rhos-appcontr-2 openshift_node_labels="{'region': 'primary', 'zone': 'middle','target':'dev','purpose':'work','role':'node'}"
+aws-rhos-appcontr-3 openshift_hostname=aws-rhos-appcontr-3 openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'dev','purpose':'work','role':'node'}"
