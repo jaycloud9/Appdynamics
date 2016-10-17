@@ -1,0 +1,41 @@
+version: v2
+variant: openshift-enterprise
+variant_version: 3.3
+ansible_log_path: /tmp/ansible.log
+deployment:
+  ansible_ssh_user: ec2_user
+  hosts:
+
+  {% for host in groups['ec2_tag_Type_master'] %}
+    - ip: {{ec2_private_ip_address}}
+      hostname: {{ec2_private_dns_name}}
+      public_ip: {{ec2_ip_address}}
+      public_hostname: {{ec2_dns_name}}
+      roles:
+        - master
+        - node
+      containerized: true
+      connect_to: {{ec2_ip_address}}
+  {% endfor %}
+
+  {% for host in groups['ec2_tag_Type_node_infra'] %}
+    - ip: {{ec2_private_ip_address}}
+      hostname: {{ec2_private_dns_name}}
+      public_ip: {{ec2_ip_address}}
+      public_hostname: {{ec2_dns_name}}
+      node_labels: {'region': 'infra'}
+      roles:
+        - node
+      connect_to: {{ec2_ip_address}}
+  {% endfor %}
+
+  {% for host in groups['ec2_tag_Type_node_worker'] %}
+    - ip: {{ec2_private_ip_address}}
+      hostname: {{ec2_private_dns_name}}
+      public_ip: {{ec2_ip_address}}
+      public_hostname: {{ec2_dns_name}}
+      node_labels: {'region': 'worker'}
+      roles:
+        - node
+      connect_to: {{ec2_ip_address}}
+  {% endfor %}

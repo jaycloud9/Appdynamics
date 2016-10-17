@@ -1,0 +1,31 @@
+---
+
+  - hosts: ec2_tag_Type_jump
+
+    tasks:
+
+      - name: populate installation configuration
+        template: src=installer.cfg.yml.j2 dest=installer.cfg.yml
+        run_once: true
+
+      - name: install OpenShift
+        cmd: atomic-openshift-installer install
+        run_once: true
+
+
+
+    - hosts: all
+    
+        roles:
+            -docker
+            -dataloop
+
+    - hosts: ec2_tag_Type_formation
+
+        roles:
+            -formation
+
+    - hosts: ec2_tag_Type_master
+
+        roles:
+            -hassomeotherrole
