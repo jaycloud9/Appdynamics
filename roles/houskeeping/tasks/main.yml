@@ -4,6 +4,6 @@
 -   name: Clean-Up job - prune images from registry
     cron: name="Prune image registry" minute="0" hour="*/2" user="root" job="oc adm prune images --keep-tag-revisions=5 --confirm --token=$(oc sa get-token cron -n default)"
 -   name: Clean-Up job - prune builds
-    cron: name="Prune Builds" minute="10" hour="*/4" user="root" job="oc adm prune builds --orphans --keep-complete=3 --keep-failed=1 --confirm "
+    cron: name="Prune Builds" minute="10" hour="*/4" user="root" job="oc adm prune builds --orphans --keep-complete=3 --keep-failed=1 --confirm" 
 -   name: Clean-Up job - prune deployments
     cron: name="Prune Deployments" minute="20" hour="*/4" user="root" job="oc adm prune deployments --orphans --keep-complete=3 --keep-failed=1 --confirm"
