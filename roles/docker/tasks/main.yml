@@ -1,0 +1,2 @@
+-   name: Ensure Cron jobs to tidy images
+    cron: name="remove dangling images from docker" minute="0" hour="*" user="root" job='docker rmi $(docker images -f "dangling=true" -qa)'

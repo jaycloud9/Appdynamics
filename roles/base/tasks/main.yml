@@ -1,0 +1,13 @@
+---
+-   name: Set up Subscription: user
+    redhat_subscription: state=present username=aphethean@temenos.com password=mARKETpLACE99
+-   name: Set up Subscription: Attach to pool
+    redhat_subscription: pool=8a85f98156c16fae0156c7669a1b760a
+-   name: Set up Subscription: Disable repos
+    shell: "subscription-manager repos --disable=*"
+-   name: Set up Subscription: Register to OSE repos
+    shell: "subscription-manager repos --enable='rhel-7-server-rpms' --enable='rhel-7-server-extras-rpms' --enable='rhel-7-server-ose-3.3-rpms' "
+-   name: Installing Pre-reqs: 
+    yum: name="atomic-openshift-utils deltarpm docker wget git net-tools bind-utils iptables-services bridge-utils bash-completion" state=latest
+-   name: Update the system
+    yum: name=* state=latest

@@ -1,0 +1,5 @@
+---
+vars:
+    -  dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
+roles:
+    -  dataloop-ansible

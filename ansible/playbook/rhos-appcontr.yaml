@@ -1,4 +1,0 @@
----
--   name: Specific cron for customer1 projects
-    #Remove old images for customer1 project
-    cron: name="Force removal of old images" minute="0" hour="*" user="root" job="docker images | grep 'customer1' | grep '<none>' | awk '{print $3}' | xargs docker rmi"
