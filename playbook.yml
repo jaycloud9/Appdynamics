@@ -1,7 +1,7 @@
 ---
-#  - hosts: all
-#    roles:
-#      - base
+  - hosts: all
+    roles:
+      - base
 
   - hosts: tag_Type_gitlab
     vars:
