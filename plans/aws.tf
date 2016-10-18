@@ -13,8 +13,9 @@ resource "aws_vpc" "vpc" {
   enable_dns_support = true
 }
 
-resource "aws_subnet" "subnet" {
+resource "aws_subnet" "subnetA" {
   vpc_id = "${aws_vpc.vpc.id}"
+  availability_zone = "eu-west-1a"
   cidr_block = "10.0.0.0/24"
   map_public_ip_on_launch = true
 }
@@ -60,7 +61,8 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
     to_port = 22
     protocol = "tcp"
     cidr_blocks = [
-      "80.169.34.194/32"]
+      "80.169.34.194/32",
+      "109.150.242.153/32"]
   }
 }
 
@@ -73,7 +75,22 @@ resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
     to_port = 443
     protocol = "tcp"
     cidr_blocks = [
-      "80.169.34.194/32"]
+      "80.169.34.194/32",
+      "109.150.242.153/32"]
+  }
+}
+
+resource "aws_security_group" "allow_restricted_http_incoming_security_group" {
+  name = "allow_restricted_http_incoming_security_group"
+  vpc_id = "${aws_vpc.vpc.id}"
+  description = "Allow restricted http incoming access"
+  ingress {
+    from_port = 80  
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [
+      "80.169.34.194/32",
+      "109.150.242.153/32"]
   }
 }
 
@@ -90,15 +107,49 @@ resource "aws_security_group" "allow_local_all_incoming_security_group" {
   }
 }
 
+resource "aws_instance" "gitlab_instance" {
+  count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
+  tags {
+    Name = "gitlab-${count.index + 1}"
+    Type = "gitlab"
+  }
+  ami = "ami-8b8c57f8"
+  instance_type = "t2.large"
+  subnet_id = "${aws_subnet.subnetA.id}"
+  vpc_security_group_ids = [
+    "${aws_security_group.allow_all_outgoing_security_group.id}",
+    "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.allow_restricted_http_incoming_security_group.id}",
+    "${aws_security_group.allow_local_all_incoming_security_group.id}"]
+}
+
+resource "aws_instance" "formation_instance" {
+  count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
+  tags {
+    Name = "formation-${count.index + 1}"
+    Type = "formation"
+  }
+  ami = "ami-8b8c57f8"
+  instance_type = "t2.large"
+  subnet_id = "${aws_subnet.subnetA.id}"
+  vpc_security_group_ids = [
+    "${aws_security_group.allow_all_outgoing_security_group.id}",
+    "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.allow_local_all_incoming_security_group.id}"]
+}
+
 resource "aws_instance" "master_instance" {
   count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
   tags {
     Name = "master-${count.index + 1}"
     Type = "master"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id = "${aws_subnet.subnetA.id}"
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -107,13 +158,14 @@ resource "aws_instance" "master_instance" {
 
 resource "aws_instance" "node_infra_instance" {
   count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
   tags {
     Name = "node-infra-${count.index + 1}"
     Type = "node-infra"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id = "${aws_subnet.subnetA.id}"
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -122,19 +174,19 @@ resource "aws_instance" "node_infra_instance" {
 
 resource "aws_instance" "node_worker_instance" {
   count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
   tags {
     Name = "node-worker-${count.index + 1}"
     Type = "node-worker"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id = "${aws_subnet.subnetA.id}"
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
     "${aws_security_group.allow_local_all_incoming_security_group.id}"]
 }
-
 
 resource "aws_elb" "master_elb" {
   name = "master-elb"
@@ -159,7 +211,7 @@ resource "aws_elb" "master_elb" {
     "${aws_instance.master_instance.*.id}"]
   security_groups = [
     "${aws_security_group.allow_restricted_https_incoming_security_group.id}"]
-  subnets = ["${aws_subnet.subnet.id}"]
+  subnets = ["${aws_subnet.subnetA.id}"]
 }
 
 resource "aws_elb" "node_infra_elb" {
@@ -185,7 +237,7 @@ resource "aws_elb" "node_infra_elb" {
     "${aws_instance.node_infra_instance.*.id}"]
   security_groups = [
     "${aws_security_group.allow_restricted_https_incoming_security_group.id}"]
-  subnets = ["${aws_subnet.subnet.id}"]
+  subnets = ["${aws_subnet.subnetA.id}"]
 }
 
 resource "aws_route53_zone" "local_route53_zone" {
@@ -207,4 +259,12 @@ resource "aws_route53_record" "external_master_route53_zone" {
   type = "CNAME"
   ttl = "30"
   records = ["${aws_elb.master_elb.dns_name}"]
+}
+
+resource "aws_route53_record" "external_gitlab_route53_zone" {
+  zone_id = "Z1DHMGOFTZGBIQ"
+  name = "gitlab.temenos.cloud"
+  type = "A"
+  ttl = "30"
+  records = ["${aws_instance.gitlab_instance.public_ip}"]
 }

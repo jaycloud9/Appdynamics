@@ -1,0 +1,12 @@
+---
+- name: "setup ssh config"
+  copy: src=ssh_config dest=/root/.ssh/config mode=0600
+- name: "setup ssh key"
+  copy: src=../../../keys/key.* dest=/root/.ssh/ mode=0600
+- name: "populate installation configuration"
+  template: src=installer.cfg.yml.j2 dest=/root/.config/openshift/installer.cfg.yml
+  run_once: true
+
+- name: "Install Openshift"
+  shell: "atomic-openshift-installer install"
+  run_once: true
