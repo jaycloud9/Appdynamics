@@ -66,6 +66,27 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
   }
 }
 
+resource "aws_security_group" "allow_restricted_https_elb_gitlab" {
+  name = "allow_restricted_https_elb_gitlab"
+  vpc_id = "${aws_vpc.vpc.id}"
+  description = "Allow restricted https incoming access for ELB"
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [
+      "80.169.34.194/32",
+      "109.150.242.153/32"]
+  }
+  egress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [
+      "10.0.0.0/24"]
+  }
+}
+
 resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
   name = "allow_restricted_https_incoming_security_group"
   vpc_id = "${aws_vpc.vpc.id}"
@@ -188,6 +209,17 @@ resource "aws_instance" "node_worker_instance" {
     "${aws_security_group.allow_local_all_incoming_security_group.id}"]
 }
 
+resource "aws_ebs_volume" "gitlab" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_volume_attachment" "ebs_att_gitlab" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.gitlab.id}"
+  instance_id = "${aws_instance.gitlab_instance.id}"
+}
+
 resource "aws_elb" "master_elb" {
   name = "master-elb"
   listener {
@@ -228,7 +260,7 @@ resource "aws_elb" "node_infra_elb" {
     unhealthy_threshold = 2
     timeout = 3
     target = "HTTP:8080/"
-    interval = 30
+    interval = 10
   }
   idle_timeout = 400
   connection_draining = true
@@ -237,6 +269,30 @@ resource "aws_elb" "node_infra_elb" {
     "${aws_instance.node_infra_instance.*.id}"]
   security_groups = [
     "${aws_security_group.allow_restricted_https_incoming_security_group.id}"]
+  subnets = ["${aws_subnet.subnetA.id}"]
+}
+
+resource "aws_elb" "gitlab_elb" {
+  name = "gitlab-elb"
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 443
+    lb_protocol = "https"
+    ssl_certificate_id = "arn:aws:acm:eu-west-1:523275672308:certificate/298fa9f5-4477-435b-90bf-e0b3bb7b0fb9"
+  }
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "HTTP:80/users/sign_in"
+    interval = 30
+  }
+  connection_draining = true
+  instances = [
+    "${aws_instance.gitlab_instance.*.id}"]
+  security_groups = [
+    "${aws_security_group.allow_restricted_https_elb_gitlab.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
@@ -264,7 +320,7 @@ resource "aws_route53_record" "external_master_route53_zone" {
 resource "aws_route53_record" "external_gitlab_route53_zone" {
   zone_id = "Z1DHMGOFTZGBIQ"
   name = "gitlab.temenos.cloud"
-  type = "A"
+  type = "CNAME"
   ttl = "30"
-  records = ["${aws_instance.gitlab_instance.public_ip}"]
+  records = ["${aws_elb.gitlab_elb.dns_name}"]
 }
