@@ -3,39 +3,46 @@ variant: openshift-enterprise
 variant_version: 3.3
 ansible_log_path: /tmp/ansible.log
 deployment:
-  ansible_ssh_user: ec2_user
+  ansible_ssh_user: ec2-user
   hosts:
 
-  {% for host in groups['ec2_tag_Type_master'] %}
-    - ip: {{ec2_private_ip_address}}
-      hostname: {{ec2_private_dns_name}}
-      public_ip: {{ec2_ip_address}}
-      public_hostname: {{ec2_dns_name}}
-      roles:
-        - master
-        - node
-      containerized: true
-      connect_to: {{ec2_ip_address}}
+  {% for host in groups['tag_Type_master'] %}
+- ip: {{hostvars[host]['ec2_private_ip_address']}}
+    hostname: {{hostvars[host]['ec2_private_dns_name']}}
+    public_ip: {{hostvars[host]['ec2_ip_address']}}
+    public_hostname: {{hostvars[host]['ec2_dns_name']}}
+    roles:
+      - master
+      - node
+    containerized: true
+    connect_to: {{hostvars[host]['ec2_private_ip_address']}}
   {% endfor %}
 
-  {% for host in groups['ec2_tag_Type_node_infra'] %}
-    - ip: {{ec2_private_ip_address}}
-      hostname: {{ec2_private_dns_name}}
-      public_ip: {{ec2_ip_address}}
-      public_hostname: {{ec2_dns_name}}
-      node_labels: {'region': 'infra'}
-      roles:
-        - node
-      connect_to: {{ec2_ip_address}}
+  {% for host in groups['tag_Type_node_infra'] %}
+- ip: {{hostvars[host]['ec2_private_ip_address']}}
+    hostname: {{hostvars[host]['ec2_private_dns_name']}}
+    public_ip: {{hostvars[host]['ec2_ip_address']}}
+    public_hostname: {{hostvars[host]['ec2_dns_name']}}
+    node_labels: {'purpose': 'infra'}
+    roles:
+      - node
+    connect_to: {{hostvars[host]['ec2_private_ip_address']}}
   {% endfor %}
 
-  {% for host in groups['ec2_tag_Type_node_worker'] %}
-    - ip: {{ec2_private_ip_address}}
-      hostname: {{ec2_private_dns_name}}
-      public_ip: {{ec2_ip_address}}
-      public_hostname: {{ec2_dns_name}}
-      node_labels: {'region': 'worker'}
-      roles:
-        - node
-      connect_to: {{ec2_ip_address}}
+  {% for host in groups['tag_Type_node_worker'] %}
+- ip: {{hostvars[host]['ec2_private_ip_address']}}
+    hostname: {{hostvars[host]['ec2_private_dns_name']}}
+    public_ip: {{hostvars[host]['ec2_ip_address']}}
+    public_hostname: {{hostvars[host]['ec2_dns_name']}}
+    node_labels: {'purpose': 'worker'}
+    roles:
+      - node
+    connect_to: {{hostvars[host]['ec2_private_ip_address']}}
   {% endfor %}
+roles:
+    master:
+      openshift_master_identity_providers: [{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+      openshift_master_cluster_public_hostname: "cluster1.temenos.cloud"
+      openshift_master_default_subdomain: "apps.cluster1.temenos.cloud"
+    node:
+      osm_default_node_selector: "purpose=work"
