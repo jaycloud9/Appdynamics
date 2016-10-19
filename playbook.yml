@@ -18,9 +18,9 @@
       - name: Restart Gitlab
         shell: "gitlab-ctl restart"
 
- # - hosts: ec2_tag_Type_formation
- #   roles:
- #     - ose_install
+  - hosts: tag_Type_formation
+    roles:
+      - ose_install
 
 
 
