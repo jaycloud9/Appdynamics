@@ -62,12 +62,12 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "109.150.242.153/32"]
+      "5.80.46.169/32"]
   }
 }
 
-resource "aws_security_group" "allow_restricted_https_elb_gitlab" {
-  name = "allow_restricted_https_elb_gitlab"
+resource "aws_security_group" "allow_restricted_https_elb" {
+  name = "allow_restricted_https_elb"
   vpc_id = "${aws_vpc.vpc.id}"
   description = "Allow restricted https incoming access for ELB"
   ingress {
@@ -97,7 +97,7 @@ resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "109.150.242.153/32"]
+      "5.80.46.169/32"]
   }
 }
 
@@ -111,7 +111,7 @@ resource "aws_security_group" "allow_restricted_http_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "109.150.242.153/32"]
+      "5.80.46.169/32"]
   }
 }
 
@@ -236,13 +236,11 @@ resource "aws_elb" "master_elb" {
     target = "HTTP:8080/"
     interval = 30
   }
-  idle_timeout = 400
   connection_draining = true
-  connection_draining_timeout = 400
   instances = [
     "${aws_instance.master_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_incoming_security_group.id}"]
+    "${aws_security_group.allow_restricted_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
@@ -262,13 +260,11 @@ resource "aws_elb" "node_infra_elb" {
     target = "HTTP:8080/"
     interval = 10
   }
-  idle_timeout = 400
   connection_draining = true
-  connection_draining_timeout = 400
   instances = [
     "${aws_instance.node_infra_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_incoming_security_group.id}"]
+    "${aws_security_group.allow_restricted_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
@@ -292,7 +288,7 @@ resource "aws_elb" "gitlab_elb" {
   instances = [
     "${aws_instance.gitlab_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_elb_gitlab.id}"]
+    "${aws_security_group.allow_restricted_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
