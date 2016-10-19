@@ -1,8 +1,12 @@
 ---
 - name: "setup ssh config"
   copy: src=ssh_config dest=/root/.ssh/config mode=0600
-- name: "setup ssh key"
-  copy: src=../../../keys/key.* dest=/root/.ssh/ mode=0600
+- name: "setup ssh keys - Private"
+  copy: src=./keys/key.pem dest=/root/.ssh/id_rsa mode=0600
+- name: "setup ssh keys - Public"
+  copy: src=./keys/key.pub dest=/root/.ssh/id_rsa.pub mode=0600
+- name: "Make openshift config directory"
+  file: path=/root/.config/openshift/ state=directory
 - name: "populate installation configuration"
   template: src=installer.cfg.yml.j2 dest=/root/.config/openshift/installer.cfg.yml
   run_once: true
