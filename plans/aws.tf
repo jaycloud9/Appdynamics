@@ -292,6 +292,13 @@ resource "aws_elb" "gitlab_elb" {
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
+resource "aws_lb_cookie_stickiness_policy" "gitlab_elb_sticky" {
+		name = "gitlab-elb-sticky-policy"
+		load_balancer = "${aws_elb.gitlab_elb.id}"
+		lb_port = 443
+		cookie_expiration_period = 600
+}
+
 resource "aws_route53_zone" "local_route53_zone" {
   name = "temenos.local"
   vpc_id = "${aws_vpc.vpc.id}"
