@@ -1,0 +1,90 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+ 
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+ansible_ssh_user=ec2-user
+ansible_sudo=true
+ansible_become=yes
+#deployment_subtype=registry
+ 
+deployment_type=openshift-enterprise
+ 
+# Simple HTPASSWD authentication, for production environments connecting to AD would be recommended
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+ 
+# Native high availbility cluster method with optional load balancer.
+# If no lb group is defined installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+{% for host in groups['tag_Type_master'] %}
+{% if loop.first %}
+openshift_master_cluster_hostname={{hostvars[host]['ec2_dns_name']}}
+{% endif %}
+{% endfor %}
+openshift_master_cluster_public_hostname=cluster1.temenos.cloud
+ 
+openshift_master_api_port=443
+openshift_master_console_port=443
+ 
+## Infrastructure
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+ 
+openshift_master_metrics_public_url=https://metrics.apps.cluster1.temenos.cloud/hawkular/metrics
+openshift_master_logging_public_url=https://logging.apps.cluster1.temenos.cloud
+
+osm_use_cockpit=false
+#This shouldn't be needed but with out it the features are disabled
+osm_disabled_features=false
+ 
+## ROUTER
+openshift_router_selector="target=router"
+openshift_hosted_router_selector="target=router"
+openshift_hosted_router_replicas=1
+ 
+## REGISTRY
+openshift_registry_selector="purpose=infra"
+openshift_hosted_registry_replicas=1
+openshift_hosted_registry_storage_kind=nfs
+{% for host in groups['tag_Type_master'] %}
+{% if loop.first %}
+openshift_hosted_registry_storage_host={{hostvars[host]['ec2_dns_name'] }}
+{% endif %}
+{% endfor %}
+openshift_hosted_registry_storage_nfs_directory=/exports
+ 
+## Project Defaults
+openshift_master_default_subdomain=apps.cluster1.temenos.cloud
+osm_default_node_selector="purpose=work"
+ 
+# override the default controller lease ttl
+#osm_controller_lease_ttl=30
+ 
+# host group for masters
+[masters]
+{% for host in groups['tag_Type_master'] %}
+{{hostvars[host]['ec2_private_ip_address']}}
+{% endfor %}
+
+# host group for etcd
+[etcd]
+{% for host in groups['tag_Type_master'] %}
+{{hostvars[host]['ec2_private_ip_address']}}
+{% endfor %}
+ 
+# host group for nodes, includes region info
+[nodes]
+{% for host in groups['tag_Type_master'] %}
+{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+{% endfor %}
+{% for host in groups['tag_Type_node_infra'] %}
+{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
+{% endfor %}
+{% for host in groups['tag_Type_node_worker'] %}
+{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
+{% endfor %}
