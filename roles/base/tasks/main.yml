@@ -1,10 +1,18 @@
 ---
+- name: "Test to see if Subscription set up"
+  shell: "subscription-manager repos --list | grep rhel-7-server-ose-3.3-rpms"
+  register: subman
+  ignore_errors: True
+  changed_when: "subman.rc != 0"
 - name: "Set up Subscription: user"
   shell: "subscription-manager register --username=aphethean@temenos.com --password=mARKETpLACE99 --force"
+  when: subman.rc == 1
 - name: "Set up Subscription: Attach to pool"
   shell: "subscription-manager attach --pool=8a85f98157d8bf8e0157d8de29362d7a"
+  when: subman.rc == 1
 - name: "Set up Subscription: Register to OSE repos"
   shell: "subscription-manager repos --enable='rhel-7-server-rpms' --enable='rhel-7-server-extras-rpms' --enable='rhel-7-server-ose-3.3-rpms'"
+  when: subman.rc == 1
 - name: "Installing Pre-reqs:" 
   yum: name={{ item }} state=latest
   with_items:
