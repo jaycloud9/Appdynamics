@@ -1,6 +1,9 @@
 ---
   - hosts: all
+    vars:
+      - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
     roles:
+      - dataloop-ansible
       - base
 
   - hosts: tag_Type_gitlab
@@ -21,20 +24,18 @@
     roles:
       - ose_install
 
+  - hosts: tag_Type_master
+    roles:
+      - master
+      - docker
+      - dataloop-docker
 
+  - hosts: tag_Type_node-infra
+    roles:
+      - docker
+      - dataloop-docker
 
-  #  - hosts: all
-  #  
-  #      roles:
-  #          -docker
-  #          -dataloop
-
-  #  - hosts: ec2_tag_Type_formation
-
-  #      roles:
-  #          -formation
-
-  #  - hosts: ec2_tag_Type_master
-
-  #      roles:
-  #          -hassomeotherrole
+  - hosts: tag_Type_node-worker
+    roles:
+      - docker
+      - dataloop-docker
