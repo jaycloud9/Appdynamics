@@ -85,6 +85,13 @@ resource "aws_security_group" "allow_restricted_https_elb" {
     cidr_blocks = [
       "10.0.0.0/24"]
   }
+  egress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [
+      "10.0.0.0/24"]
+  }
 }
 
 resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
@@ -223,8 +230,8 @@ resource "aws_volume_attachment" "ebs_att_gitlab" {
 resource "aws_elb" "master_elb" {
   name = "master-elb"
   listener {
-    instance_port = 8080
-    instance_protocol = "http"
+    instance_port = 443
+    instance_protocol = "https"
     lb_port = 443
     lb_protocol = "https"
     ssl_certificate_id = "arn:aws:acm:eu-west-1:523275672308:certificate/298fa9f5-4477-435b-90bf-e0b3bb7b0fb9"
@@ -233,7 +240,7 @@ resource "aws_elb" "master_elb" {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 3
-    target = "HTTP:8080/"
+    target = "HTTPS:443/healthz/ready"
     interval = 30
   }
   connection_draining = true
@@ -247,8 +254,8 @@ resource "aws_elb" "master_elb" {
 resource "aws_elb" "node_infra_elb" {
   name = "node-infra-elb"
   listener {
-    instance_port = 8080
-    instance_protocol = "http"
+    instance_port = 443
+    instance_protocol = "https"
     lb_port = 443
     lb_protocol = "https"
     ssl_certificate_id = "arn:aws:acm:eu-west-1:523275672308:certificate/1f4ce718-c857-452a-afa0-67aecd244cd5"
@@ -257,8 +264,8 @@ resource "aws_elb" "node_infra_elb" {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 3
-    target = "HTTP:8080/"
-    interval = 10
+    target = "HTTPS:443/healthz/ready"
+    interval = 30
   }
   connection_draining = true
   instances = [
@@ -290,6 +297,20 @@ resource "aws_elb" "gitlab_elb" {
   security_groups = [
     "${aws_security_group.allow_restricted_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
+}
+
+resource "aws_lb_cookie_stickiness_policy" "master_elb_sticky" {
+		name = "master-elb-sticky-policy"
+		load_balancer = "${aws_elb.master_elb.id}"
+		lb_port = 443
+		cookie_expiration_period = 600
+}
+
+resource "aws_lb_cookie_stickiness_policy" "node_infra_elb_sticky" {
+		name = "node-infra-elb-sticky-policy"
+		load_balancer = "${aws_elb.node_infra_elb.id}"
+		lb_port = 443
+		cookie_expiration_period = 600
 }
 
 resource "aws_lb_cookie_stickiness_policy" "gitlab_elb_sticky" {
