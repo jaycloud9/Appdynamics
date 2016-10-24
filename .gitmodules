@@ -1,0 +1,3 @@
+[submodule "roles/dataloop-ansible"]
+	path = roles/dataloop-ansible
+	url = git@github.com:dataloop/dataloop-ansible.git
