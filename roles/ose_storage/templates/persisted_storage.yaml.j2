@@ -11,8 +11,8 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   nfs:
     path: {{ose_storage_nfs_directory}}/pv/%pv
-    {% for host in groups['tag_Type_master'] %}
-    {% if loop.first %}
-    server: {{hostvars[host]['ec2_private_ip_address'] }}
-    {% endif %}
-    {% endfor %}
+  {% for host in groups['tag_Type_master'] %}
+  {% if loop.first %}
+server: {{hostvars[host]['ec2_private_ip_address'] }}
+  {% endif %}
+  {% endfor %}

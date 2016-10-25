@@ -14,8 +14,15 @@
 - name: "Ensure NFS started"
   service: name=nfs-server state=started enabled=yes
 
+- name: "Test to see if pv20 exists"
+  shell: "oc get pv | grep pv20"
+  register: pv_exist
+  ignore_errors: True
+  changed_when: "pv_exist.rc != 0"
+
 - name: "Create PV Directories"
-  shell: "mkdir -p {{ose_storage_nfs_directory}}/pv/pv{1..20}; chown nfsnobody:nfsnobody -R {{ose_storage_nfs_directory}}"
+  file: path={{ose_storage_nfs_directory}}/pv/pv{{item}} owner=nfsnobody group=nfsnobody recurse=yes state=directory
+  with_sequence: count=20
 
 - name: "Push PV template file"
   template: src=persisted_storage.yaml.j2 dest=/tmp/pv-template.yaml
@@ -24,4 +31,7 @@
   copy: src=create_pvs.sh dest=/tmp/create_pvs.sh
 
 - name: "create pvs"
-  shell: "cd /tmp; bash create_pvs.sh"
+  shell: "bash create_pvs.sh" 
+  args:
+    chdir: '/tmp'
+  when: pv_exist.rc == 1
