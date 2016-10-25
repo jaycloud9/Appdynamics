@@ -62,7 +62,7 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.46.169/32"]
+      "86.186.169.2/32"]
   }
 }
 
@@ -76,7 +76,7 @@ resource "aws_security_group" "allow_restricted_https_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "109.150.242.153/32"]
+      "86.186.169.2/32"]
   }
   egress {
     from_port = 80
@@ -104,7 +104,7 @@ resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.46.169/32"]
+      "86.186.169.2/32"]
   }
 }
 
@@ -118,7 +118,7 @@ resource "aws_security_group" "allow_restricted_http_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.46.169/32"]
+      "86.186.169.2/32"]
   }
 }
 
@@ -225,6 +225,17 @@ resource "aws_volume_attachment" "ebs_att_gitlab" {
   device_name = "/dev/sdh"
   volume_id = "${aws_ebs_volume.gitlab.id}"
   instance_id = "${aws_instance.gitlab_instance.id}"
+}
+
+resource "aws_ebs_volume" "persisted" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_volume_attachment" "ebs_att_persisted" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.persisted.id}"
+  instance_id = "${aws_instance.master_instance.id}"
 }
 
 resource "aws_elb" "master_elb" {

@@ -6,36 +6,39 @@
       - dataloop-ansible
       - base
 
-  - hosts: tag_Type_gitlab
-    vars:
-      gitlab_external_url: "https://gitlab.temenoscloud.com/"
-      gitlab_redirect_http_to_https: 'false'
-      gitlab_nginx_listen_https: 'false'
-      gitlab_root_password: 'mARKETpLACE99'
-      gitlab_nginx_listen_addresses: 
-        - "0.0.0.0"
-    roles:
-      - gitlab
-    tasks:
-      - name: Restart Gitlab
-        shell: "gitlab-ctl restart"
+#  - hosts: tag_Type_gitlab
+#    vars:
+#      gitlab_external_url: "https://gitlab.temenoscloud.com/"
+#      gitlab_redirect_http_to_https: 'false'
+#      gitlab_nginx_listen_https: 'false'
+#      gitlab_root_password: 'mARKETpLACE99'
+#      gitlab_nginx_listen_addresses: 
+#        - "0.0.0.0"
+#    roles:
+#      - gitlab
+#    tasks:
+#      - name: Restart Gitlab
+#        shell: "gitlab-ctl restart"
 
   - hosts: tag_Type_formation
     roles:
       - ose_install
 
   - hosts: tag_Type_master
+    vars:
+      ose_storage_nfs_directory: "/exports"
     roles:
+      - ose_storage
       - master
       - docker
       - dataloop-docker
 
-  - hosts: tag_Type_node-infra
+  - hosts: tag_Type_node_infra
     roles:
       - docker
       - dataloop-docker
 
-  - hosts: tag_Type_node-worker
+  - hosts: tag_Type_node_worker
     roles:
       - docker
       - dataloop-docker

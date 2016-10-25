@@ -24,7 +24,7 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 openshift_master_cluster_method=native
 {% for host in groups['tag_Type_master'] %}
 {% if loop.first %}
-openshift_master_cluster_hostname={{hostvars[host]['ec2_dns_name']}}
+openshift_master_cluster_hostname={{hostvars[host]['ec2_private_ip_address']}}
 {% endif %}
 {% endfor %}
 openshift_master_cluster_public_hostname=cluster1.temenos.cloud
@@ -51,7 +51,7 @@ openshift_hosted_registry_replicas=1
 openshift_hosted_registry_storage_kind=nfs
 {% for host in groups['tag_Type_master'] %}
 {% if loop.first %}
-openshift_hosted_registry_storage_host={{hostvars[host]['ec2_dns_name'] }}
+openshift_hosted_registry_storage_host={{hostvars[host]['ec2_private_ip_address'] }}
 {% endif %}
 {% endfor %}
 openshift_hosted_registry_storage_nfs_directory=/exports
