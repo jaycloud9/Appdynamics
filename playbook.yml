@@ -6,6 +6,10 @@
       - dataloop-ansible
       - base
 
+  - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
+    roles:
+      - ose_prereq
+
 #  - hosts: tag_Type_gitlab
 #    vars:
 #      gitlab_external_url: "https://gitlab.temenoscloud.com/"
@@ -28,6 +32,7 @@
     vars:
       ose_storage_nfs_directory: "/exports"
     roles:
+      - ose_setup
       - ose_storage
       - master
       - docker

@@ -1,0 +1,4 @@
+---
+- name: "Deploy metrics"
+  shell: "echo test"
+  

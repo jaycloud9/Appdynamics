@@ -1,0 +1,7 @@
+---
+- name: "Give admin user Admin rights"
+  shell: "oadm policy add-cluster-role-to-user admin to admin"
+- name: "Install Logging"
+  include: logging.yml
+- name: "Install Metrics"
+  include: metrics.yml

@@ -216,9 +216,36 @@ resource "aws_instance" "node_worker_instance" {
     "${aws_security_group.allow_local_all_incoming_security_group.id}"]
 }
 
+# Find a better way to attach disks to every host...
 resource "aws_ebs_volume" "gitlab" {
   availability_zone = "eu-west-1a"
   size = 200
+}
+
+resource "aws_ebs_volume" "master" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_ebs_volume" "node_worker" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_ebs_volume" "node_infra" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_ebs_volume" "formation" {
+  availability_zone = "eu-west-1a"
+  size = 200
+}
+
+resource "aws_volume_attachment" "ebs_att_formation" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.formation.id}"
+  instance_id = "${aws_instance.formation_instance.id}"
 }
 
 resource "aws_volume_attachment" "ebs_att_gitlab" {
@@ -227,15 +254,22 @@ resource "aws_volume_attachment" "ebs_att_gitlab" {
   instance_id = "${aws_instance.gitlab_instance.id}"
 }
 
-resource "aws_ebs_volume" "persisted" {
-  availability_zone = "eu-west-1a"
-  size = 200
+resource "aws_volume_attachment" "ebs_att_master" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.master.id}"
+  instance_id = "${aws_instance.master_instance.id}"
 }
 
-resource "aws_volume_attachment" "ebs_att_persisted" {
+resource "aws_volume_attachment" "ebs_att_node_worker" {
   device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.persisted.id}"
-  instance_id = "${aws_instance.master_instance.id}"
+  volume_id = "${aws_ebs_volume.node_worker.id}"
+  instance_id = "${aws_instance.node_worker_instance.id}"
+}
+
+resource "aws_volume_attachment" "ebs_att_node_infra" {
+  device_name = "/dev/sdh"
+  volume_id = "${aws_ebs_volume.node_infra.id}"
+  instance_id = "${aws_instance.node_infra_instance.id}"
 }
 
 resource "aws_elb" "master_elb" {
