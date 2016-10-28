@@ -30,3 +30,12 @@
     - mlocate
 - name: "Update the system"
   yum: name=* state=latest
+
+- name: "Set up LVM service"
+  service: name=lvm2-{{item}} enabled=yes state=started
+  with_items:
+    - lvmpolld
+    - lvmetad
+
+- name: "Creating VG"
+  lvg: vg=vg_ose pvs=/dev/xvdh

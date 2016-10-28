@@ -1,9 +1,12 @@
 ---
+- name: Set up LV
+  lvol: vg=vg_ose lv=nfs size=100G
+
 - name: "Set up Storage disks"
-  filesystem: fstype=xfs dev=/dev/xvdh
+  filesystem: fstype=xfs dev=/dev/mapper/vg_ose-nfs
 
 - name: "Mount volume"
-  mount: name={{ose_storage_nfs_directory}} src=/dev/xvdh fstype=xfs opts=noatime state=mounted
+  mount: name={{ose_storage_nfs_directory}} src=/dev/mapper/vg_ose-nfs fstype=xfs opts=noatime state=mounted
 
 - name: "Push NFS exports file"
   template: src=nfs_exports.j2 dest=/etc/exports
