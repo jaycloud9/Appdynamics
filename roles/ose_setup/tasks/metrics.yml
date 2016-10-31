@@ -1,4 +1,36 @@
 ---
-- name: "Deploy metrics"
-  shell: "echo test"
-  
+- name: "Switch to Openshift-infra project"
+  shell: "oc project openshift-infra"
+
+- name: "Test for metrics users"
+  shell: "oc get sa | grep metrics-deployer"
+  register: create_metrics_deployer
+  ignore_errors: True
+  changed_when: "create_metrics_deployer.rc != 0"
+
+- name: "Move service account file to server"
+  copy: src=metrics-service-account.yml dest=/tmp/metrics-service-account.yml
+  when: create_metrics_deployer.rc == 1
+
+- name: "Create Service accounts"
+  shell: "oc create -f /tmp/metrics-service-account.yml"
+  when: create_metrics_deployer.rc == 1
+
+- name: "Grant edit permission to metrics deployer"
+  shell: "oadm policy add-role-to-user edit system:serviceaccount:openshift-infra:metrics-deployer"
+
+- name: "Assing cluster-reader to heapster user"
+  shell: "oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:openshift-infra:heapster"
+
+- name: "Test for metrics secret"
+  shell: "oc get secrets | grep metrics-deployer"
+  register: secret_metrics_deployer
+  ignore_errors: True
+  changed_when: "secret_metrics_deployer.rc != 0"
+
+- name: "Create dummy certs"
+  shell: "oc secrets new metrics-deployer nothing=/dev/null"
+  when: secret_metrics_deployer.rc == 1
+
+- name: "Deploy metrics non-persistant storage"
+  shell: "oc new-app metrics-deployer-template -p HAWKULAR_METRICS_HOSTNAME=hawkular-metrics.apps.cluster1.temenos.cloud -p USE_PERSISTENT_STORAGE=false"
