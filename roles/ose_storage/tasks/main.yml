@@ -8,10 +8,16 @@
 - name: "Mount volume"
   mount: name={{ose_storage_nfs_directory}} src=/dev/mapper/vg_ose-nfs fstype=xfs opts=noatime state=mounted
 
+- name: "Install NFS server"
+  yum: name={{ item }} state=latest
+  with_items:
+    - nfs-utils
+    - libnfsidmap
+
 - name: "Push NFS exports file"
   template: src=nfs_exports.j2 dest=/etc/exports
 
-- name: "Ensure NFS configures"
+- name: "Ensure NFS configured"
   service: name=nfs-config state=started enabled=yes
 
 - name: "Ensure NFS started"
@@ -32,6 +38,9 @@
 
 - name: "Copy create pv script"
   copy: src=create_pvs.sh dest=/tmp/create_pvs.sh
+
+- name: "Create Registry PV"
+  file: path={{ose_storage_nfs_directory}}/registry owner=nfsnobody group=nfsnobody recurse=yes state=directory
 
 - name: "create pvs"
   shell: "bash create_pvs.sh" 

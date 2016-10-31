@@ -66,18 +66,34 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
   }
 }
 
-resource "aws_security_group" "allow_restricted_https_elb" {
-  name = "allow_restricted_https_elb"
+resource "aws_security_group" "allow_restricted_http_and_https_elb" {
+  name = "allow_restricted_http_and_https_elb"
   vpc_id = "${aws_vpc.vpc.id}"
   description = "Allow restricted https incoming access for ELB"
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [
+      "80.169.34.194/32",
+      "86.186.169.2/32",
+      "${aws_instance.master_instance.public_ip}/32",
+      "${aws_instance.node_worker_instance.public_ip}/32",
+      "${aws_instance.node_infra_instance.public_ip}/32"]
+  }
+  
   ingress {
     from_port = 443
     to_port = 443
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "86.186.169.2/32"]
+      "86.186.169.2/32",
+      "${aws_instance.master_instance.public_ip}/32",
+      "${aws_instance.node_worker_instance.public_ip}/32",
+      "${aws_instance.node_infra_instance.public_ip}/32"]
   }
+  
   egress {
     from_port = 80
     to_port = 80
@@ -174,6 +190,8 @@ resource "aws_instance" "master_instance" {
   tags {
     Name = "master-${count.index + 1}"
     Type = "master"
+    Docker = "true"
+    SubType = "storage"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
@@ -190,6 +208,7 @@ resource "aws_instance" "node_infra_instance" {
   tags {
     Name = "node-infra-${count.index + 1}"
     Type = "node-infra"
+    Docker = "true"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
@@ -206,6 +225,7 @@ resource "aws_instance" "node_worker_instance" {
   tags {
     Name = "node-worker-${count.index + 1}"
     Type = "node-worker"
+    Docker = "true"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
@@ -292,12 +312,18 @@ resource "aws_elb" "master_elb" {
   instances = [
     "${aws_instance.master_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_elb.id}"]
+    "${aws_security_group.allow_restricted_http_and_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
 resource "aws_elb" "node_infra_elb" {
   name = "node-infra-elb"
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
   listener {
     instance_port = 443
     instance_protocol = "https"
@@ -309,14 +335,14 @@ resource "aws_elb" "node_infra_elb" {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 3
-    target = "HTTPS:443/healthz/ready"
+    target = "TCP:443"
     interval = 30
   }
   connection_draining = true
   instances = [
     "${aws_instance.node_infra_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_elb.id}"]
+    "${aws_security_group.allow_restricted_http_and_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
@@ -340,7 +366,7 @@ resource "aws_elb" "gitlab_elb" {
   instances = [
     "${aws_instance.gitlab_instance.*.id}"]
   security_groups = [
-    "${aws_security_group.allow_restricted_https_elb.id}"]
+    "${aws_security_group.allow_restricted_http_and_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 

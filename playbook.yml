@@ -1,9 +1,9 @@
 ---
   - hosts: all
-    vars:
-      - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
+#    vars:
+#      - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
     roles:
-      - dataloop-ansible
+#      - dataloop-ansible
       - base
 
   - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
@@ -27,23 +27,17 @@
   - hosts: tag_Type_formation
     roles:
       - ose_install
-
-  - hosts: tag_Type_master
+  
+  - hosts: tag_SubType_storage
     vars:
       ose_storage_nfs_directory: "/exports"
     roles:
-      - ose_setup
       - ose_storage
-      - master
-      - docker
-      - dataloop-docker
 
-  - hosts: tag_Type_node_infra
+  - hosts: tag_Type_master
     roles:
-      - docker
-      - dataloop-docker
+      - ose_setup
 
-  - hosts: tag_Type_node_worker
-    roles:
-      - docker
-      - dataloop-docker
+#  - hosts: tag_Docker_true
+#      - docker
+#      - dataloop-docker

@@ -1,7 +1,9 @@
 ---
+- name: Apache htpasswd file for openshift console
+  copy: src=files/rhos-master-htpasswd dest=/etc/origin/master/htpasswd owner=root group=root mode=0644
 - name: "Give admin user Admin rights"
   shell: "oadm policy add-cluster-role-to-user admin to admin"
-- name: "Install Logging"
-  include: logging.yml
-- name: "Install Metrics"
-  include: metrics.yml
+#- name: "Install Logging"
+#  include: logging.yml
+#- name: "Install Metrics"
+#  include: metrics.yml

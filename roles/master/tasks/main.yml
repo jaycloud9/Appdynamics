@@ -1,3 +1,0 @@
----
--   name: Apache htpasswd file for openshift console
-    copy: src=files/rhos-master-htpasswd dest=/etc/origin/master/htpasswd owner=root group=root mode=0644
