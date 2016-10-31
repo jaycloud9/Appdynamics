@@ -5,17 +5,45 @@
 #  shell: 'oadm new-project logging --node-selector=""'
 - name: "Switch to logging project"
   shell: "oc project logging"
+
+- name: "Test for logging users"
+  shell: "oc get sa | grep logging-deployer"
+  register: create_logging_deployer
+  ignore_errors: True
+  changed_when: "create_logging_deployer.rc != 0"
+
 - name: "Create Service accounts"
   shell: "oc new-app logging-deployer-account-template"
+  when: create_logging_deployer.rc == 1
+
 - name: "Allow Deployer SA to create tokens"
   shell: "oadm policy add-cluster-role-to-user oauth-editor system:serviceaccount:logging:logging-deployer"
+
 - name: "Enable fluetd to be privilleged"
   shell: "oadm policy add-scc-to-user privileged system:serviceaccount:logging:aggregated-logging-fluentd"
+
 - name: "Enable to read Pod metadata"
   shell: "oadm policy add-cluster-role-to-user cluster-reader system:serviceaccount:logging:aggregated-logging-fluentd"
+
+- name: "Test for logging configmap"
+  shell: "oc get configmaps | grep logging-deployer"
+  register: config_logging_deployer
+  ignore_errors: True
+  changed_when: "config_logging_deployer.rc != 0"
+
 - name: "Create ConfigMap"
   shell: "oc create configmap logging-deployer --from-literal kibana-hostname=kibana.apps.cluster1.temenos.cloud --from-literal public-master-url=https://cluster1.temenos.cloud --from-literal es-cluster-size=3 --from-literal es-instance-ram=8G"
+  when: config_logging_deployer.rc == 1
+
+- name: "Test for logging secret"
+  shell: "oc get secrets | grep logging-deployer"
+  register: secret_logging_deployer
+  ignore_errors: True
+  changed_when: "config_logging_deployer.rc != 0"
+
 - name: "Create OC Secret"
   shell: "oc create secret generic logging-deployer"
+  when: secret_logging_deployer.rc == 1
+
 - name: "install logging"
   shell: "oc new-app logging-deployer-template"
