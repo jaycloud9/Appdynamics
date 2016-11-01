@@ -38,4 +38,4 @@
     - lvmetad
 
 - name: "Creating VG"
-  lvg: vg=vg_ose pvs=/dev/xvdh
+  lvg: vg=vg_oscp pvs=/dev/xvdh
