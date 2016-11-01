@@ -24,7 +24,7 @@
 
 #NB the space on the grep is important
 - name: "Test for metrics secret"
-  shell: "oc get secrets | grep metrics-deployer "
+  shell: "oc get secrets | grep 'metrics-deployer '"
   register: secret_metrics_deployer
   ignore_errors: True
   changed_when: "secret_metrics_deployer.rc != 0"
