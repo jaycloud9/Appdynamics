@@ -1,0 +1,15 @@
+---
+- name: "setup ssh config"
+  copy: src=ssh_config dest=/root/.ssh/config mode=0600
+- name: "setup ssh keys - Private"
+  copy: src=./keys/key.pem dest=/root/.ssh/id_rsa mode=0600
+- name: "setup ssh keys - Public"
+  copy: src=./keys/key.pub dest=/root/.ssh/id_rsa.pub mode=0600
+- name: "Push ansible hosts file"
+  template: src=ansible-hosts.j2 dest=/etc/ansible/hosts
+  run_once: true
+- name: "Install Openshift"
+  shell: "ansible-playbook /usr/share/ansible/openshift-ansible/playbooks/byo/config.yml"
+  async: 2400
+  poll: 60
+  run_once: true
