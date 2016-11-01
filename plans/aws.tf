@@ -370,11 +370,11 @@ resource "aws_elb" "gitlab_elb" {
   subnets = ["${aws_subnet.subnetA.id}"]
 }
 
-resource "aws_lb_cookie_stickiness_policy" "master_elb_sticky" {
+resource "aws_app_cookie_stickiness_policy" "master_elb_sticky" {
 		name = "master-elb-sticky-policy"
 		load_balancer = "${aws_elb.master_elb.id}"
 		lb_port = 443
-		cookie_expiration_period = 600
+		cookie_name = "ssn"
 }
 
 resource "aws_lb_cookie_stickiness_policy" "node_infra_elb_sticky" {
