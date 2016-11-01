@@ -1,0 +1,11 @@
+---
+- name: "Create docker-var"
+  lvol: vg=vg_ose lv=docker_var size=10g
+- name: "Format docker-var disk"
+  filesystem: fstype=xfs dev=/dev/mapper/vg_ose-docker_var 
+- name: "Mount docker-var volume"
+  mount: name=/var/lib/docker src=/dev/mapper/vg_ose-docker_var fstype=xfs opts=noatime state=mounted
+- name: "Docker storage configuration" 
+  copy: src=docker-storage-setup dest=/etc/sysconfig/docker-storage-setup
+- name: "Set up docker storage"
+  shell: "docker-storage-setup"
