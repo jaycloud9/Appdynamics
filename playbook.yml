@@ -8,7 +8,7 @@
 
   - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
     roles:
-      - ose_prereq
+      - oscp_prereq
 
 #  - hosts: tag_Type_gitlab
 #    vars:
@@ -26,17 +26,17 @@
 
   - hosts: tag_Type_formation
     roles:
-      - ose_install
+      - oscp_install
   
   - hosts: tag_SubType_storage
     vars:
-      ose_storage_nfs_directory: "/exports"
+      oscp_storage_nfs_directory: "/exports"
     roles:
-      - ose_storage
+      - oscp_storage
 
   - hosts: tag_Type_master
     roles:
-      - ose_setup
+      - oscp_setup
 
 #  - hosts: tag_Docker_true
 #      - docker
