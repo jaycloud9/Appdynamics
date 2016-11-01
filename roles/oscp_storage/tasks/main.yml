@@ -1,12 +1,12 @@
 ---
 - name: Set up LV
-  lvol: vg=vg_ose lv=nfs size=100G
+  lvol: vg=vg_oscp lv=nfs size=100G
 
 - name: "Set up Storage disks"
-  filesystem: fstype=xfs dev=/dev/mapper/vg_ose-nfs
+  filesystem: fstype=xfs dev=/dev/mapper/vg_oscp-nfs
 
 - name: "Mount volume"
-  mount: name={{ose_storage_nfs_directory}} src=/dev/mapper/vg_ose-nfs fstype=xfs opts=noatime state=mounted
+  mount: name={{oscp_storage_nfs_directory}} src=/dev/mapper/vg_oscp-nfs fstype=xfs opts=noatime state=mounted
 
 - name: "Install NFS server"
   yum: name={{ item }} state=latest
@@ -30,7 +30,7 @@
   changed_when: "pv_exist.rc != 0"
 
 - name: "Create PV Directories"
-  file: path={{ose_storage_nfs_directory}}/pv/pv{{item}} owner=nfsnobody group=nfsnobody recurse=yes state=directory
+  file: path={{oscp_storage_nfs_directory}}/pv/pv{{item}} owner=nfsnobody group=nfsnobody recurse=yes state=directory
   with_sequence: count=20
 
 - name: "Push PV template file"
@@ -40,7 +40,7 @@
   copy: src=create_pvs.sh dest=/tmp/create_pvs.sh
 
 - name: "Create Registry PV"
-  file: path={{ose_storage_nfs_directory}}/registry owner=nfsnobody group=nfsnobody recurse=yes state=directory
+  file: path={{oscp_storage_nfs_directory}}/registry owner=nfsnobody group=nfsnobody recurse=yes state=directory
 
 - name: "create pvs"
   shell: "bash create_pvs.sh" 
