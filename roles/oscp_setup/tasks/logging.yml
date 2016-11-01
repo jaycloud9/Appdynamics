@@ -36,7 +36,7 @@
   when: config_logging_deployer.rc == 1
 
 - name: "Test for logging secret"
-  shell: "oc get secrets | grep logging-deployer"
+  shell: "oc get secrets | grep 'logging-deployer '"
   register: secret_logging_deployer
   ignore_errors: True
   changed_when: "config_logging_deployer.rc != 0"
