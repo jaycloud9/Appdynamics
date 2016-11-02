@@ -4,7 +4,7 @@
 - name: "Give admin user Admin rights"
   shell: "oadm policy add-cluster-role-to-user admin to admin"
   #Allows the registry to finish comming up
-- pause: minutes=2
+- pause: minutes=4
 - name: "Test for registry running"
   shell: "oc get pods -l docker-registry -n default | grep -i running"
   register: registry_running
