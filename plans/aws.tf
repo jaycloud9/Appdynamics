@@ -102,6 +102,13 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
       "10.0.0.0/24"]
   }
   egress {
+    from_port = 8081
+    to_port = 8081
+    protocol = "tcp"
+    cidr_blocks = [
+      "10.0.0.0/24"]
+  }
+  egress {
     from_port = 443
     to_port = 443
     protocol = "tcp"
@@ -349,7 +356,7 @@ resource "aws_elb" "node_infra_elb" {
 resource "aws_elb" "gitlab_elb" {
   name = "gitlab-elb"
   listener {
-    instance_port = 80
+    instance_port = 8081
     instance_protocol = "http"
     lb_port = 443
     lb_protocol = "https"
@@ -359,7 +366,7 @@ resource "aws_elb" "gitlab_elb" {
     healthy_threshold = 2
     unhealthy_threshold = 2
     timeout = 3
-    target = "HTTP:80/users/sign_in"
+    target = "HTTP:8081/users/sign_in"
     interval = 30
   }
   connection_draining = true

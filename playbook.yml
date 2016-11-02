@@ -1,33 +1,34 @@
 ---
   - hosts: all
-#    vars:
-#      - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
+    vars:
+      - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
     roles:
-#      - dataloop-ansible
+      - dataloop-ansible
       - base
 
   - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
     roles:
       - oscp_prereq
 
-#  - hosts: tag_Type_gitlab
-#    vars:
-#      gitlab_external_url: "https://gitlab.temenoscloud.com/"
-#      gitlab_redirect_http_to_https: 'false'
-#      gitlab_nginx_listen_https: 'false'
-#      gitlab_root_password: 'mARKETpLACE99'
-#      gitlab_nginx_listen_addresses: 
-#        - "0.0.0.0"
-#    roles:
-#      - gitlab
-#    tasks:
-#      - name: Restart Gitlab
-#        shell: "gitlab-ctl restart"
+  - hosts: tag_Type_gitlab
+    vars:
+      gitlab_external_url: "https://gitlab.temenos.cloud/"
+      gitlab_redirect_http_to_https: 'false'
+      gitlab_nginx_listen_https: 'false'
+      gitlab_root_password: 'mARKETpLACE99'
+      gitlab_nginx_listen_port: 8081
+      gitlab_nginx_listen_addresses: 
+        - "0.0.0.0"
+    roles:
+      - gitlab
+    tasks:
+      - name: Restart Gitlab
+        shell: "gitlab-ctl restart"
 
   - hosts: tag_Type_formation
     roles:
       - oscp_install
-  
+
   - hosts: tag_SubType_storage
     vars:
       oscp_storage_nfs_directory: "/exports"
@@ -38,6 +39,6 @@
     roles:
       - oscp_setup
 
-#  - hosts: tag_Docker_true
-#      - docker
-#      - dataloop-docker
+  - hosts: tag_Docker_true
+      - docker
+      - dataloop-docker
