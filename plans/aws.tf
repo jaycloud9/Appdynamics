@@ -303,9 +303,9 @@ resource "aws_elb" "master_elb" {
   name = "master-elb"
   listener {
     instance_port = 443
-    instance_protocol = "https"
+    instance_protocol = "SSL"
     lb_port = 443
-    lb_protocol = "https"
+    lb_protocol = "SSL"
     ssl_certificate_id = "arn:aws:acm:eu-west-1:523275672308:certificate/298fa9f5-4477-435b-90bf-e0b3bb7b0fb9"
   }
   health_check {
@@ -375,13 +375,6 @@ resource "aws_elb" "gitlab_elb" {
   security_groups = [
     "${aws_security_group.allow_restricted_http_and_https_elb.id}"]
   subnets = ["${aws_subnet.subnetA.id}"]
-}
-
-resource "aws_app_cookie_stickiness_policy" "master_elb_sticky" {
-		name = "master-elb-sticky-policy"
-		load_balancer = "${aws_elb.master_elb.id}"
-		lb_port = 443
-		cookie_name = "ssn"
 }
 
 resource "aws_lb_cookie_stickiness_policy" "node_infra_elb_sticky" {
