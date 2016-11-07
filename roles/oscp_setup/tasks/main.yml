@@ -15,5 +15,3 @@
   when: registry_running.rc == 1
 - name: "Install Logging"
   include: logging.yml
-- name: "Install Metrics"
-  include: metrics.yml
