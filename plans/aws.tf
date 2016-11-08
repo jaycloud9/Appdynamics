@@ -243,7 +243,7 @@ resource "aws_instance" "node_infra_instance" {
 }
 
 resource "aws_instance" "node_worker_instance" {
-  count = 3
+  count = 1
   key_name = "${aws_key_pair.key_pair.key_name}"
   tags {
     Name = "node-worker-${count.index + 1}"
