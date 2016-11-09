@@ -15,7 +15,7 @@
     - libnfsidmap
 
 - name: "Configure Firewall to allow local traffic"
-  iptables: chain=OS_FIREWALL_ALLOW source=10.0.0.0/8 jump=ACCEPT
+  iptables: chain=INPUT source=10.0.0.0/8 jump=ACCEPT
 
 - name: "Push NFS exports file"
   template: src=nfs_exports.j2 dest=/etc/exports
@@ -26,27 +26,9 @@
 - name: "Ensure NFS started"
   service: name=nfs-server state=started enabled=yes
 
-- name: "Test to see if pv20 exists"
-  shell: "oc get pv | grep pv20"
-  register: pv_exist
-  ignore_errors: True
-  changed_when: "pv_exist.rc != 0"
-
 - name: "Create PV Directories"
   file: path={{oscp_storage_nfs_directory}}/pv/pv{{item}} owner=nfsnobody group=nfsnobody recurse=yes state=directory
   with_sequence: count=20
 
-- name: "Push PV template file"
-  template: src=persisted_storage.yaml.j2 dest=/tmp/pv-template.yaml
-
-- name: "Copy create pv script"
-  copy: src=create_pvs.sh dest=/tmp/create_pvs.sh
-
 - name: "Create Registry PV"
   file: path={{oscp_storage_nfs_directory}}/registry owner=nfsnobody group=nfsnobody recurse=yes state=directory
-
-- name: "create pvs"
-  shell: "bash create_pvs.sh" 
-  args:
-    chdir: '/tmp'
-  when: pv_exist.rc == 1
