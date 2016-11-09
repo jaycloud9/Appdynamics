@@ -15,3 +15,21 @@
   when: registry_running.rc == 1
 - name: "Install Logging"
   include: logging.yml
+
+- name: "Test to see if pv20 exists"
+  shell: "oc get pv | grep pv20"
+  register: pv_exist
+  ignore_errors: True
+  changed_when: "pv_exist.rc != 0"
+
+- name: "Push PV template file"
+  template: src=persisted_storage.yaml.j2 dest=/tmp/pv-template.yaml
+
+- name: "Copy create pv script"
+  copy: src=create_pvs.sh dest=/tmp/create_pvs.sh
+
+- name: "create pvs"
+  shell: "bash create_pvs.sh"
+  args:
+    chdir: '/tmp'
+  when: pv_exist.rc == 1
