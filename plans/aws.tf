@@ -68,6 +68,7 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
 
 resource "aws_security_group" "allow_restricted_http_and_https_elb" {
   name = "allow_restricted_http_and_https_elb"
+  depends_on = ["aws_instance.master_instance","aws_instance.node_worker_instance","aws_instance.node_infra_instance"]
   vpc_id = "${aws_vpc.vpc.id}"
   description = "Allow restricted https incoming access for ELB"
   ingress {
