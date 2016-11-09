@@ -200,6 +200,26 @@ resource "aws_instance" "formation_instance" {
     "${aws_security_group.allow_local_all_incoming_security_group.id}"]
 }
 
+resource "aws_instance" "storage_instance" {
+  count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
+  tags {
+    Name = "storage-${count.index + 1}"
+    Type = "storage"
+  }
+  ami = "ami-8b8c57f8"
+  instance_type = "t2.large"
+  subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
+  vpc_security_group_ids = [
+    "${aws_security_group.allow_all_outgoing_security_group.id}",
+    "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.allow_local_all_incoming_security_group.id}"]
+}
+
 resource "aws_instance" "master_instance" {
   count = 1
   key_name = "${aws_key_pair.key_pair.key_name}"
@@ -207,7 +227,6 @@ resource "aws_instance" "master_instance" {
     Name = "master-${count.index + 1}"
     Type = "master"
     Docker = "true"
-    SubType = "storage"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"

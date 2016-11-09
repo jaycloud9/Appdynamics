@@ -29,13 +29,15 @@
     roles:
       - oscp_install
 
-  - hosts: tag_SubType_storage
+  - hosts: tag_Type_storage
     vars:
       oscp_storage_nfs_directory: "/exports"
     roles:
       - oscp_storage
 
   - hosts: tag_Type_master
+    vars:
+      oscp_storage_nfs_directory: "/exports"
     roles:
       - oscp_setup
 
