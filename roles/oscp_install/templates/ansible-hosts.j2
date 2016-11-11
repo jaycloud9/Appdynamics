@@ -34,7 +34,8 @@ openshift_master_console_port=443
  
 ## Infrastructure
 os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
- 
+
+openshift_hosted_metrics_deploy=true
 openshift_master_metrics_public_url=https://metrics.apps.cluster1.temenos.cloud/hawkular/metrics
 openshift_master_logging_public_url=https://logging.apps.cluster1.temenos.cloud
 
@@ -44,12 +45,12 @@ osm_use_cockpit=false
 openshift_router_selector="target=router"
 openshift_hosted_router_selector="target=router"
 openshift_hosted_router_replicas=1
- 
+
 ## REGISTRY
 openshift_registry_selector="purpose=infra"
 openshift_hosted_registry_replicas=1
 openshift_hosted_registry_storage_kind=nfs
-{% for host in groups['tag_Type_master'] %}
+{% for host in groups['tag_Type_storage'] %}
 {% if loop.first %}
 openshift_hosted_registry_storage_host={{hostvars[host]['ec2_private_ip_address'] }}
 {% endif %}

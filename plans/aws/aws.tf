@@ -68,6 +68,7 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
 
 resource "aws_security_group" "allow_restricted_http_and_https_elb" {
   name = "allow_restricted_http_and_https_elb"
+  depends_on = ["aws_instance.master_instance","aws_instance.node_worker_instance","aws_instance.node_infra_instance"]
   vpc_id = "${aws_vpc.vpc.id}"
   description = "Allow restricted https incoming access for ELB"
   ingress {
@@ -77,9 +78,9 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
     cidr_blocks = [
       "80.169.34.194/32",
       "5.80.40.141/32",
-      "${aws_instance.master_instance.public_ip}/32",
-      "${aws_instance.node_worker_instance.public_ip}/32",
-      "${aws_instance.node_infra_instance.public_ip}/32"]
+      "${formatlist("%s/32", aws_instance.master_instance.*.public_ip)}",
+      "${formatlist("%s/32", aws_instance.node_worker_instance.*.public_ip)}",
+      "${formatlist("%s/32", aws_instance.node_infra_instance.*.public_ip)}"]
   }
   
   ingress {
@@ -89,9 +90,9 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
     cidr_blocks = [
       "80.169.34.194/32",
       "5.80.40.141/32",
-      "${aws_instance.master_instance.public_ip}/32",
-      "${aws_instance.node_worker_instance.public_ip}/32",
-      "${aws_instance.node_infra_instance.public_ip}/32"]
+      "${formatlist("%s/32", aws_instance.master_instance.*.public_ip)}",
+      "${formatlist("%s/32", aws_instance.node_worker_instance.*.public_ip)}",
+      "${formatlist("%s/32", aws_instance.node_infra_instance.*.public_ip)}"]
   }
   
   egress {
@@ -168,6 +169,10 @@ resource "aws_instance" "gitlab_instance" {
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -185,6 +190,30 @@ resource "aws_instance" "formation_instance" {
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
+  vpc_security_group_ids = [
+    "${aws_security_group.allow_all_outgoing_security_group.id}",
+    "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
+    "${aws_security_group.allow_local_all_incoming_security_group.id}"]
+}
+
+resource "aws_instance" "storage_instance" {
+  count = 1
+  key_name = "${aws_key_pair.key_pair.key_name}"
+  tags {
+    Name = "storage-${count.index + 1}"
+    Type = "storage"
+  }
+  ami = "ami-8b8c57f8"
+  instance_type = "t2.large"
+  subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -198,11 +227,14 @@ resource "aws_instance" "master_instance" {
     Name = "master-${count.index + 1}"
     Type = "master"
     Docker = "true"
-    SubType = "storage"
   }
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -220,6 +252,10 @@ resource "aws_instance" "node_infra_instance" {
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
@@ -237,66 +273,14 @@ resource "aws_instance" "node_worker_instance" {
   ami = "ami-8b8c57f8"
   instance_type = "t2.large"
   subnet_id = "${aws_subnet.subnetA.id}"
+  ebs_block_device {
+    device_name = "/dev/sdh"
+    volume_size = 200
+  }
   vpc_security_group_ids = [
     "${aws_security_group.allow_all_outgoing_security_group.id}",
     "${aws_security_group.allow_restricted_ssh_incoming_security_group.id}",
     "${aws_security_group.allow_local_all_incoming_security_group.id}"]
-}
-
-# Find a better way to attach disks to every host...
-resource "aws_ebs_volume" "gitlab" {
-  availability_zone = "eu-west-1a"
-  size = 200
-}
-
-resource "aws_ebs_volume" "master" {
-  availability_zone = "eu-west-1a"
-  size = 200
-}
-
-resource "aws_ebs_volume" "node_worker" {
-  availability_zone = "eu-west-1a"
-  size = 200
-}
-
-resource "aws_ebs_volume" "node_infra" {
-  availability_zone = "eu-west-1a"
-  size = 200
-}
-
-resource "aws_ebs_volume" "formation" {
-  availability_zone = "eu-west-1a"
-  size = 200
-}
-
-resource "aws_volume_attachment" "ebs_att_formation" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.formation.id}"
-  instance_id = "${aws_instance.formation_instance.id}"
-}
-
-resource "aws_volume_attachment" "ebs_att_gitlab" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.gitlab.id}"
-  instance_id = "${aws_instance.gitlab_instance.id}"
-}
-
-resource "aws_volume_attachment" "ebs_att_master" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.master.id}"
-  instance_id = "${aws_instance.master_instance.id}"
-}
-
-resource "aws_volume_attachment" "ebs_att_node_worker" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.node_worker.id}"
-  instance_id = "${aws_instance.node_worker_instance.id}"
-}
-
-resource "aws_volume_attachment" "ebs_att_node_infra" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.node_infra.id}"
-  instance_id = "${aws_instance.node_infra_instance.id}"
 }
 
 resource "aws_elb" "master_elb" {
