@@ -6,8 +6,6 @@ variable "name"            { }
 variable "vpc_cidr"        { }
 variable "azs"             { }
 variable "public_subnets"  { }
-variable "key_name"        { }
-variable "private_key"     { }
 
 module "vpc" {
   source = "./vpc"
@@ -24,3 +22,11 @@ module "public_subnet" {
   cidrs  = "${var.public_subnets}"
   azs    = "${var.azs}"
 }
+
+# VPC
+output "vpc_id"   { value = "${module.vpc.vpc_id}" }
+output "vpc_cidr" { value = "${module.vpc.vpc_cidr}" }
+
+# Subnets
+output "public_subnet_ids"  { value = "${module.public_subnet.subnet_ids}" }
+output "public_subnet_addresses"  { value = "${module.public_subnet.subnet_addresses}" }

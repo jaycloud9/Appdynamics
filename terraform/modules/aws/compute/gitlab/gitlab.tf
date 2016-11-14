@@ -4,12 +4,13 @@
 #--------------------------------------------------------------
 
 variable "name"                	{ default = "gitlab" }
+variable "vpc_id"               { }
 variable "count"								{	default = 1 }
 variable "aws_key_name"					{ }
 variable "domain"								{ }
 variable "ami"									{ }
-variable "size"									{ default = "t2.lrge" }
-variable "subnet_id"    				{ }
+variable "size"									{ default = "t2.large" }
+variable "subnet_ids"    				{ }
 variable "local_subnets"        { }
 variable "ebs_disk_mount"				{ default = "/dev/sdh"}
 variable "ebs_disk_size"				{ default = 200}
@@ -18,15 +19,13 @@ variable "ssl_certificate_id"		{ }
 
 resource "aws_security_group" "allow_instance_access" {
   name = "${var.name}.allow_instance_access"
-  vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${var.vpc_id}"
   description = "Allow Instance access"
  ingress {
     from_port = 8081
     to_port = 8081
     protocol = "tcp"
-    cidr_blocks = [
-      "${var.local_subnets}"
-		]
+    cidr_blocks = ["${element(split(",", var.local_subnets), count.index)}"]
   }
   
  ingress {
@@ -53,7 +52,7 @@ resource "aws_security_group" "allow_instance_access" {
 
 resource "aws_security_group" "allow_restricted_http_and_https_elb" {
   name = "${var.name}.allow_restricted_http_and_https_elb"
-  vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = "${var.vpc_id}"
   description = "Allow restricted https incoming access for ELB"
   ingress {
     from_port = 80
@@ -85,7 +84,6 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
 
 
 resource "aws_instance" "instance" {
-	name = "${var.name}"
   count = "${var.count}"
   key_name = "${var.aws_key_name}"
   tags {
@@ -125,7 +123,7 @@ resource "aws_elb" "elb" {
     "${aws_instance.instance.*.id}"]
   security_groups = [
     "${aws_security_group.allow_restricted_http_and_https_elb.id}"]
-  subnets = ["${split(",", var.public_subnet_ids)}"]
+  subnets = ["${split(",", var.subnet_ids)}"]
 }
 
 resource "aws_lb_cookie_stickiness_policy" "elb_sticky" {

@@ -5,13 +5,11 @@
 variable "name"                 { }
 variable "region"               { }
 variable "aws_key_name"         { }
+variable "vpc_id"               { }
 variable "domain"               { }
 variable "ami"                  { }
-variable "size"                 { }
-variable "public_subnet_id"     { }
+variable "public_subnet_ids"    { }
 variable "local_subnets"        { }
-variable "ebs_disk_mount"       { }
-variable "ebs_disk_size"        { }
 variable "ssl_certificate_id"   { }
 
 
@@ -19,13 +17,11 @@ variable "ssl_certificate_id"   { }
 module "gitlab" {
   source                = "./gitlab"
   name                  = "${var.name}-gitlab"
+  vpc_id                = "${var.vpc_id}"
   aws_key_name          = "${var.aws_key_name}"
   domain                = "${var.domain}"
   ami                   = "${var.ami}"
-  size                  = "${var.size}"
-  subnet_id             = "${var.public_subnet_id}"
+  subnet_ids            = "${var.public_subnet_ids}"
   local_subnets         = "${var.local_subnets}"
-  ebs_disk_mount        = "${var.ebs_disk_mount}"
-  ebs_disk_size         = "${var.ebs_disk_size}"
   ssl_certificate_id    = "${var.ssl_certificate_id}"
 }

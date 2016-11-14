@@ -13,10 +13,27 @@
 # `terraform push` commands - changing this WILL affect your
 # terraform.tfstate file, so use caution
 
+#--------------------------------------------------------------
+# Global
+#--------------------------------------------------------------
+
+
+domain              = "temenos.cloud"
+ssl_certificate_id  = "arn:aws:acm:eu-west-1:523275672308:certificate/298fa9f5-4477-435b-90bf-e0b3bb7b0fb9"
+name                = "global"
+region              = "eu-west-1"
+
+
+#--------------------------------------------------------------
+# Env
+#--------------------------------------------------------------
+
 name              = "dev"
+ami               = "ami-8b8c57f8"
 region            = "eu-west-1"
 key_pair_name     = "key_pair"
-key_public_key    = "${file("../../../keys/key.pub")}"
+# Below does not work but text version of key does
+#key_public_key    = "${file("../../../../keys/key.pub")}"
 
 #--------------------------------------------------------------
 # Network
