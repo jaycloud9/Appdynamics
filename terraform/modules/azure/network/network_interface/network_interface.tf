@@ -13,7 +13,7 @@ resource "azurerm_network_interface" "NIC" {
 
   ip_configuration {
     name = "${var.environment}-${var.name}-${var.stack}-ipconf"
-    subnet_id = "${vr.subnet_id}"
+    subnet_id = "${var.subnet_id}"
     private_ip_address_allocation = "dynamic"
   }
   tags {

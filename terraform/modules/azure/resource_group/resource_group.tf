@@ -1,6 +1,6 @@
 variable "name"					{ }
 variable "environment"	{ }
-variable "region"				{ default = "ukwest"}
+variable "region"				{ }
 variable "stack"				{ }
 variable "owner"				{ }
 

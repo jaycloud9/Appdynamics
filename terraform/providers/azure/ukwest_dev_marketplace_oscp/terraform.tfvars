@@ -33,4 +33,8 @@ name            = "marketplace"
 environment     = "dev"
 stack           = "oscp"
 owner           = "Astillion"
+region          = "ukwest"
 
+cidr            = "10.10.0.0/16"
+dns_servers     = "8.8.8.8,4.4.4.4"
+subnet          = "10.10.1.0/24"

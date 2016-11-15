@@ -18,6 +18,7 @@ module "virtual_network" {
   cidr        = "${var.cidr}"
   region      = "${var.region}"
   rg_name     = "${var.rg_name}"
+  dns_servers = "${var.dns_servers}"
   owner       = "${var.owner}"
 }
 

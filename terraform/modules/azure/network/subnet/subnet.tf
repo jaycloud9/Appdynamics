@@ -1,6 +1,5 @@
 variable "name"           { }
 variable "environment"    { }
-variable "owner"          { }
 variable "purpose"        { }
 variable "rg_name"        { }
 variable "vnet_name"      { }
@@ -15,4 +14,4 @@ resource "azurerm_subnet" "subnet" {
   address_prefix        = "${var.subnet}"
 }
 
-output "${var.purpose}_subnet_id" { value = "${azurerm_subnet.subnet.id}" }
+output "id" { value = "${azurerm_subnet.subnet.id}" }

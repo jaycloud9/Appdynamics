@@ -7,6 +7,11 @@ variable "name"	          { }
 variable "environment"    { }
 variable "stack"          { }
 variable "owner"          { }
+variable "region"         { }
+
+variable "subnet"         { }
+variable "cidr"           { }
+variable "dns_servers"    { }
 
 provider "azurerm" {
   subscription_id = "${var.sub_id}"
@@ -22,11 +27,21 @@ module "resource_group" {
   environment   = "${var.environment}"
   stack         = "${var.stack}"
   owner         = "${var.owner}"
+  region        = "${var.region}"
 
 }
 
-#module "network" {
-#  source = "../../../modules/azure/network"
-#
-#
-#}
+module "network" {
+  source = "../../../modules/azure/network"
+
+  name          = "${var.name}"
+  environment   = "${var.environment}"
+  stack         = "${var.stack}"
+  owner         = "${var.owner}"
+  region        = "${var.region}"
+  cidr          = "${var.cidr}" 
+  dns_servers   = "${var.dns_servers}"
+  subnet        = "${var.subnet}"
+  rg_name       = "${module.resource_group.name}"
+
+}
