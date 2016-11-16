@@ -37,6 +37,17 @@ module "servers_subnet" {
 module "gitlab_load_balancer" {
   source = "./load_balancer"
 
+  name        = "${var.name}"
+  environment = "${var.environment}"
+  stack       = "${var.stack}"
+  region      = "${var.region}"
+  rg_name     = "${var.rg_name}"
+  owner       = "${var.owner}"
+
+	subnet_id   	= "${module.servers_subnet.id}"
+	frontend_port	= "80"
+	backend_port	= "8081"
+  probe_path    = "/users/sign_in"
 }
 
 #Network interfaces tie together Vms and services. be it public IP or a Load balancer
@@ -51,6 +62,6 @@ module "gitlab_network_interface" {
   region      = "${var.region}"
   rg_name     = "${var.rg_name}"
   owner       = "${var.owner}"
-  subnet_id   = "${module.subnet.id}"
+  subnet_id   = "${module.servers_subnet.id}"
   lb_backend_pool_id  = "${module.gitlab_load_balancer.lb_backend_pool_id}"
 }
