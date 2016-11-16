@@ -22,7 +22,7 @@ module "virtual_network" {
   owner       = "${var.owner}"
 }
 
-module "subnet" {
+module "servers_subnet" {
   source = "./subnet"
 
   name        = "${var.name}"
@@ -34,7 +34,15 @@ module "subnet" {
   vnet_name   = "${module.virtual_network.name}"
 }
 
-module "network_interface" {
+module "gitlab_load_balancer" {
+  source = "./load_balancer"
+
+}
+
+#Network interfaces tie together Vms and services. be it public IP or a Load balancer
+#This means we need to define the network interfaces after any services (LB's public IPs)
+#Then attach the Network interface to a VM later
+module "gitlab_network_interface" {
   source      = "./network_interface"
 
   name        = "${var.name}"
@@ -44,4 +52,5 @@ module "network_interface" {
   rg_name     = "${var.rg_name}"
   owner       = "${var.owner}"
   subnet_id   = "${module.subnet.id}"
+  lb_backend_pool_id  = "${module.gitlab_load_balancer.lb_backend_pool_id}"
 }
