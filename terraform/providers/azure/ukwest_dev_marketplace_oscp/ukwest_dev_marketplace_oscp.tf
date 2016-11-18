@@ -31,6 +31,21 @@ module "resource_group" {
 
 }
 
+module "storage" {
+  source = "../../../modules/azure/storage"
+
+  name          = "${var.name}"
+  environment   = "${var.environment}"
+  stack         = "${var.stack}"
+  owner         = "${var.owner}"
+  region        = "${var.region}"
+  rg_name       = "${module.resource_group.name}"
+
+  sa_type       = "Standard_LRS"
+  purpose       = "vhd"
+
+}
+
 module "network" {
   source = "../../../modules/azure/network"
 

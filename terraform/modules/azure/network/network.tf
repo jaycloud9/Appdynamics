@@ -65,3 +65,8 @@ module "gitlab_network_interface" {
   subnet_id   = "${module.servers_subnet.id}"
   lb_backend_pool_id  = "${module.gitlab_load_balancer.lb_backend_pool_id}"
 }
+
+
+# Outputs
+
+output "gitlab_network_interface_id"   { value = "${module.gitlab_network_interface.id}"}
