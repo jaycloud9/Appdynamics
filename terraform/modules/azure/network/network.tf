@@ -38,6 +38,7 @@ module "gitlab_load_balancer" {
   source = "./load_balancer"
 
   name        = "${var.name}"
+  purpose     = "gitlab"
   environment = "${var.environment}"
   stack       = "${var.stack}"
   region      = "${var.region}"
