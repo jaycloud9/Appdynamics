@@ -62,7 +62,7 @@ resource "aws_security_group" "allow_restricted_ssh_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.40.141/32"]
+      "86.173.172.58/32"]
   }
 }
 
@@ -77,7 +77,7 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.40.141/32",
+      "86.173.172.58/32",
       "${formatlist("%s/32", aws_instance.master_instance.*.public_ip)}",
       "${formatlist("%s/32", aws_instance.node_worker_instance.*.public_ip)}",
       "${formatlist("%s/32", aws_instance.node_infra_instance.*.public_ip)}"]
@@ -89,7 +89,7 @@ resource "aws_security_group" "allow_restricted_http_and_https_elb" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.40.141/32",
+      "86.173.172.58/32",
       "${formatlist("%s/32", aws_instance.master_instance.*.public_ip)}",
       "${formatlist("%s/32", aws_instance.node_worker_instance.*.public_ip)}",
       "${formatlist("%s/32", aws_instance.node_infra_instance.*.public_ip)}"]
@@ -128,7 +128,7 @@ resource "aws_security_group" "allow_restricted_https_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.40.141/32"]
+      "86.173.172.58/32"]
   }
 }
 
@@ -142,7 +142,7 @@ resource "aws_security_group" "allow_restricted_http_incoming_security_group" {
     protocol = "tcp"
     cidr_blocks = [
       "80.169.34.194/32",
-      "5.80.40.141/32"]
+      "86.173.172.58/32"]
   }
 }
 
