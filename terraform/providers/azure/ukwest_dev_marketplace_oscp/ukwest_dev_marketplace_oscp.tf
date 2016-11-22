@@ -60,3 +60,20 @@ module "network" {
   rg_name       = "${module.resource_group.name}"
 
 }
+
+module "compute" {
+  source = "../../../modules/azure/compute"
+
+  name          = "${var.name}"
+  environment   = "${var.environment}"
+  stack         = "${var.stack}"
+  owner         = "${var.owner}"
+  region        = "${var.region}"
+  rg_name       = "${module.resource_group.name}"
+
+  network_inf   = "${module.network.gitlab_network_interface_id}"
+  os_storage_container = "${module.storage.sa_endpoint}${module.storage.sa_container_name}"
+  tf_admin_password = "tfPassw0rd"
+  vm_size       = "Standard_A0"
+
+}
