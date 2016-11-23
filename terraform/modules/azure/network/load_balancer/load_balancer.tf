@@ -7,15 +7,13 @@ variable "region"         { }
 variable "rg_name"        { }
 
 variable "protocol"       { default = "Tcp" }
-variable "probe"          { default = "Http" }
 variable "subnet_id"      { }
 variable "frontend_port"  { }
 variable "backend_port"   { }
-variable "probe_path"     { }
 
 
 resource "azurerm_public_ip" "public_ip" {
-  name  = "${var.environment}-${var.name}-${var.stack}-lb-pub-ip"
+  name  = "${var.environment}-${var.name}-${var.stack}-${var.purpose}lb-pub-ip"
   location  = "${var.region}"
   resource_group_name = "${var.rg_name}"
   public_ip_address_allocation = "static"
@@ -48,28 +46,6 @@ resource "azurerm_lb_backend_address_pool" "public_lb_backend" {
   location            = "${var.region}"
   resource_group_name = "${var.rg_name}"
   loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
-}
-
-resource "azurerm_lb_probe" "public_lb_probe" {
-  name                = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-probe-${var.probe}_${var.backend_port}"  
-  location            = "${var.region}"
-  resource_group_name = "${var.rg_name}"
-  loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
-  port                = "${var.backend_port}"
-  protocol            = "${var.probe}"
-  request_path        = "${var.probe_path}"
-}
-
-resource "azurerm_lb_rule" "private_rule" {
-  name                = "${var.environment}-${var.name}-${var.stack}-lb-rule"  
-  location            = "${var.region}"
-  resource_group_name = "${var.rg_name}"
-  loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
-  probe_id            = "${azurerm_lb_probe.public_lb_probe.id}"
-  protocol            = "${var.protocol}"
-  frontend_port       = "${var.frontend_port}"
-  backend_port        = "${var.backend_port}"
-  frontend_ip_configuration_name = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-front_ip"
 }
 
 output "lb_name"  { value = "${azurerm_lb.public_lb.name}" }

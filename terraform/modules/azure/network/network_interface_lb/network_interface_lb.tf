@@ -6,6 +6,7 @@ variable "subnet_id"          { }
 variable "rg_name"            { }
 variable "region"             { }
 variable "purpose"            { }
+variable "lb_backend_pool_id" { }
 
 resource "azurerm_public_ip" "public" {
   name  = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-pub-ip"
@@ -30,6 +31,7 @@ resource "azurerm_network_interface" "NIC" {
     subnet_id = "${var.subnet_id}"
     private_ip_address_allocation = "Dynamic"
 		public_ip_address_id = "${azurerm_public_ip.public.id}"
+    load_balancer_backend_address_pools_ids = ["${var.lb_backend_pool_id}"]
   }
   tags {
     Environment = "${var.environment}"
