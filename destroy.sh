@@ -42,12 +42,12 @@ if [[ $1 != "" ]]; then
 				fi
 			else
 				echo "Removing subscriptions from ALL HOSTS"
-				ansible -i $inventory all -u $user --private-key=keys/key.pem -m shell -a "subscription-manager remove --all; subscription-manager unregister"
+				ansible -i $inventory all -u $user -K --private-key=keys/key.pem -m shell -a "subscription-manager remove --all; subscription-manager unregister"
 				rc=$?
 				if [[ $rc == "0" ]]; then
 					echo "Success"
 					echo "Stopping Instances prior to termination"
-					ansible -i $inventory all -u $user --private-key=keys/key.pem -m shell -a "shutdown -h now"
+					ansible -i $inventory all -u $user -K --private-key=keys/key.pem -m shell -a "shutdown -h now"
 					terraform destroy -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
 				else
 					echo "Failed to unsubscribe all hosts or they are already unsubscribed."
