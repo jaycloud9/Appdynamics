@@ -27,7 +27,7 @@ if [[ $1 != "" ]]; then
         user="ec2-user"
         inventory= "inventory/ec2.py"
       else
-        user=tfadmin
+        user="tfadmin"
         inventory="inventory/azure_rm.py"
       fi
 
