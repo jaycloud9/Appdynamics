@@ -13,15 +13,28 @@ variable "frontend_port"  { }
 variable "backend_port"   { }
 variable "probe_path"     { }
 
-resource "azurerm_lb" "private_lb" {
+
+resource "azurerm_public_ip" "public_ip" {
+  name  = "${var.environment}-${var.name}-${var.stack}-lb-pub-ip"
+  location  = "${var.region}"
+  resource_group_name = "${var.rg_name}"
+  public_ip_address_allocation = "static"
+
+  tags {
+    Environment = "${var.environment}"
+    Stack       = "${var.stack}"
+    Owner       = "${var.owner}"
+  }
+}
+
+resource "azurerm_lb" "public_lb" {
   name                = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb"  
   location            = "${var.region}"
   resource_group_name = "${var.rg_name}"
 
   frontend_ip_configuration {
-    name      = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-front_ip"  
-    subnet_id = "${var.subnet_id}"
-    private_ip_address_allocation = "Dynamic"
+    name      = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-front_ip"
+		public_ip_address_id = "${azurerm_public_ip.public_ip.id}"
   }
   tags {
     Environment = "${var.environment}"
@@ -30,18 +43,18 @@ resource "azurerm_lb" "private_lb" {
   }
 }
 
-resource "azurerm_lb_backend_address_pool" "private_lb_backend" {
+resource "azurerm_lb_backend_address_pool" "public_lb_backend" {
   name                = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-front_ip"  
   location            = "${var.region}"
   resource_group_name = "${var.rg_name}"
-  loadbalancer_id     = "${azurerm_lb.private_lb.id}"  
+  loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
 }
 
-resource "azurerm_lb_probe" "private_lb_probe" {
+resource "azurerm_lb_probe" "public_lb_probe" {
   name                = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-probe-${var.probe}_${var.backend_port}"  
   location            = "${var.region}"
   resource_group_name = "${var.rg_name}"
-  loadbalancer_id     = "${azurerm_lb.private_lb.id}"  
+  loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
   port                = "${var.backend_port}"
   protocol            = "${var.probe}"
   request_path        = "${var.probe_path}"
@@ -51,16 +64,16 @@ resource "azurerm_lb_rule" "private_rule" {
   name                = "${var.environment}-${var.name}-${var.stack}-lb-rule"  
   location            = "${var.region}"
   resource_group_name = "${var.rg_name}"
-  loadbalancer_id     = "${azurerm_lb.private_lb.id}"  
-  probe_id            = "${azurerm_lb_probe.private_lb_probe.id}"
+  loadbalancer_id     = "${azurerm_lb.public_lb.id}"  
+  probe_id            = "${azurerm_lb_probe.public_lb_probe.id}"
   protocol            = "${var.protocol}"
   frontend_port       = "${var.frontend_port}"
   backend_port        = "${var.backend_port}"
   frontend_ip_configuration_name = "${var.environment}-${var.name}-${var.stack}-${var.purpose}-lb-front_ip"
 }
 
-output "lb_name"  { value = "${azurerm_lb.private_lb.name}" }
-output "lb_id"    { value = "${azurerm_lb.private_lb.id}" }
+output "lb_name"  { value = "${azurerm_lb.public_lb.name}" }
+output "lb_id"    { value = "${azurerm_lb.public_lb.id}" }
 
-output "lb_backend_pool_name"  { value = "${azurerm_lb_backend_address_pool.private_lb_backend.name}" }
-output "lb_backend_pool_id"    { value = "${azurerm_lb_backend_address_pool.private_lb_backend.id}" }
+output "lb_backend_pool_name"  { value = "${azurerm_lb_backend_address_pool.public_lb_backend.name}" }
+output "lb_backend_pool_id"    { value = "${azurerm_lb_backend_address_pool.public_lb_backend.id}" }
