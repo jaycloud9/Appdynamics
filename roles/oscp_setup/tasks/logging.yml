@@ -45,5 +45,8 @@
   shell: "oc create secret generic logging-deployer"
   when: secret_logging_deployer.rc == 1
 
+- name: "Set labels for logging"
+  shell: "oc label node --all logging-infra-fluentd=true"
+
 - name: "install logging"
   shell: "oc new-app logging-deployer-template"
