@@ -23,20 +23,20 @@ if [[ $1 != "" ]]; then
 
       echo "Working directory is $tf_path"
       
-      #export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
-      #export AWS_SECRET_ACCESS_KEY='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'
       echo "downloading/sourcing modules"
       terraform get $tf_path
       echo "Executing terraform"
       terraform apply -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
       if [[ $provider == "aws" ]]; then
+        export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
+        export AWS_SECRET_ACCESS_KEY='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'
         user="ec2-user"
         inventory= "inventory/ec2.py"
       else
         user=tfadmin
         inventory="inventory/azure_rm.py"
       fi
-      ansible-playbook -i $inventory playbook.yml -u $user -K --private-key=keys/key.pem
+      ansible-playbook -i $inventory playbook.yml -K -u $user --private-key=keys/key.pem --extra-vars "platform=$provider"
     else
       echo "You must specify an environment"
       exit 1
