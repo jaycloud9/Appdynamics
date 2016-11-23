@@ -76,7 +76,13 @@ module "compute" {
   region        = "${var.region}"
   rg_name       = "${module.resource_group.name}"
 
-  network_inf   = "${module.network.gitlab_network_interface_id}"
+  gitlab_network_inf        = "${module.network.gitlab_network_interface_id}"
+  master_network_inf        = "${module.network.master_network_interface_id}"
+  node_infra_network_inf    = "${module.network.node_infra_network_interface_id}"
+  node_worker_network_inf   = "${module.network.node_worker_network_interface_id}"
+  formation_network_inf     = "${module.network.formation_network_interface_id}"
+  storage_network_inf       = "${module.network.storage_network_interface_id}"
+
   os_storage_container = "${module.storage.sa_endpoint}${module.storage.sa_container_name}"
   tf_user       = "${var.tf_user}"
   tf_admin_password = "${var.tf_user_password}"
