@@ -25,32 +25,32 @@
       - name: Restart Gitlab
         shell: "gitlab-ctl restart"
 
-  - hosts: tag_Type_formation
-    roles:
-      - oscp_install
-
-  - hosts: tag_Type_storage
-    vars:
-      oscp_storage_nfs_directory: "/exports"
-    roles:
-      - oscp_storage
-
-  - hosts: tag_Type_master
-    vars:
-      oscp_storage_nfs_directory: "/exports"
-    roles:
-      - oscp_setup
-
-  - hosts: tag_Docker_true
-    roles:
-      - docker
-      - dataloop-docker
-
-  - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
-    tasks:
-      - name: "Restart Openshift Nodes"
-        shell: "systemctl restart atomic-openshift-node.service"
-  - hosts: tag_Type_master
-    tasks:
-      - name: "Restart Openshift Masters"
-        shell: "systemctl restart atomic-openshift-master.service"
+#  - hosts: tag_Type_formation
+#    roles:
+#      - oscp_install
+#
+#  - hosts: tag_Type_storage
+#    vars:
+#      oscp_storage_nfs_directory: "/exports"
+#    roles:
+#      - oscp_storage
+#
+#  - hosts: tag_Type_master
+#    vars:
+#      oscp_storage_nfs_directory: "/exports"
+#    roles:
+#      - oscp_setup
+#
+#  - hosts: tag_Docker_true
+#    roles:
+#      - docker
+#      - dataloop-docker
+#
+#  - hosts: tag_Type_node_worker:tag_Type_master:tag_Type_node_infra
+#    tasks:
+#      - name: "Restart Openshift Nodes"
+#        shell: "systemctl restart atomic-openshift-node.service"
+#  - hosts: tag_Type_master
+#    tasks:
+#      - name: "Restart Openshift Masters"
+#        shell: "systemctl restart atomic-openshift-master.service"

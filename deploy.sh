@@ -5,7 +5,6 @@ tf_root=./terraform/providers/
 
 if [[ $1 != "" ]]; then
   provider=$1
-  user="ec2-user"
   region="ukwest"
   team="marketplace"
   purpose="oscp"
@@ -30,7 +29,14 @@ if [[ $1 != "" ]]; then
       terraform get $tf_path
       echo "Executing terraform"
       terraform apply -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
-      #ansible-playbook playbook.yml -u $user --private-key=keys/key.pem
+      if [[ $provider == "aws" ]]; then
+        user="ec2-user"
+        inventory= "inventory/ec2.py"
+      else
+        user=tfadmin
+        inventory="inventory/azure_rm.py"
+      fi
+      ansible-playbook -i $inventory playbook.yml -u $user -K --private-key=keys/key.pem
     else
       echo "You must specify an environment"
       exit 1
