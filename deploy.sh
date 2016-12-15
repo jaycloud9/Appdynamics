@@ -23,10 +23,8 @@ if [[ $1 != "" ]]; then
 
       echo "Working directory is $tf_path"
       
-      echo "downloading/sourcing modules"
-      terraform get $tf_path
       echo "Executing terraform"
-      terraform apply -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
+      #terraform apply -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
       if [[ $provider == "aws" ]]; then
         export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
         export AWS_SECRET_ACCESS_KEY='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'
