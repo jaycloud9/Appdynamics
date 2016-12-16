@@ -5,9 +5,6 @@ tf_root=./terraform/providers/
 
 if [[ $1 != "" ]]; then
   provider=$1
-  region="ukwest"
-  team="marketplace"
-  purpose="oscp"
   shift
 
   if [[ $provider == 'aws' || $provider == 'azure' ]]; then
@@ -16,15 +13,9 @@ if [[ $1 != "" ]]; then
     if [[ $1 != "" ]]; then
       env=$1
       shift
-      platform=$region"_"$env"_"$team"_"$purpose
-      echo "Platform: $platform"
-
-      tf_path=$tf_root$provider/$platform
-
-      echo "Working directory is $tf_path"
-      
-      echo "Executing terraform"
+      echo "Executing provisioning"
       #terraform apply -state=$tf_path/terraform.tfstate -var-file=$tf_path/terraform.tfvars $tf_path
+      python oscp_infra.py
       if [[ $provider == "aws" ]]; then
         export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
         export AWS_SECRET_ACCESS_KEY='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'
