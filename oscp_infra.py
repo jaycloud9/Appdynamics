@@ -54,25 +54,18 @@ def main():
       ).name
       print("Reosource Group %s created" % rg)
 
-      print('Create a storage account')
-      sa = service + config.get(service,'name') + config.get(service,'stack')
-      storage_async_operation = storage_client.storage_accounts.create(
-          rg,
-          sa,
-          {
-              'sku': {'name': 'standard_lrs'},
-              'kind': 'storage',
-              'location': config.get(service,'region')
-          }
-      )
-      storage_async_operation.wait() 
-      print("Storage Account %s created" % sa)
-
       print("Creating Network")
       subnet = create_network(service, rg)
 
+      lb_info = create_load_balancer(rg, service, 'console')
+      console_be_id = lb_info.backend_address_pools[0].id
 
-      create_vm(rg,service, subnet, sa, 'gitlab', config.get(service,'gitlab_count'))
+#      create_vm(rg,service, subnet, 'gitlab', config.get(service,'gitlab_count'))
+#      create_vm(rg,service, subnet, 'formation', config.get(service,'formation_count'))
+#      create_vm(rg,service, subnet, 'storage', config.get(service,'storage_count'))
+      create_vm(rg,service, subnet, 'master', config.get(service,'master_count'), console_be_id)
+#      create_vm(rg,service, subnet, 'node_worker', config.get(service,'node_worker_count'))
+#      create_vm(rg,service, subnet, 'node_infra', config.get(service,'node_infra_count'))
 
 
       print("Done")
@@ -84,18 +77,25 @@ def main():
 #
 ######################################################
 
-def create_vm(rg, service, subnet, sa, vmtype, count):
+def create_vm(rg, service, subnet, vmtype, count, be_id=None):
   """Create a VM and associated coponents
   """
+
+  print('Create availability set')
+  availability_set_info = compute_client.availability_sets.create_or_update(
+    rg,
+    rg + vmtype + '-as',
+    {'location': config.get(service,'region')}
+  )
 
   i = 1
   while (i <= int(count)):
     vmname = vmtype + str(i)
     print("Creating %s of %s: %s VMs" % (i, count, vmtype))
     print("Creating NIC")
-    nic = create_nic(network_client, rg, service, vmname, subnet)
+    nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
 
-    vm_parameters = create_vm_parameters(nic.id, vmname, 'Standard_A0', sa, service)
+    vm_parameters = create_vm_parameters(nic.id, vmname, 'Standard_A0', service, availability_set_info.id)
     async_vm_creation = compute_client.virtual_machines.create_or_update(
       rg, vmname, vm_parameters)
     async_vm_creation.wait()
@@ -147,7 +147,7 @@ def create_network(service, resource_group):
   subnet_info = async_subnet_creation.result()
   return subnet_info
 
-def create_nic(network_client, resource_group, service, vmname, subnet_info):
+def create_nic(network_client, resource_group, service, vmname, subnet_info, be_id=None):
   """Create a Network Interface for a VM.
   """
 
@@ -165,10 +165,7 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info):
 
   # Create NIC
   print('Create NIC')
-  async_nic_creation = network_client.network_interfaces.create_or_update(
-    resource_group,
-    resource_group + vmname + '-nic',
-    {
+  params = { 
       'location': config.get(service,'region'),
       'ip_configurations': [{
         'name': vmname + '-nic',
@@ -180,10 +177,18 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info):
         }
       }]
     }
+  if be_id:
+    print("Inserting LB param")
+    params['ip_configurations'][0]['load_balancer_backend_address_pools'] = [{'id': be_id}]
+
+  async_nic_creation = network_client.network_interfaces.create_or_update(
+    resource_group,
+    resource_group + vmname + '-nic',
+    params
   )
   return async_nic_creation.result()
 
-def create_vm_parameters(nic_id, vmname, vmsize, sa, service):
+def create_vm_parameters(nic_id, vmname, vmsize, service, as_id):
   """Create the VM parameters structure.
   """
   return {
@@ -216,7 +221,125 @@ def create_vm_parameters(nic_id, vmname, vmsize, sa, service):
             'id': nic_id,
         }]
     },
+    'availability_set': {
+      'id': as_id
+    },
   }
+
+def create_load_balancer(rg, service, purpose):
+  lbname = rg + '-' + purpose + '-lb'
+  
+  # Create PublicIP
+  print('Create Public IP')
+  public_ip_parameters = {
+    'location': config.get(service,'region'),
+    'public_ip_allocation_method': 'static',
+    'idle_timeout_in_minutes': 4
+  }
+  async_publicip_creation = network_client.public_ip_addresses.create_or_update(
+    rg,
+    lbname + '-ip',
+    public_ip_parameters
+  )
+  public_ip_info = async_publicip_creation.result()
+
+  # Building a FrontEndIpPool
+  print('Create FrontEndIpPool configuration')
+  frontend_ip_configurations = [{
+    'name': lbname + '-fip',
+    'private_ip_allocation_method': 'Dynamic',
+    'public_ip_address': {
+      'id': public_ip_info.id
+    }
+  }]
+
+  # Building a BackEnd address pool
+  print('Create BackEndAddressPool configuration')
+  backend_address_pools = [{
+    'name': lbname + '-bepool'
+  }]
+
+  # Building a HealthProbe
+  print('Create HealthProbe configuration')
+  probes = [{
+    'name': lbname + 'http-probe',
+    'protocol': 'Http',
+    'port': 80,
+    'interval_in_seconds': 15,
+    'number_of_probes': 4,
+    'request_path': 'healthprobe.aspx'
+  }]
+
+  # Building a LoadBalancer rule
+  print('Create LoadBalancerRule configuration')
+  load_balancing_rules = [{
+    'name': lbname + '-rule',
+    'protocol': 'tcp',
+    'frontend_port': 80,
+    'backend_port': 80,
+    'idle_timeout_in_minutes': 4,
+    'enable_floating_ip': False,
+    'load_distribution': 'Default',
+    'frontend_ip_configuration': {
+      'id': construct_fip_id(subscription_id, rg, lbname, lbname + '-fip')
+    },
+    'backend_address_pool': {
+      'id': construct_bap_id(subscription_id, rg, lbname, lbname + '-bepool')
+    },
+    'probe': {
+      'id': construct_probe_id(subscription_id, rg, lbname, lbname + 'http-probe')
+    }
+  }]
+
+  # Creating Load Balancer
+  print('Creating Load Balancer')
+  lb_async_creation = network_client.load_balancers.create_or_update(
+    rg,
+    lbname,
+    {
+      'location': config.get(service,'region'),
+      'frontend_ip_configurations': frontend_ip_configurations,
+      'backend_address_pools': backend_address_pools,
+      'probes': probes,
+      'load_balancing_rules': load_balancing_rules
+    }
+  )
+  lb_info = lb_async_creation.result()
+
+  return lb_info
+
+def construct_fip_id(subscription_id, rg, lbname, fipname):
+  """Build the future FrontEndId based on components name.
+  """
+  return ('/subscriptions/{}'
+          '/resourceGroups/{}'
+          '/providers/Microsoft.Network'
+          '/loadBalancers/{}'
+          '/frontendIPConfigurations/{}').format(
+              subscription_id, rg, lbname, fipname
+          )
+
+def construct_bap_id(subscription_id, rg, lbname, addr_pool_name):
+  """Build the future BackEndId based on components name.
+  """
+  return ('/subscriptions/{}'
+          '/resourceGroups/{}'
+          '/providers/Microsoft.Network'
+          '/loadBalancers/{}'
+          '/backendAddressPools/{}').format(
+              subscription_id, rg, lbname, addr_pool_name
+          )
+
+def construct_probe_id(subscription_id, rg, lbname, probe_name):
+  """Build the future ProbeId based on components name.
+  """
+  return ('/subscriptions/{}'
+          '/resourceGroups/{}'
+          '/providers/Microsoft.Network'
+          '/loadBalancers/{}'
+          '/probes/{}').format(
+              subscription_id, rg, lbname, probe_name
+          )
 
 if __name__ == "__main__":
     main()
