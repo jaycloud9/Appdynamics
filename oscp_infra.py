@@ -32,8 +32,15 @@ network_client = NetworkManagementClient(credentials, subscription_id)
 #for vm in compute_client.virtual_machines.list_all():
 #  print("\tVM: {}".format(vm.name))
 
+#NICE
 #TODO: Get all resourves for a resource group if it exists and only create new if they don't exist.
-#TODO: Copy VHD to new RG and provision from that one
+#TODO: Copy VHD to new RG and provision from that one or Provision from one SA to another
+
+#MUST
+#TODO: Configure the Lb's for each purpose properly
+#TODO: Point DNS at the LB's
+#TODO: Delete RG 
+
 def main():
   for service in config.sections():
     if service != 'azure':
@@ -57,15 +64,24 @@ def main():
       print("Creating Network")
       subnet = create_network(service, rg)
 
+
+      print("Creating Load Balancers")
       lb_info = create_load_balancer(rg, service, 'console')
       console_be_id = lb_info.backend_address_pools[0].id
 
-#      create_vm(rg,service, subnet, 'gitlab', config.get(service,'gitlab_count'))
-#      create_vm(rg,service, subnet, 'formation', config.get(service,'formation_count'))
-#      create_vm(rg,service, subnet, 'storage', config.get(service,'storage_count'))
+      lb_info = create_load_balancer(rg, service, 'apps')
+      apps_be_id = lb_info.backend_address_pools[0].id
+
+      lb_info = create_load_balancer(rg, service, 'gitlab')
+      gitlab_be_id = lb_info.backend_address_pools[0].id
+
+      print("Creating VMs")
+      create_vm(rg,service, subnet, 'gitlab', config.get(service,'gitlab_count'), gitlab_be_id)
+      create_vm(rg,service, subnet, 'formation', config.get(service,'formation_count'))
+      create_vm(rg,service, subnet, 'storage', config.get(service,'storage_count'))
       create_vm(rg,service, subnet, 'master', config.get(service,'master_count'), console_be_id)
-#      create_vm(rg,service, subnet, 'node_worker', config.get(service,'node_worker_count'))
-#      create_vm(rg,service, subnet, 'node_infra', config.get(service,'node_infra_count'))
+      create_vm(rg,service, subnet, 'node_worker', config.get(service,'node_worker_count'), )
+      create_vm(rg,service, subnet, 'node_infra', config.get(service,'node_infra_count'), apps_be_id)
 
 
       print("Done")
@@ -90,7 +106,7 @@ def create_vm(rg, service, subnet, vmtype, count, be_id=None):
 
   i = 1
   while (i <= int(count)):
-    vmname = vmtype + str(i)
+    vmname = str(vmtype + str(i)).translate(None, '` ~!@#$%^&*()=+_[]{}\|;:\'",<>/?.')
     print("Creating %s of %s: %s VMs" % (i, count, vmtype))
     print("Creating NIC")
     nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
