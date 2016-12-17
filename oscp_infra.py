@@ -3,6 +3,7 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.dns import DnsManagementClient
 
 import configparser
 
@@ -27,19 +28,18 @@ resource_client = ResourceManagementClient(credentials, subscription_id)
 compute_client = ComputeManagementClient(credentials, subscription_id)
 storage_client = StorageManagementClient(credentials, subscription_id)
 network_client = NetworkManagementClient(credentials, subscription_id)
+dns_client = DnsManagementClient(credentials, subscription_id)
 
 #print('\nList VMs in subscription')
 #for vm in compute_client.virtual_machines.list_all():
 #  print("\tVM: {}".format(vm.name))
 
 #NICE
-#TODO: Get all resourves for a resource group if it exists and only create new if they don't exist.
+#TODO: Get all resources for a resource group if it exists and only create new if they don't exist.
 #TODO: Copy VHD to new RG and provision from that one or Provision from one SA to another
 
 #MUST
-#TODO: Configure the Lb's for each purpose properly
-#TODO: Point DNS at the LB's
-#TODO: Delete RG 
+#TODO: Delete RG and mp_core specific components
 
 def main():
   for service in config.sections():
@@ -64,18 +64,34 @@ def main():
       print("Creating Network")
       subnet = create_network(service, rg)
 
-
       print("Creating Load Balancers")
-      lb_info = create_load_balancer(rg, service, 'console')
-      console_be_id = lb_info.backend_address_pools[0].id
+      console_rules = []
+      console_rules.append({'name': 'ssl', 'protocol':'Tcp', 'frontend_port': '443', 'backend_port': '443'})
 
-      lb_info = create_load_balancer(rg, service, 'apps')
-      apps_be_id = lb_info.backend_address_pools[0].id
+      console_lb = create_load_balancer(rg, service, 'console', 443, 'Http', '/healthz/ready', console_rules)
+      console_be_id = console_lb['lb_info'].backend_address_pools[0].id
+      console_ip = console_lb['public_ip'].ip_address
+      add_dns('mp_core', console_ip, service)
 
-      lb_info = create_load_balancer(rg, service, 'gitlab')
-      gitlab_be_id = lb_info.backend_address_pools[0].id
 
-      print("Creating VMs")
+      apps_rules = []
+      apps_rules.append({'name': 'router-ssl', 'protocol':'Tcp', 'frontend_port': '443', 'backend_port': '443'})
+      apps_rules.append({'name': 'router-http', 'protocol':'Tcp', 'frontend_port': '80', 'backend_port': '80'})
+
+      apps_lb = create_load_balancer(rg, service, 'apps', 443, 'Tcp', None, apps_rules)
+      apps_be_id = apps_lb['lb_info'].backend_address_pools[0].id
+      apps_ip = apps_lb['public_ip'].ip_address
+      add_dns('mp_core', apps_ip, '*.apps.cluster1')
+
+
+      gitlab_rules = []
+      gitlab_rules.append({'name': 'web', 'protocol':'Tcp', 'frontend_port': '443', 'backend_port': '8081'})
+
+      gitlab_lb = create_load_balancer(rg, service, 'gitlab', 8081, 'Http', '/users/sign_in', gitlab_rules)
+      gitlab_be_id = gitlab_lb['lb_info'].backend_address_pools[0].id
+      gitlab_ip = gitlab_lb['public_ip'].ip_address
+      add_dns('mp_core', gitlab_ip, 'gitlab')
+
       create_vm(rg,service, subnet, 'gitlab', config.get(service,'gitlab_count'), gitlab_be_id)
       create_vm(rg,service, subnet, 'formation', config.get(service,'formation_count'))
       create_vm(rg,service, subnet, 'storage', config.get(service,'storage_count'))
@@ -242,7 +258,7 @@ def create_vm_parameters(nic_id, vmname, vmsize, service, as_id):
     },
   }
 
-def create_load_balancer(rg, service, purpose):
+def create_load_balancer(rg, service, purpose, hp_port, hp_proto, hp_path, lb_rules):
   lbname = rg + '-' + purpose + '-lb'
   
   # Create PublicIP
@@ -278,34 +294,37 @@ def create_load_balancer(rg, service, purpose):
   # Building a HealthProbe
   print('Create HealthProbe configuration')
   probes = [{
-    'name': lbname + 'http-probe',
-    'protocol': 'Http',
-    'port': 80,
+    'name': lbname + hp_proto + '-probe',
+    'protocol': hp_proto,
+    'port': hp_port,
     'interval_in_seconds': 15,
     'number_of_probes': 4,
-    'request_path': 'healthprobe.aspx'
   }]
+  if hp_proto == 'Http':
+    probes[0]['request_path'] = hp_path
 
   # Building a LoadBalancer rule
   print('Create LoadBalancerRule configuration')
-  load_balancing_rules = [{
-    'name': lbname + '-rule',
-    'protocol': 'tcp',
-    'frontend_port': 80,
-    'backend_port': 80,
-    'idle_timeout_in_minutes': 4,
-    'enable_floating_ip': False,
-    'load_distribution': 'Default',
-    'frontend_ip_configuration': {
-      'id': construct_fip_id(subscription_id, rg, lbname, lbname + '-fip')
-    },
-    'backend_address_pool': {
-      'id': construct_bap_id(subscription_id, rg, lbname, lbname + '-bepool')
-    },
-    'probe': {
-      'id': construct_probe_id(subscription_id, rg, lbname, lbname + 'http-probe')
-    }
-  }]
+  load_balancing_rules = []
+  for rule in lb_rules:
+    load_balancing_rules.append({
+      'name': lbname + rule['name'] +'-rule',
+      'protocol': rule['protocol'],
+      'frontend_port': rule['frontend_port'],
+      'backend_port': rule['backend_port'],
+      'idle_timeout_in_minutes': 4,
+      'enable_floating_ip': False,
+      'load_distribution': 'Default',
+      'frontend_ip_configuration': {
+        'id': construct_fip_id(subscription_id, rg, lbname, lbname + '-fip')
+      },
+      'backend_address_pool': {
+        'id': construct_bap_id(subscription_id, rg, lbname, lbname + '-bepool')
+      },
+      'probe': {
+        'id': construct_probe_id(subscription_id, rg, lbname, lbname + hp_proto + '-probe')
+      }
+    })
 
   # Creating Load Balancer
   print('Creating Load Balancer')
@@ -321,8 +340,12 @@ def create_load_balancer(rg, service, purpose):
     }
   )
   lb_info = lb_async_creation.result()
+  lb_data = dict()
+  lb_data['lb_info'] = lb_info
+  lb_data['public_ip'] = public_ip_info
+  
+  return lb_data
 
-  return lb_info
 
 def construct_fip_id(subscription_id, rg, lbname, fipname):
   """Build the future FrontEndId based on components name.
@@ -356,6 +379,22 @@ def construct_probe_id(subscription_id, rg, lbname, probe_name):
           '/probes/{}').format(
               subscription_id, rg, lbname, probe_name
           )
+
+def add_dns(resource_group, ip, rs):
+  record_set = dns_client.record_sets.create_or_update(
+    resource_group,
+    'temenos.cloud',
+    rs,
+    'A',
+      {
+        "ttl": 300,
+        "arecords": [
+          {
+            "ipv4_address": ip 
+          }
+       ]
+      }
+    )
 
 if __name__ == "__main__":
     main()
