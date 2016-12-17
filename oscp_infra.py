@@ -127,7 +127,7 @@ def create_vm(rg, service, subnet, vmtype, count, be_id=None):
     print("Creating NIC")
     nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
 
-    vm_parameters = create_vm_parameters(nic.id, vmname, 'Standard_A0', service, availability_set_info.id)
+    vm_parameters = create_vm_parameters(nic.id, vmname, 'Standard_D5_v2', service, availability_set_info.id)
     async_vm_creation = compute_client.virtual_machines.create_or_update(
       rg, vmname, vm_parameters)
     async_vm_creation.wait()
