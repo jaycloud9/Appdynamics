@@ -11,8 +11,8 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   nfs:
     path: {{oscp_storage_nfs_directory}}/pv/%pv
-  {% for host in groups['tag_Type_storage'] %}
+  {% for host in groups['Type_storage'] %}
   {% if loop.first %}
-server: {{hostvars[host]['ec2_private_ip_address'] }}
+server: {{hostvars[host]['private_ip'] }}
   {% endif %}
   {% endfor %}

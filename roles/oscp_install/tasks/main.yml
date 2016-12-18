@@ -1,4 +1,6 @@
 ---
+- name: "creating ssh directory"
+  file: path=/root/.ssh state=directory mode=0700
 - name: "setup ssh config"
   copy: src=ssh_config dest=/root/.ssh/config mode=0600
 - name: "setup ssh keys - Private"

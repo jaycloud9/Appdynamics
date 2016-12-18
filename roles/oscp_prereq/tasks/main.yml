@@ -1,4 +1,6 @@
 ---
+- name: "Set enforce to permissive on docker nodes to fix bug: https://bugzilla.redhat.com/show_bug.cgi?id=1398861"
+  shell: "setenforce permissive"
 - name: "Create docker-var"
   lvol: vg=vg_oscp lv=docker_var size=10g
 - name: "Format docker-var disk"
@@ -9,3 +11,5 @@
   copy: src=docker-storage-setup dest=/etc/sysconfig/docker-storage-setup
 - name: "Set up docker storage"
   shell: "docker-storage-setup"
+
+
