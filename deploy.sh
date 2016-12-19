@@ -6,7 +6,7 @@ if [[ $1 != "" ]]; then
   if [[ $provider == 'aws' || $provider == 'azure' ]]; then
     echo "Executing against provider: $provider"
     echo "Executing provisioning"
-#    python oscp_infra.py create
+    python oscp_infra.py create
     if [[ $provider == "aws" ]]; then
       export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
       export AWS_SECRET_ACCESS_KEY='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'
