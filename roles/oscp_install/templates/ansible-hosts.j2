@@ -28,7 +28,9 @@ openshift_master_cluster_hostname={{hostvars[host]['private_ip']}}
 {% endif %}
 {% endfor %}
 openshift_master_cluster_public_hostname=cluster1.temenos.cloud
- 
+# Provide local certificate paths which will be deployed to masters
+openshift_master_named_certificates=[{"certfile": "/root/ssl/wildcard.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard.temenos.cloud.key.pem"}]
+
 openshift_master_api_port=443
 openshift_master_console_port=443
  
@@ -45,6 +47,9 @@ osm_use_cockpit=false
 openshift_router_selector="target=router"
 openshift_hosted_router_selector="target=router"
 openshift_hosted_router_replicas=1
+# router's default certificate.
+openshift_hosted_router_certificate={"certfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem"}
+
 
 ## REGISTRY
 openshift_registry_selector="purpose=infra"

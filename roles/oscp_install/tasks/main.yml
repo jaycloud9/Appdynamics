@@ -1,12 +1,22 @@
 ---
 - name: "creating ssh directory"
   file: path=/root/.ssh state=directory mode=0700
+- name: "creating ssl directory"
+  file: path=/root/ssl state=directory mode=0700
 - name: "setup ssh config"
   copy: src=ssh_config dest=/root/.ssh/config mode=0600
 - name: "setup ssh keys - Private"
   copy: src=./keys/key.pem dest=/root/.ssh/id_rsa mode=0600
 - name: "setup ssh keys - Public"
   copy: src=./keys/key.pub dest=/root/.ssh/id_rsa.pub mode=0600
+- name: "Apps.cluster1.tememnos.cloud cert"
+  copy: src=./keys/wildcard_apps.cluster1.temenos.cloud.cert.pem dest=/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem mode=0600
+- name: "Apps.cluster1.temenos.cloud key"
+  copy: src=./keys/wildcard_apps.cluster1.temenos.cloud.key.pem dest=/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem mode=0600
+- name: "wildcard.temenos.cloud cert"
+  copy: src=./keys/wildcard.temenos.cloud.cert.pem dest=/root/ssl/wildcard.temenos.cloud.cert.pem mode=0600
+- name: "wildcard.temenos.cloud key"
+  copy: src=./keys/wildcard.temenos.cloud.key.pem dest=/root/ssl/wildcard.temenos.cloud.cert.pem mode=0600
 - name: "Push ansible hosts file"
   template: src=ansible-hosts.j2 dest=/etc/ansible/hosts
   run_once: true
