@@ -5,7 +5,7 @@ etcd
  
 # Set variables common for all OSEv3 hosts
 [OSEv3:vars]
-ansible_ssh_user=ec2-user
+ansible_ssh_user=mpadmin
 ansible_sudo=true
 ansible_become=yes
 #deployment_subtype=registry
@@ -22,13 +22,15 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 # or to one or all of the masters defined in the inventory if no load
 # balancer is present.
 openshift_master_cluster_method=native
-{% for host in groups['tag_Type_master'] %}
+{% for host in groups['Type_master'] %}
 {% if loop.first %}
-openshift_master_cluster_hostname={{hostvars[host]['ec2_private_ip_address']}}
+openshift_master_cluster_hostname={{hostvars[host]['private_ip']}}
 {% endif %}
 {% endfor %}
 openshift_master_cluster_public_hostname=cluster1.temenos.cloud
- 
+# Provide local certificate paths which will be deployed to masters
+openshift_master_named_certificates=[{"certfile": "/root/ssl/wildcard.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard.temenos.cloud.key.pem"}]
+
 openshift_master_api_port=443
 openshift_master_console_port=443
  
@@ -45,14 +47,17 @@ osm_use_cockpit=false
 openshift_router_selector="target=router"
 openshift_hosted_router_selector="target=router"
 openshift_hosted_router_replicas=1
+# router's default certificate.
+openshift_hosted_router_certificate={"certfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem"}
+
 
 ## REGISTRY
 openshift_registry_selector="purpose=infra"
 openshift_hosted_registry_replicas=1
 openshift_hosted_registry_storage_kind=nfs
-{% for host in groups['tag_Type_storage'] %}
+{% for host in groups['Type_storage'] %}
 {% if loop.first %}
-openshift_hosted_registry_storage_host={{hostvars[host]['ec2_private_ip_address'] }}
+openshift_hosted_registry_storage_host={{hostvars[host]['private_ip'] }}
 {% endif %}
 {% endfor %}
 openshift_hosted_registry_storage_nfs_directory=/exports
@@ -66,24 +71,24 @@ osm_default_node_selector="purpose=work"
  
 # host group for masters
 [masters]
-{% for host in groups['tag_Type_master'] %}
-{{hostvars[host]['ec2_private_ip_address']}}
+{% for host in groups['Type_master'] %}
+{{hostvars[host]['private_ip']}}
 {% endfor %}
 
 # host group for etcd
 [etcd]
-{% for host in groups['tag_Type_master'] %}
-{{hostvars[host]['ec2_private_ip_address']}}
+{% for host in groups['Type_master'] %}
+{{hostvars[host]['private_ip']}}
 {% endfor %}
  
 # host group for nodes, includes region info
 [nodes]
-{% for host in groups['tag_Type_master'] %}
-{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+{% for host in groups['Type_master'] %}
+{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
 {% endfor %}
-{% for host in groups['tag_Type_node_infra'] %}
-{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
+{% for host in groups['Type_node_infra'] %}
+{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
 {% endfor %}
-{% for host in groups['tag_Type_node_worker'] %}
-{{hostvars[host]['ec2_private_ip_address']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
+{% for host in groups['Type_node_worker'] %}
+{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
 {% endfor %}

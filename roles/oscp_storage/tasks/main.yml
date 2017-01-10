@@ -15,7 +15,8 @@
     - libnfsidmap
 
 - name: "Configure Firewall to allow local traffic"
-  iptables: chain=INPUT source=10.0.0.0/8 jump=ACCEPT
+  iptables: chain=INPUT_direct source=10.0.0.0/8 jump=ACCEPT
+#  shell: "systemctl stop firewalld.service"
 
 - name: "Push NFS exports file"
   template: src=nfs_exports.j2 dest=/etc/exports

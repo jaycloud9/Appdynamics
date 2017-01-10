@@ -39,3 +39,7 @@
 
 - name: "Creating VG"
   lvg: vg=vg_oscp pvs=/dev/xvdh
+  when: platform == 'aws'
+- name: "Creating VG"
+  lvg: vg=vg_oscp pvs=/dev/sdc
+  when: platform == 'azure'
