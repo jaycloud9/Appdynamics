@@ -24,7 +24,7 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 openshift_master_cluster_method=native
 {% for host in groups['Type_master'] %}
 {% if loop.first %}
-openshift_master_cluster_hostname={{hostvars[host]['private_ip']}}
+openshift_master_cluster_hostname={{hostvars[host]['name']}}
 {% endif %}
 {% endfor %}
 openshift_master_cluster_public_hostname=cluster1.temenos.cloud
@@ -57,7 +57,7 @@ openshift_hosted_registry_replicas=1
 openshift_hosted_registry_storage_kind=nfs
 {% for host in groups['Type_storage'] %}
 {% if loop.first %}
-openshift_hosted_registry_storage_host={{hostvars[host]['private_ip'] }}
+openshift_hosted_registry_storage_host={{hostvars[host]['name'] }}
 {% endif %}
 {% endfor %}
 openshift_hosted_registry_storage_nfs_directory=/exports
@@ -72,23 +72,23 @@ osm_default_node_selector="purpose=work"
 # host group for masters
 [masters]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['private_ip']}}
+{{hostvars[host]['name']}}
 {% endfor %}
 
 # host group for etcd
 [etcd]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['private_ip']}}
+{{hostvars[host]['name']}}
 {% endfor %}
  
 # host group for nodes, includes region info
 [nodes]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
 {% endfor %}
 {% for host in groups['Type_node_infra'] %}
-{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
+{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
 {% endfor %}
 {% for host in groups['Type_node_worker'] %}
-{{hostvars[host]['private_ip']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
+{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
 {% endfor %}
