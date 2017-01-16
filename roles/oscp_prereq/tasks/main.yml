@@ -11,5 +11,13 @@
   copy: src=docker-storage-setup dest=/etc/sysconfig/docker-storage-setup
 - name: "Set up docker storage"
   shell: "docker-storage-setup"
-
-
+- name: "creating ssl directory"
+  file: path=/root/ssl state=directory mode=0700
+- name: "Apps.cluster1.tememnos.cloud cert"
+  copy: src=./keys/wildcard_apps.cluster1.temenos.cloud.cert.pem dest=/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem mode=0600
+- name: "Apps.cluster1.temenos.cloud key"
+  copy: src=./keys/wildcard_apps.cluster1.temenos.cloud.key.pem dest=/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem mode=0600
+- name: "wildcard.temenos.cloud cert"
+  copy: src=./keys/wildcard.temenos.cloud.cert.pem dest=/root/ssl/wildcard.temenos.cloud.cert.pem mode=0600
+- name: "wildcard.temenos.cloud key"
+  copy: src=./keys/wildcard.temenos.cloud.key.pem dest=/root/ssl/wildcard.temenos.cloud.key.pem mode=0600
