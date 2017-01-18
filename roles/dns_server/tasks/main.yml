@@ -10,3 +10,5 @@
   template: src=named.temenos.cloud.local.j2 dest=/var/named/named.temenos.cloud.local
 - name: "Start named service"
   service: name=named state=restarted enabled=yes
+- name: "Configure Firewall to allow local traffic"
+  iptables: chain=IN_public_allow source=10.0.0.0/8 jump=ACCEPT
