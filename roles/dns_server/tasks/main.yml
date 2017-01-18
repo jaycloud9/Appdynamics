@@ -1,0 +1,12 @@
+---
+- name: "install Bind"
+  yum: name={{ item }} state=latest
+  with_items:
+  - bind
+  - bind-utils
+- name: "Push named config"
+  template: src=named.conf.j2 dest=/etc/named.conf
+- name: "Push temenos.cloud.local zone"
+  template: src=named.temenos.cloud.local.j2 dest=/var/named/named.temenos.cloud.local
+- name: "Start named service"
+  service: name=named state=restarted enabled=yes
