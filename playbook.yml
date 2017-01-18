@@ -6,6 +6,10 @@
       - dataloop-ansible
       - base
 
+  - hosts: Type_formation
+    roles:
+      - dns_server
+
   - hosts: Type_node_worker:Type_master:Type_node_infra
     roles:
       - oscp_prereq
