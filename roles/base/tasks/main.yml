@@ -43,3 +43,5 @@
 - name: "Creating VG"
   lvg: vg=vg_oscp pvs=/dev/sdc
   when: platform == 'azure'
+- name: "reconfigure resolv.conf"
+  template: src=resolv.conf.j2 dest=/etc/resolv.conf
