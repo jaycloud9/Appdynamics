@@ -193,11 +193,6 @@ def create_vm(rg, service, sa, subnet, vmtype, count, be_id=None):
     )
     async_vm_update.wait()
     
-    #Apply Local IP address to local domain
-    vm_ip = nic.ip_configurations[0].private_ip_address
-    add_dns('mp_core', vm_ip, vmname, 'temenos.cloud.local')
-    
-
     print('Tag Virtual Machine')
     async_vm_update = compute_client.virtual_machines.create_or_update(
       rg,
