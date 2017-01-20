@@ -1,14 +1,14 @@
 ---
+  - hosts: Type_formation
+    roles:
+      - dns_server
+
   - hosts: all
     vars:
       - dataloop_api_key: d2fc7190-7176-4415-b498-814e52423823
     roles:
-      - dataloop-ansible
       - base
-
-  - hosts: Type_formation
-    roles:
-      - dns_server
+      - dataloop-ansible
 
   - hosts: Type_node_worker:Type_master:Type_node_infra
     roles:
