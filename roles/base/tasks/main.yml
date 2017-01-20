@@ -1,4 +1,6 @@
 ---
+- name: "reconfigure resolv.conf"
+  template: src=resolv.conf.j2 dest=/etc/resolv.conf
 - name: "Test to see if Subscription set up"
   shell: "subscription-manager repos --list | grep rhel-7-server-ose-3.3-rpms"
   register: subman
@@ -43,5 +45,3 @@
 - name: "Creating VG"
   lvg: vg=vg_oscp pvs=/dev/sdc
   when: platform == 'azure'
-- name: "reconfigure resolv.conf"
-  template: src=resolv.conf.j2 dest=/etc/resolv.conf
