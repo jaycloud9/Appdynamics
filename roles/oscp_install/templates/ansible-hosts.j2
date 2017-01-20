@@ -24,7 +24,7 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 openshift_master_cluster_method=native
 {% for host in groups['Type_master'] %}
 {% if loop.first %}
-openshift_master_cluster_hostname={{hostvars[host]['name']}}
+openshift_master_cluster_hostname={{hostvars[host]['name']}}.temenos.cloud.local
 {% endif %}
 {% endfor %}
 openshift_master_cluster_public_hostname=cluster1.temenos.cloud
@@ -49,7 +49,7 @@ openshift_router_selector="target=router"
 openshift_hosted_router_selector="target=router"
 openshift_hosted_router_replicas=1
 # router's default certificate.
-openshift_hosted_router_certificate={"certfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem"}
+openshift_hosted_router_certificate={"cafile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.ca.pem", "certfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.cert.pem", "keyfile": "/root/ssl/wildcard_apps.cluster1.temenos.cloud.key.pem"}
 
 
 ## REGISTRY
@@ -58,7 +58,7 @@ openshift_hosted_registry_replicas=1
 openshift_hosted_registry_storage_kind=nfs
 {% for host in groups['Type_storage'] %}
 {% if loop.first %}
-openshift_hosted_registry_storage_host={{hostvars[host]['name'] }}
+openshift_hosted_registry_storage_host={{hostvars[host]['name'] }}.temenos.cloud.local
 {% endif %}
 {% endfor %}
 openshift_hosted_registry_storage_nfs_directory=/exports
@@ -73,23 +73,23 @@ osm_default_node_selector="purpose=work"
 # host group for masters
 [masters]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['name']}}
+{{hostvars[host]['name']}}.temenos.cloud.local openshift_ip={{hostvars[host]['private_ip']}} openshift_public_ip={{hostvars[host]['public_ip']}} openshift_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_public_hostname={{hostvars[host]['name']}}.temenos.cloud.local
 {% endfor %}
 
 # host group for etcd
 [etcd]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['name']}}
+{{hostvars[host]['name']}}.temenos.cloud.local openshift_ip={{hostvars[host]['private_ip']}} openshift_public_ip={{hostvars[host]['public_ip']}} openshift_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_public_hostname={{hostvars[host]['name']}}.temenos.cloud.local
 {% endfor %}
  
 # host group for nodes, includes region info
 [nodes]
 {% for host in groups['Type_master'] %}
-{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
+{{hostvars[host]['name']}}.temenos.cloud.local openshift_ip={{hostvars[host]['private_ip']}} openshift_public_ip={{hostvars[host]['public_ip']}} openshift_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_public_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'rsvd','purpose':'infra','role':'master-etcd-node'}" openshift_schedulable=true
 {% endfor %}
 {% for host in groups['Type_node_infra'] %}
-{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
+{{hostvars[host]['name']}}.temenos.cloud.local openshift_ip={{hostvars[host]['private_ip']}} openshift_public_ip={{hostvars[host]['public_ip']}} openshift_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_public_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_node_labels="{'region': 'primary', 'zone': 'right','target':'router','purpose':'infra','role':'node'}"
 {% endfor %}
 {% for host in groups['Type_node_worker'] %}
-{{hostvars[host]['name']}} openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
+{{hostvars[host]['name']}}.temenos.cloud.local openshift_ip={{hostvars[host]['private_ip']}} openshift_public_ip={{hostvars[host]['public_ip']}} openshift_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_public_hostname={{hostvars[host]['name']}}.temenos.cloud.local openshift_node_labels="{'region': 'primary', 'zone': 'left','target':'dev','purpose':'work','role':'node'}"
 {% endfor %}
