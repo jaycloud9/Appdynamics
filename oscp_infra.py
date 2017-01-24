@@ -131,12 +131,14 @@ def create():
       gitlab_ip = gitlab_lb['public_ip'].ip_address
       add_dns('mp_core', gitlab_ip, 'gitlab')
 
-      create_vm(rg,service, sa, subnet, 'gitlab', config.get(service,'gitlab_count'), gitlab_be_id)
-      create_vm(rg,service, sa, subnet, 'formation', config.get(service,'formation_count'))
-      create_vm(rg,service, sa, subnet, 'storage', config.get(service,'storage_count'))
-      create_vm(rg,service, sa, subnet, 'master', config.get(service,'master_count'), console_be_id)
-      create_vm(rg,service, sa, subnet, 'node_worker', config.get(service,'node_worker_count'), )
-      create_vm(rg,service, sa, subnet, 'node_infra', config.get(service,'node_infra_count'), apps_be_id)
+      size='Standard_D1_v2'
+
+      create_vm(rg,service, sa, subnet, 'gitlab', size, config.get(service,'gitlab_count'), gitlab_be_id)
+      create_vm(rg,service, sa, subnet, 'formation', size, config.get(service,'formation_count'))
+      create_vm(rg,service, sa, subnet, 'storage', size, config.get(service,'storage_count'))
+      create_vm(rg,service, sa, subnet, 'master', size, config.get(service,'master_count'), console_be_id)
+      create_vm(rg,service, sa, subnet, 'node_worker', size, config.get(service,'node_worker_count'), )
+      create_vm(rg,service, sa, subnet, 'node_infra', size, config.get(service,'node_infra_count'), apps_be_id)
 
 
       print("Done")
@@ -148,7 +150,7 @@ def create():
 #
 ######################################################
 
-def create_vm(rg, service, sa, subnet, vmtype, count, be_id=None):
+def create_vm(rg, service, sa, subnet, vmtype, vm_size, count, be_id=None):
   """Create a VM and associated coponents
   """
 
@@ -166,7 +168,7 @@ def create_vm(rg, service, sa, subnet, vmtype, count, be_id=None):
     print("Creating NIC")
     nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
 
-    vm_parameters = create_vm_parameters(nic.id, sa, vmname, 'Standard_D1_v2', service, availability_set_info.id)
+    vm_parameters = create_vm_parameters(nic.id, sa, vmname, vm_size, service, availability_set_info.id)
     async_vm_creation = compute_client.virtual_machines.create_or_update(
       rg, vmname, vm_parameters)
     async_vm_creation.wait()
