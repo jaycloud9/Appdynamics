@@ -11,4 +11,4 @@
 - name: "Start named service"
   service: name=named state=restarted enabled=yes
 - name: "Configure Firewall to allow local traffic"
-  iptables: chain=IN_public_allow source=10.0.0.0/8 jump=ACCEPT
+  firewalld: immediate=true service=dns permanent=true state=enabled
