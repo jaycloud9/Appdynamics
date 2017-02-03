@@ -5,7 +5,7 @@
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - include: rhel.yml
-  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' or ansible_distribution == 'RedHat'
 
 - name: Make sure the service is running so we can download the cli jar
   service: name=jenkins state=running
@@ -14,7 +14,7 @@
   meta: flush_handlers
 
 - name: Wait for Jenkins to start
-  wait_for: port=8080 host=localhost delay=30
+  wait_for: port=8080 host=localhost delay=45
 
 - name: Download Jenkins CLI so we can enabled/disabled modules
   get_url: url=http://localhost:8080/jnlpJars/jenkins-cli.jar dest=/root/jenkins-cli.jar
