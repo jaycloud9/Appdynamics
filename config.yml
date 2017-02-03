@@ -1,4 +1,4 @@
-platform:
+provider:
   - azure:
     - config:
       - credentials:
@@ -9,17 +9,18 @@ platform:
       - images:
         - base_os_vhd: https://mpcoredisks532.blob.core.windows.net/system/Microsoft.Compute/Images/vhds/baseRHEL73-osDisk.b1d65628-b713-45d3-b467-5b576f0c697d.vhd
 environment:
- - cluster1:
-    name: marketplace
-    environment: dev
-    stack: oscp
-    owner: Astillion
-    region: ukwest
+ -
+   service: cluster1
+   name: marketplace
+   environment: dev
+   stack: oscp
+   owner: Astillion
+   region: ukwest
 
-    cidr: 10.10.0.0/16
-    dns_servers: 8.8.8.8,4.4.4.4
-    subnet: 10.10.1.0/24
-    servers:
+   cidr: 10.10.0.0/16
+   dns_servers: 8.8.8.8,4.4.4.4
+   subnet: 10.10.1.0/24
+   servers:
     - name: gitlab
       count: 1
     - name: storage
