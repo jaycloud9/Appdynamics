@@ -13,6 +13,7 @@
 - name: "Restart Registry deployment"
   shell: "oc deploy docker-registry --latest -n default"
   when: registry_running.rc == 1
+- pause: minutes=4
 - name: "Install Logging"
   include: logging.yml
 

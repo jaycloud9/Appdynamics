@@ -1,0 +1,18 @@
+---
+platforms:
+#  - name: ubuntu-14.04
+#    driver:
+#      instance_type: c4.large
+#    tags:
+#      - Name: ubuntu-14.04-test-kitchen-apache
+  - name: centos-7
+    provision_command: yum install -y rubygem-rake
+    tags:
+      - Name: centos-7-test-kitchen-jenkins
+
+suites:
+  - name: jenkins
+
+verifier:
+  sudo_command: sudo
+

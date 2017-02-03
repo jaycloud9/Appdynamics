@@ -1,0 +1,4 @@
+---
+#RHEL specific tasks
+- name: Install java-1.7.0-openjdk
+  yum: name=java-1.7.0-openjdk state=present

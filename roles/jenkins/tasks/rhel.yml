@@ -1,0 +1,17 @@
+---
+# RHEL Specific Tasks
+- name: Add jenkins repo
+  get_url: dest=/etc/yum.repos.d/jenkins.repo url=http://pkg.jenkins-ci.org/redhat/jenkins.repo owner=root group=root mode=0644
+
+- name: Add jenkins repo key
+  command: rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+
+- name: Install jenkins
+  yum: name=jenkins state=present
+
+- name: Fix the Setup wizard and security question
+  lineinfile:
+    dest: /etc/sysconfig/jenkins
+    regexp: '^JENKINS_JAVA_OPTIONS'
+    line: 'JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"'
+    state: present

@@ -1,0 +1,10 @@
+# Set the ipaddress/credentials as required to SSH and run Ansbile in the VM instance
+[temenos-jenkins]
+52.175.216.210
+
+[temenos-jenkins:vars]
+ansible_ssh_user=shobin
+ansible_ssh_private_key_file=/Users/shobin/.ssh/id_rsa
+
+[temenos-secrets:children]
+temenos-jenkins

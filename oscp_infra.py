@@ -110,7 +110,7 @@ def create():
       console_lb = create_load_balancer(rg, service, 'console', 443, 'Tcp', None, console_rules)
       console_be_id = console_lb['lb_info'].backend_address_pools[0].id
       console_ip = console_lb['public_ip'].ip_address
-      add_dns('mp_core', console_ip, service)
+      add_dns('mp_dev_core', console_ip, service)
 
 
       apps_rules = []
@@ -120,7 +120,7 @@ def create():
       apps_lb = create_load_balancer(rg, service, 'apps', 443, 'Tcp', None, apps_rules)
       apps_be_id = apps_lb['lb_info'].backend_address_pools[0].id
       apps_ip = apps_lb['public_ip'].ip_address
-      add_dns('mp_core', apps_ip, '*.apps.cluster1')
+      add_dns('mp_dev_core', apps_ip, '*.apps.cluster1')
 
 
       gitlab_rules = []
@@ -129,14 +129,16 @@ def create():
       gitlab_lb = create_load_balancer(rg, service, 'gitlab', 8081, 'Http', '/users/sign_in', gitlab_rules)
       gitlab_be_id = gitlab_lb['lb_info'].backend_address_pools[0].id
       gitlab_ip = gitlab_lb['public_ip'].ip_address
-      add_dns('mp_core', gitlab_ip, 'gitlab')
+      add_dns('mp_dev_core', gitlab_ip, 'gitlab')
 
-      create_vm(rg,service, sa, subnet, 'gitlab', config.get(service,'gitlab_count'), gitlab_be_id)
-      create_vm(rg,service, sa, subnet, 'formation', config.get(service,'formation_count'))
-      create_vm(rg,service, sa, subnet, 'storage', config.get(service,'storage_count'))
-      create_vm(rg,service, sa, subnet, 'master', config.get(service,'master_count'), console_be_id)
-      create_vm(rg,service, sa, subnet, 'node_worker', config.get(service,'node_worker_count'), )
-      create_vm(rg,service, sa, subnet, 'node_infra', config.get(service,'node_infra_count'), apps_be_id)
+      size='Standard_D1_v2'
+
+      create_vm(rg,service, sa, subnet, 'gitlab', size, config.get(service,'gitlab_count'), gitlab_be_id)
+      create_vm(rg,service, sa, subnet, 'formation', size, config.get(service,'formation_count'))
+      create_vm(rg,service, sa, subnet, 'storage', size, config.get(service,'storage_count'))
+      create_vm(rg,service, sa, subnet, 'master', size, config.get(service,'master_count'), console_be_id)
+      create_vm(rg,service, sa, subnet, 'node_worker', size, config.get(service,'node_worker_count'), )
+      create_vm(rg,service, sa, subnet, 'node_infra', size, config.get(service,'node_infra_count'), apps_be_id)
 
 
       print("Done")
@@ -148,7 +150,7 @@ def create():
 #
 ######################################################
 
-def create_vm(rg, service, sa, subnet, vmtype, count, be_id=None):
+def create_vm(rg, service, sa, subnet, vmtype, vm_size, count, be_id=None):
   """Create a VM and associated coponents
   """
 
@@ -166,7 +168,7 @@ def create_vm(rg, service, sa, subnet, vmtype, count, be_id=None):
     print("Creating NIC")
     nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
 
-    vm_parameters = create_vm_parameters(nic.id, sa, vmname, 'Standard_D1_v2', service, availability_set_info.id)
+    vm_parameters = create_vm_parameters(nic.id, sa, vmname, vm_size, service, availability_set_info.id)
     async_vm_creation = compute_client.virtual_machines.create_or_update(
       rg, vmname, vm_parameters)
     async_vm_creation.wait()
@@ -450,7 +452,7 @@ def construct_probe_id(subscription_id, rg, lbname, probe_name):
               subscription_id, rg, lbname, probe_name
           )
 
-def add_dns(resource_group, ip, rs, domain='temenos.cloud'):
+def add_dns(resource_group, ip, rs, domain='dev.temenos.cloud'):
   record_set = dns_client.record_sets.create_or_update(
     resource_group,
     domain,
