@@ -1,6 +1,6 @@
 ---
 - name: Set up LV
-  lvol: vg=vg_oscp lv=gitlab size=100G
+  lvol: vg=vg_oscp lv=gitlab size=95G
 
 - name: Format attached disk
   filesystem: fstype=xfs dev=/dev/mapper/vg_oscp-gitlab
