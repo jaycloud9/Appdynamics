@@ -15,12 +15,14 @@ if [[ $1 != "" ]]; then
       user="mpadmin"
       inventory="inventory/azure_rm.py"
     fi
-    if [[ $1 == "--force" ]]; then
+    if [[ $3 == "--force" ]]; then
       echo "Forcing remove of servers with out attempting to unsubscribe"
       echo "Are you sure you wish to continue? Type 'yes' to continue"
       read ans
       if [ $ans == 'yes' ]; then
-        python oscp_infra.py destroy cluster1
+        service=$1
+        env=$2
+        python oscp_infra.py destroy $provider $service $env
       fi
     else
       echo "Removing subscriptions from ALL HOSTS"
@@ -30,7 +32,9 @@ if [[ $1 != "" ]]; then
         echo "Success"
         echo "Stopping Instances prior to termination"
         ansible -i $inventory all -u $user --private-key=keys/key.pem -m shell -a "shutdown -h now"
-        python oscp_infra.py destroy cluster1
+        service=$1
+        env=$2
+        python oscp_infra.py destroy $provider $service $env
       else
         echo "Failed to unsubscribe all hosts or they are already unsubscribed."
         echo "Ensure all systems unsubscribed and then add the --force option"
