@@ -9,6 +9,17 @@ provider:
       - server_size: Standard_D1_v2
 services:
  -
+   name: t24dev
+   stack: t24
+   owner: marketplace
+   region: ukwest
+   cidr: 10.10.0.0/16
+   dns_servers: 8.8.8.8,4.4.4.4
+   subnet: 10.10.1.0/24
+   servers:
+    - name: t24
+      count: 1
+ -
    name: temenosdevcore 
    stack: core
    owner: marketplace
