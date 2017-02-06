@@ -8,7 +8,7 @@ provider:
           tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
       - images:
         - base_os_vhd: https://mpcoredisks532.blob.core.windows.net/system/Microsoft.Compute/Images/vhds/baseRHEL73-osDisk.b1d65628-b713-45d3-b467-5b576f0c697d.vhd
-environment:
+environments:
  -
    service: cluster1
    name: marketplace
@@ -23,16 +23,18 @@ environment:
    servers:
     - name: gitlab
       count: 1
+      lb: true
     - name: storage
       count: 1
     - name: formation
       count: 1
     - name: master
       count: 1
+      lb: true
     - name: node_infra
       count: 1
+      lb: true
     - name: node_worker
       count: 1
 global:
  user: mpadmin
- user_password: HS7fdysnbjshbd!ndkF

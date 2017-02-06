@@ -14,20 +14,8 @@ import sys
 #
 ######################################################
 
+
 def main():
-  subscription_id = config['provider'][0]['azure'][0]['config'][0]['credentials']['subscription_id']
-  credentials = ServicePrincipalCredentials(
-      client_id = config['provider'][0]['azure'][0]['config'][0]['credentials']['client_id'],
-      secret = config['provider'][0]['azure'][0]['config'][0]['credentials']['secret'],
-      tenant = config['provider'][0]['azure'][0]['config'][0]['credentials']['tenant']
-  )
-
-  resource_client = ResourceManagementClient(credentials, subscription_id)
-  compute_client = ComputeManagementClient(credentials, subscription_id)
-  storage_client = StorageManagementClient(credentials, subscription_id)
-  network_client = NetworkManagementClient(credentials, subscription_id)
-  dns_client = DnsManagementClient(credentials, subscription_id)
-
   #print('\nList VMs in subscription')
   #for vm in compute_client.virtual_machines.list_all():
   #  print("\tVM: {}".format(vm.name))
@@ -57,7 +45,7 @@ def main():
 
 def destroy(service):
   print("Destroying %s" % service)
-  rg = service + '-' + config['environment'][0]['name'] + '-' + config['environment'][0]['stack']
+  rg = service + '-' + config['environments'][0]['name'] + '-' + config['environments'][0]['stack']
   delete_async_operation = resource_client.resource_groups.delete(rg)
   delete_async_operation.wait()
   print("Deleted Resource group {}".format(rg))
@@ -94,6 +82,8 @@ def create():
     )
     storage_async_operation.wait()
 
+    be_ids = dict()
+
     print("Creating Network")
     subnet = create_network(env['service'], rg)
 
@@ -102,7 +92,7 @@ def create():
     console_rules.append({'name': 'ssl', 'protocol':'Tcp', 'frontend_port': '443', 'backend_port': '443'})
 
     console_lb = create_load_balancer(rg, env['service'], 'console', 443, 'Tcp', None, console_rules)
-    console_be_id = console_lb['lb_info'].backend_address_pools[0].id
+    be_ids['master'] = console_lb['lb_info'].backend_address_pools[0].id
     console_ip = console_lb['public_ip'].ip_address
     add_dns('mp_dev_core', console_ip, env['service'])
 
@@ -112,7 +102,7 @@ def create():
     apps_rules.append({'name': 'router-http', 'protocol':'Tcp', 'frontend_port': '80', 'backend_port': '80'})
 
     apps_lb = create_load_balancer(rg, env['service'], 'apps', 443, 'Tcp', None, apps_rules)
-    apps_be_id = apps_lb['lb_info'].backend_address_pools[0].id
+    be_ids['node_infra'] = apps_lb['lb_info'].backend_address_pools[0].id
     apps_ip = apps_lb['public_ip'].ip_address
     add_dns('mp_dev_core', apps_ip, '*.apps.cluster1')
 
@@ -121,19 +111,18 @@ def create():
     gitlab_rules.append({'name': 'web', 'protocol':'Tcp', 'frontend_port': '80', 'backend_port': '8081'})
 
     gitlab_lb = create_load_balancer(rg, env['service'], 'gitlab', 8081, 'Http', '/users/sign_in', gitlab_rules)
-    gitlab_be_id = gitlab_lb['lb_info'].backend_address_pools[0].id
+    be_ids['gitlab'] = gitlab_lb['lb_info'].backend_address_pools[0].id
     gitlab_ip = gitlab_lb['public_ip'].ip_address
     add_dns('mp_dev_core', gitlab_ip, 'gitlab')
 
     size='Standard_D1_v2'
 
-    create_vm(rg,env['service'], sa, subnet, 'gitlab', size, env['gitlab_count'], gitlab_be_id)
-    create_vm(rg,env['service'], sa, subnet, 'formation', size, env['formation_count'])
-    create_vm(rg,env['service'], sa, subnet, 'storage', size, env['storage_count'])
-    create_vm(rg,env['service'], sa, subnet, 'master', size, env['master_count'], console_be_id)
-    create_vm(rg,env['service'], sa, subnet, 'node_worker', size, env['node_worker_count'], )
-    create_vm(rg,env['service'], sa, subnet, 'node_infra', size, env['node_infra_count'], apps_be_id)
 
+    for server in env['servers']:
+      if 'lb' in server:
+        create_vm(rg,env['service'], sa, subnet, server['name'], size, server['count'], be_ids[server['name']])
+      else:
+        create_vm(rg,env['service'], sa, subnet, server['name'], size, server['count'])
 
     print("Done")
 
@@ -152,7 +141,7 @@ def create_vm(rg, service, sa, subnet, vmtype, vm_size, count, be_id=None):
   availability_set_info = compute_client.availability_sets.create_or_update(
     rg,
     rg + '-' + vmtype + '-as',
-    {'location': config['environment'][0]['region']}
+    {'location': config['environments'][0]['region']}
   )
 
   i = 1
@@ -171,7 +160,7 @@ def create_vm(rg, service, sa, subnet, vmtype, vm_size, count, be_id=None):
       rg,
       vmname,
       {
-        'location': config['environment'][0]['region'],
+        'location': config['environments'][0]['region'],
         'storage_profile': {
           'data_disks': [{
             'name': vmname + 'datadisk1.vhd',
@@ -192,11 +181,11 @@ def create_vm(rg, service, sa, subnet, vmtype, vm_size, count, be_id=None):
       rg,
       vmname,
       {
-        'location': config['environment'][0]['region'],
+        'location': config['environments'][0]['region'],
         'tags': {
-          'Environment': config['environment'][0]['environment'],
-          'Stack': config['environment'][0]['stack'],
-          'Owner': config['environment'][0]['owner'],
+          'Environment': config['environments'][0]['environment'],
+          'Stack': config['environments'][0]['stack'],
+          'Owner': config['environments'][0]['owner'],
           'Type': vmtype
         }
       }
@@ -215,9 +204,9 @@ def create_network(service, resource_group):
     resource_group,
     resource_group + '-vnet',
     {
-      'location': config.get(service,'region'),
+      'location': config['environments'][0]['region'],
       'address_space': {
-        'address_prefixes': [config.get(service,'cidr')]
+        'address_prefixes': [config['environments'][0]['cidr']]
       }
     }
   )
@@ -229,7 +218,7 @@ def create_network(service, resource_group):
     resource_group,
     resource_group + '-vnet',
     resource_group + '-vnet1',
-    {'address_prefix': config.get(service, 'subnet')}
+    {'address_prefix': config['environments'][0]['subnet']}
   )
   subnet_info = async_subnet_creation.result()
   return subnet_info
@@ -244,7 +233,7 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info, be_
     resource_group + '-' + vmname + '-ip',
     {
       'public_ip_allocation_method': 'Dynamic',
-      'location': config.get(service,'region'),
+      'location': config['environments'][0]['region'],
       'public_ip_address_version': 'IPv4'
     }
   )
@@ -253,7 +242,7 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info, be_
   # Create NIC
   print('Create NIC')
   params = {
-      'location': config.get(service,'region'),
+      'location': config['environments'][0]['region'],
       'ip_configurations': [{
         'name': vmname + '-nic',
         'subnet': {
@@ -279,10 +268,10 @@ def create_vm_parameters(nic_id, sa,  vmname, vmsize, service, as_id):
   """Create the VM parameters structure.
   """
   return {
-    'location': config.get(service,'region'),
+    'location': config['environments'][0]['region'],
     'os_profile': {
       'computer_name': vmname,
-      'admin_username': config.get(service,'user'),
+      'admin_username': config['global']['user'],
       'linux_configuration': {
         'ssh': {
           'public_keys': [{
@@ -327,7 +316,7 @@ def create_load_balancer(rg, service, purpose, hp_port, hp_proto, hp_path, lb_ru
   # Create PublicIP
   print('Create Public IP')
   public_ip_parameters = {
-    'location': config.get(service,'region'),
+    'location': config['environments'][0]['region'],
     'public_ip_allocation_method': 'static',
     'idle_timeout_in_minutes': 4
   }
@@ -395,7 +384,7 @@ def create_load_balancer(rg, service, purpose, hp_port, hp_proto, hp_path, lb_ru
     rg,
     lbname,
     {
-      'location': config.get(service,'region'),
+      'location': config['environments'][0]['region'],
       'frontend_ip_configurations': frontend_ip_configurations,
       'backend_address_pools': backend_address_pools,
       'probes': probes,
@@ -480,9 +469,21 @@ def get_config(cfg_file):
   config_yaml = yaml.load(stream)
   return config_yaml
 
-
 #Initialise Config:
 config = get_config('config.yml')
+
+subscription_id = config['provider'][0]['azure'][0]['config'][0]['credentials']['subscription_id']
+credentials = ServicePrincipalCredentials(
+    client_id = config['provider'][0]['azure'][0]['config'][0]['credentials']['client_id'],
+    secret = config['provider'][0]['azure'][0]['config'][0]['credentials']['secret'],
+    tenant = config['provider'][0]['azure'][0]['config'][0]['credentials']['tenant']
+)
+
+resource_client = ResourceManagementClient(credentials, subscription_id)
+compute_client = ComputeManagementClient(credentials, subscription_id)
+storage_client = StorageManagementClient(credentials, subscription_id)
+network_client = NetworkManagementClient(credentials, subscription_id)
+dns_client = DnsManagementClient(credentials, subscription_id)
 
 
 if __name__ == "__main__":
