@@ -1,10 +1,25 @@
-# Set the ipaddress/credentials as required to SSH and run Ansbile in the VM instance
 [temenos-jenkins]
-52.175.216.210
+51.141.7.30
+
+[temenos-gitlab]
+51.140.231.208
 
 [temenos-jenkins:vars]
-ansible_ssh_user=shobin
-ansible_ssh_private_key_file=/Users/shobin/.ssh/id_rsa
+ansible_ssh_user=mpadmin
+ansible_ssh_private_key_file=./keys/key.pem
+
+[temenos-gitlab:vars]
+ansible_ssh_user=mpadmin
+ansible_ssh_private_key_file=./keys/key.pem
+gitlab_external_url= "http://gitlab.temenos.cloud/"
+gitlab_redirect_http_to_https= 'true'
+gitlab_nginx_listen_https= 'true'
+gitlab_nginx_listen_port= 443
+gitlab_nginx_listen_addresses= "*"
+gitlab_unicorn_port= 8081
+gitlab_create_self_signed_cert= true
+gitlab_self_signed_cert_subj= "/C=GB/ST=London/L=Hemel Hempstead/O=TemenosMP/CN=gitlab"
 
 [temenos-secrets:children]
 temenos-jenkins
+temenos-gitlab

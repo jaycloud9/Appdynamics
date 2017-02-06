@@ -19,6 +19,9 @@ nginx['redirect_http_to_https'] = {{ gitlab_redirect_http_to_https }}
 nginx['ssl_certificate'] = "{{ gitlab_ssl_certificate }}"
 nginx['ssl_certificate_key'] = "{{ gitlab_ssl_certificate_key }}"
 
+unicorn['port'] = "{{ gitlab_unicorn_port }}"
+gitlab_git_http_server['auth_backend'] = "http://localhost:{{ gitlab_unicorn_port }}"
+
 # The directory where Git repositories will be stored.
 git_data_dir "{{ gitlab_git_data_dir }}"
 
