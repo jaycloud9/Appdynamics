@@ -7,12 +7,25 @@ from azure.mgmt.dns import DnsManagementClient
 
 import yaml
 import sys
+import time
 
 ######################################################
 #
-#     Main Code
+#     Helper methods
 #
 ######################################################
+
+def timeit(method):
+  def timed(*args, **kw):
+    ts = time.time()
+    result = method(*args, **kw)
+    te = time.time()
+
+    print '%r (%r, %r) %2.2f sec' % \
+      (method.__name__, args, kw, te-ts)
+    return result
+
+  return timed
 
 
 def get_env(service):
@@ -20,6 +33,13 @@ def get_env(service):
     if srvc['name'] == service:
       srvc['server_size'] = config['provider'][0]['azure'][0]['config'][1]['server_size']
       return srvc
+
+
+######################################################
+#
+#     Main Code
+#
+######################################################
 
 
 def main():
@@ -90,19 +110,9 @@ def create(provider, service, environment):
     }
   ).name
   print("Reosource Group %s created" % rg)
-  print('Create a storage account')
-  sa = service['name'] + 'sa'
-  storage_async_operation = storage_client.storage_accounts.create(
-    rg,
-    sa,
-    {
-      'sku': {'name': 'standard_lrs'},
-      'kind': 'storage',
-      'location': service['region']
-    }
-  )
-  storage_async_operation.wait()
 
+  sa = create_storage(rg,service)
+	
   be_ids = dict()
 
   print("Creating Network")
@@ -151,6 +161,23 @@ def create(provider, service, environment):
 #     Functions
 #
 ######################################################
+@timeit
+def create_storage(rg,service):
+  print('Create a storage account')
+  sa = service['name'] + 'sa'
+  storage_async_operation = storage_client.storage_accounts.create(
+    rg,
+    sa,
+    {
+      'sku': {'name': 'standard_lrs'},
+      'kind': 'storage',
+      'location': service['region']
+    }
+  )
+  storage_async_operation.wait()
+
+  return sa
+
 
 def create_vm(rg, service, environment, sa, subnet, vmtype, vm_size, count, be_id=None):
   """Create a VM and associated coponents
@@ -487,6 +514,7 @@ def get_config(cfg_file):
   stream = file(cfg_file, 'r')
   config_yaml = yaml.load(stream)
   return config_yaml
+
 
 #Initialise Config:
 config = get_config('config.yml')
