@@ -6,20 +6,51 @@ provider:
           client_id: 03ead528-650b-4c11-8abc-624aa2569c4a
           secret: FSgtsqf8TuV6Sb2mrdVuTDozc43HYY9ltksCw/ytbmk=
           tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
-      - images:
-        - base_os_vhd: https://mpcoredisks532.blob.core.windows.net/system/Microsoft.Compute/Images/vhds/baseRHEL73-osDisk.b1d65628-b713-45d3-b467-5b576f0c697d.vhd
-environments:
+      - server_size: Standard_D1_v2
+services:
  -
-   service: cluster1
-   name: marketplace
-   environment: dev
+   name: cluster1
    stack: oscp
-   owner: Astillion
+   owner: marketplace
    region: ukwest
-
    cidr: 10.10.0.0/16
    dns_servers: 8.8.8.8,4.4.4.4
    subnet: 10.10.1.0/24
+   load_balancers:
+    - name: gitlab
+      be_servers: gitlab
+      health_port: 8081
+      health_protocol: 'Http'
+      health_path: '/users/sign_in'
+      rules:
+       - name: web
+         protocol: 'Tcp'
+         frontend_port: 80
+         backend_port: 8081
+    - name: console
+      domain: cluster1
+      be_servers: master
+      health_port: 443
+      health_protocol: 'Tcp'
+      rules:
+       - name: ssl
+         protocol: 'Tcp'
+         frontend_port: 443
+         backend_port: 443
+    - name: apps
+      domain: '*.apps.cluster1'
+      be_servers: node_infra
+      health_port: 443
+      health_protocol: 'Tcp'
+      rules:
+       - name: router-http
+         protocol: 'Tcp'
+         frontend_port: 80
+         backend_port: 80
+       - name: router-ssl
+         protocol: 'Tcp'
+         frontend_port: 443
+         backend_port: 443
    servers:
     - name: gitlab
       count: 1
@@ -38,3 +69,4 @@ environments:
       count: 1
 global:
  user: mpadmin
+
