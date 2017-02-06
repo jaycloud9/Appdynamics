@@ -9,6 +9,21 @@ provider:
       - server_size: Standard_D1_v2
 services:
  -
+   name: temenosdevcore 
+   stack: core
+   owner: marketplace
+   region: ukwest
+   cidr: 10.10.0.0/16
+   dns_servers: 8.8.8.8,4.4.4.4
+   subnet: 10.10.1.0/24
+   servers:
+    - name: gitlab
+      count: 1
+    - name: yum
+      count: 1
+    - name: jenkins
+      count: 1
+ -
    name: cluster1
    stack: oscp
    owner: marketplace
