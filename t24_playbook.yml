@@ -1,3 +1,4 @@
-- hosts: Type_t24dev
-		roles:
-			- t24 
+- hosts: Type_t24
+  tasks:
+    - name: ping
+      ping:
