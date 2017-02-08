@@ -19,6 +19,7 @@ services:
    servers:
     - name: t24
       count: 1
+      dns: t24
  -
    name: temenosdevcore 
    stack: core
