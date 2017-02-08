@@ -111,7 +111,7 @@ def create(provider, service, environment):
   ).name
   print("Reosource Group %s created" % rg)
 
-  sa = create_storage(rg,service)
+  sa = create_storage(rg,service, environment)
 	
   be_ids = dict()
 
@@ -162,9 +162,9 @@ def create(provider, service, environment):
 #
 ######################################################
 @timeit
-def create_storage(rg,service):
+def create_storage(rg,service, environment):
   print('Create a storage account')
-  sa = service['name'] + 'sa'
+  sa = service['name'] + environment + 'sa'
   storage_async_operation = storage_client.storage_accounts.create(
     rg,
     sa,
