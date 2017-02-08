@@ -18,8 +18,9 @@ if [[ $1 != "" ]]; then
       user=mpadmin
       inventory="inventory/azure_rm.py"
     fi
+    playbook=$3
     echo "Running configuration"
-    ansible-playbook -i $inventory playbook.yml -u $user --private-key=keys/key.pem --extra-vars "platform=$provider"
+    ansible-playbook -i $inventory $playbook  -u $user --private-key=keys/key.pem --extra-vars "platform=$provider"
   else
     echo "Please specify a valid provider: aws | azure"
     exit 1
