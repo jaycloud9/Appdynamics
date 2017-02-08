@@ -27,3 +27,5 @@ i.e.
 ./destroy.sh azure cluster1
 ```
 
+#FYI
+This repo is now built upon every commit...
