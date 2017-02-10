@@ -150,7 +150,7 @@ def create(provider, service, environment):
   for server in service['servers']:
 
     if 'lb' in server:
-      vms = create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'], be_ids[server['name']])
+      vms = create_vm(rg,service, environment, sa, subnet, server, be_ids[server['name']])
       print("VMs {}".format(vms))
       if 'dns' in server:
         for vm in vms:
@@ -158,7 +158,7 @@ def create(provider, service, environment):
           result = add_dns('mp_dev_core', vm['public_ip'] , server['dns'])
           print("Created Domain: {}".format(result))
     else:
-      vms = create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'])
+      vms = create_vm(rg,service, environment, sa, subnet, server)
       if 'dns' in server:
         for vm in vms:
           print("NB: the DNS option run against multiple machines overrides")
@@ -198,10 +198,12 @@ def create_storage(rg,service, environment):
   return sa
 
 
-def create_vm(rg, service, environment, sa, subnet, vmtype, vm_size, count, be_id=None):
+def create_vm(rg, service, environment, sa, subnet, server, be_id=None):
   """Create a VM and associated coponents
   """
-
+  vmtype = server['name']
+  count = server['count']
+  vm_size = service['server_size']
   print('Create availability set')
   availability_set_info = compute_client.availability_sets.create_or_update(
     rg,
@@ -216,7 +218,7 @@ def create_vm(rg, service, environment, sa, subnet, vmtype, vm_size, count, be_i
     vmname = str(vmtype + str(i)).translate(None, '` ~!@#$%^&*()=+_[]{}\|;:\'",<>/?.')
     print("Creating %s of %s: %s VMs" % (i, count, vmtype))
     print("Creating NIC")
-    details = create_nic(network_client, rg, service, vmname, subnet, be_id)
+    details = create_nic(network_client, rg, service, vmname, server, environment, subnet, be_id)
     nic = details['nic']
     print("Generating VM Params")
     vm_parameters = create_vm_parameters(nic.id, sa, vmname, service, availability_set_info.id)
@@ -300,7 +302,7 @@ def create_network(service, resource_group):
   subnet_info = async_subnet_creation.result()
   return subnet_info
 
-def create_nic(network_client, resource_group, service, vmname, subnet_info, be_id=None):
+def create_nic(network_client, resource_group, service, vmname, server, environment, subnet_info, be_id=None):
   """Create a Network Interface for a VM.
   """
 
@@ -333,6 +335,11 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info, be_
         }
       }]
     }
+
+  if 'service_port' in server:
+    nsg = add_nsg(resource_group, server, environment, service) 
+    params['network_security_group'] = nsg
+
   if be_id:
     print("Inserting LB param")
     params['ip_configurations'][0]['load_balancer_backend_address_pools'] = [{'id': be_id}]
@@ -554,6 +561,34 @@ def get_config(cfg_file):
   config_yaml = yaml.load(stream)
   return config_yaml
 
+
+def add_nsg(rg, server, environment, service):
+  nsg_name = rg + server['name'] + environment
+  rules = {
+    "location": service['region'],
+    "security_rules": [
+      {
+        "description": nsg_name + "-" + str(server['service_port']),
+        "protocol": "Tcp",
+        "source_port_range": "*",
+        "source_address_prefix": "*",
+        "destination_address_prefix": "*",
+        "destination_port_range": str(server['service_port']),
+        "access": "Allow",
+        "priority": 100,
+        "direction":"Inbound",
+        "name": nsg_name + "-" + str(server['service_port']) + "nsg"
+      }
+    ]
+  }
+  async_nsg_operation = network_client.network_security_groups.create_or_update(rg, nsg_name, rules)
+  print("Creating Network Security Group")
+  async_nsg_operation.wait()
+
+  nsg = async_nsg_operation.result()
+
+
+  return nsg
 
 #Initialise Config:
 config = get_config('config.yml')

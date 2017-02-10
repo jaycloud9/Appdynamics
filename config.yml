@@ -20,6 +20,7 @@ services:
     - name: t24
       count: 1
       dns: t24
+      service_port: 8080
  -
    name: temenosdevcore 
    stack: core
