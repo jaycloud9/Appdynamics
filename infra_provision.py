@@ -144,14 +144,27 @@ def create(provider, service, environment):
       if 'domain' in lb:
         record = lb['domain']
 
-      add_dns('mp_dev_core', public_ip, record)
+      result = add_dns('mp_dev_core', public_ip, record)
+      print("Created Domain: {}".format(result))
 
   for server in service['servers']:
 
     if 'lb' in server:
-      create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'], be_ids[server['name']])
+      vms = create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'], be_ids[server['name']])
+      print("VMs {}".format(vms))
+      if 'dns' in server:
+        for vm in vms:
+          print("NB: the DNS option run against multiple machines overrides")
+          result = add_dns('mp_dev_core', vm['public_ip'] , server['dns'])
+          print("Created Domain: {}".format(result))
     else:
-      create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'])
+      vms = create_vm(rg,service, environment, sa, subnet, server['name'], service['server_size'], server['count'])
+      if 'dns' in server:
+        for vm in vms:
+          print("NB: the DNS option run against multiple machines overrides")
+          result = add_dns('mp_dev_core', vm['public_ip'] , server['dns'])
+          print("Created Domain: {}".format(result))
+
 
   print("Done")
 
@@ -165,6 +178,8 @@ def create(provider, service, environment):
 def create_storage(rg,service, environment):
   print('Create a storage account')
   sa = service['name'] + environment + 'sa'
+  # looking at https://github.com/Azure/azure-sdk-for-python/blob/master/azure-mgmt-storage/azure/mgmt/storage/operations/storage_accounts_operations.py
+  # Suggests I can pass in a dict with long_running_operation_timeout to adjust the azure poller timeout
   storage_async_operation = storage_client.storage_accounts.create(
     rg,
     sa,
@@ -172,9 +187,13 @@ def create_storage(rg,service, environment):
       'sku': {'name': 'standard_lrs'},
       'kind': 'storage',
       'location': service['region']
+#    },
+#    {
+#      'long_running_operation_timeout': 5
     }
   )
   storage_async_operation.wait()
+#  print(storage_async_operation.result())
 
   return sa
 
@@ -190,14 +209,18 @@ def create_vm(rg, service, environment, sa, subnet, vmtype, vm_size, count, be_i
     {'location': service['region']}
   )
 
+  vm_details = list()
+
   i = 1
   while (i <= int(count)):
     vmname = str(vmtype + str(i)).translate(None, '` ~!@#$%^&*()=+_[]{}\|;:\'",<>/?.')
     print("Creating %s of %s: %s VMs" % (i, count, vmtype))
     print("Creating NIC")
-    nic = create_nic(network_client, rg, service, vmname, subnet, be_id)
-
+    details = create_nic(network_client, rg, service, vmname, subnet, be_id)
+    nic = details['nic']
+    print("Generating VM Params")
     vm_parameters = create_vm_parameters(nic.id, sa, vmname, service, availability_set_info.id)
+    print("Creating VM")
     async_vm_creation = compute_client.virtual_machines.create_or_update(
       rg, vmname, vm_parameters)
     async_vm_creation.wait()
@@ -238,7 +261,15 @@ def create_vm(rg, service, environment, sa, subnet, vmtype, vm_size, count, be_i
     )
     async_vm_update.wait()
 
+    #Get Public IP for Host and return
+    public_ip = network_client.public_ip_addresses.get(rg,details['public_ip_name'])
+    vm_details.append({'name': vmname, 'public_ip': public_ip.ip_address})
+    
+
     i = i + 1
+
+  print("VM Details inside create VM {}".format(vm_details))
+  return vm_details
 
 
 def create_network(service, resource_group):
@@ -274,15 +305,18 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info, be_
   """
 
   # Create Pub IP
+  print("Creating Public IP")
+  pub_ip_name=resource_group + '-' + vmname + '-ip'
   async_pubIP_creation = network_client.public_ip_addresses.create_or_update(
     resource_group,
-    resource_group + '-' + vmname + '-ip',
+    pub_ip_name,
     {
       'public_ip_allocation_method': 'Dynamic',
       'location': service['region'],
       'public_ip_address_version': 'IPv4'
     }
   )
+  async_pubIP_creation.wait()
   pub_ip = async_pubIP_creation.result()
 
   # Create NIC
@@ -308,7 +342,10 @@ def create_nic(network_client, resource_group, service, vmname, subnet_info, be_
     resource_group + '-' + vmname + '-nic',
     params
   )
-  return async_nic_creation.result()
+  details = dict()
+  details['public_ip_name'] = pub_ip_name
+  details['nic'] = async_nic_creation.result()
+  return details
 
 def create_vm_parameters(nic_id, sa, vmname, service, as_id):
   """Create the VM parameters structure.
@@ -493,6 +530,8 @@ def add_dns(resource_group, ip, rs, domain='dev.temenos.cloud'):
        ]
       }
     )
+
+  return rs + "." + domain
 
 def print_item(group):
   """Print an Azure object instance."""
