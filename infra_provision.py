@@ -270,7 +270,6 @@ def create_vm(rg, service, environment, sa, subnet, server, be_id=None):
 
     i = i + 1
 
-  print("VM Details inside create VM {}".format(vm_details))
   return vm_details
 
 
@@ -568,6 +567,18 @@ def add_nsg(rg, server, environment, service):
     "location": service['region'],
     "security_rules": [
       {
+        "description": "SSH Access",
+        "protocol": "Tcp",
+        "source_port_range": "*",
+        "source_address_prefix": "*",
+        "destination_address_prefix": "*",
+        "destination_port_range": "22",
+        "access": "Allow",
+        "priority": 100,
+        "direction":"Inbound",
+        "name": nsg_name + "-22-nsg"
+      },
+      {
         "description": nsg_name + "-" + str(server['service_port']),
         "protocol": "Tcp",
         "source_port_range": "*",
@@ -575,9 +586,9 @@ def add_nsg(rg, server, environment, service):
         "destination_address_prefix": "*",
         "destination_port_range": str(server['service_port']),
         "access": "Allow",
-        "priority": 100,
+        "priority": 110,
         "direction":"Inbound",
-        "name": nsg_name + "-" + str(server['service_port']) + "nsg"
+        "name": nsg_name + "-" + str(server['service_port']) + "-nsg"
       }
     ]
   }
