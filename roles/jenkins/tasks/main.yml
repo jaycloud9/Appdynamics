@@ -42,8 +42,24 @@
 
 - name: Install Jenkins Plugins
   command: "java -jar /root/jenkins-cli.jar -s http://localhost:8080/ install-plugin {{ item }}"
-  with_items:
-    - git
-    - ansicolor
+  with_items: "{{ plugins-list }}"
   notify:
     - Restart Jenkins
+
+- name: Download Pip depdency list file
+  copy:
+    content: " {{ pip_dependency_for_azure }}"
+    dest: "/tmp/requirements.txt"
+    mode: 0400
+
+- name: Install pip
+  command: "easy_install pip"
+
+- name: Install Pip dependencies for Ansible and Azure
+  pip:
+   requirements: /tmp/requirments.txt
+
+- name: Add Temenos Azure Credentials
+  copy:
+   content: " {{ azure_temenos_credentials }}"
+   dest: "/var/lib/jenkins/.azure/credentials"
