@@ -43,6 +43,22 @@
 - name: Install Jenkins Plugins
   command: "java -jar /root/jenkins-cli.jar -s http://localhost:8080/ install-plugin {{ item }}"
   with_items: "{{ plugins-list }}"
+
+- name: Copy Global Credentials
+  template:
+    src: credentials-configuration.xml.j2
+    dest: /var/lib/jenkins/credentials-configuration.xml
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+
+- name: Copy Github Credentials
+  template:
+    src: credentials.xml.j2
+    dest: /var/lib/jenkins/credentials.xml
+    owner: jenkins
+    group: jenkins
+    mode: 0644
   notify:
     - Restart Jenkins
 
