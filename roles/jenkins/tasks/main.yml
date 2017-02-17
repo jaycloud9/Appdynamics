@@ -87,8 +87,21 @@
    mode: 0775
    state: directory
   tags: test
+
 - name: Add Temenos Azure Credentials
   copy:
    content: " {{ azure_temenos_credentials }}"
    dest: "/var/lib/jenkins/.azure/credentials"
+  tags: test
+
+- name: Copy T24 Pipeline Job Template
+  template:
+    src: t24_pipeline.xml.j2
+    dest: /tmp/t24_pipeline.xml
+    owner: jenkins
+    mode: 0644
+  tags: test  
+
+- name: Load Pipeline job
+  shell: "java -jar /root/jenkins-cli.jar -s http://localhost:8080 create-job T24_Pipeline < /tmp/t24_pipeline.xml"
   tags: test
