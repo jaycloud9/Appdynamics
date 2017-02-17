@@ -21,9 +21,10 @@ services:
       count: 1
       dns: t24
       service_port: 8080
+ 
  -
-   name: temenosdevcore 
-   stack: core
+   name: temenosbuildstack 
+   stack: build
    owner: marketplace
    region: ukwest
    cidr: 10.10.0.0/16
@@ -32,10 +33,14 @@ services:
    servers:
     - name: gitlab
       count: 1
+      service_port: 443
     - name: yum
       count: 1
+      service_port: 80
     - name: jenkins
       count: 1
+      service_port: 8080
+
  -
    name: cluster1
    stack: oscp

@@ -9,6 +9,15 @@
 - name: Install jenkins
   yum: name=jenkins state=present
 
+- name: Install Ansible and Azure dependecies
+  package: name="{{ item }}" state=installed
+  with_items:
+    - git
+    - python-devel
+    - openssl-devel
+    - python-lxml
+    - python-setuptools  
+
 - name: Fix the Setup wizard and security question
   lineinfile:
     dest: /etc/sysconfig/jenkins
