@@ -17,7 +17,8 @@
     - openssl-devel
     - python-lxml
     - python-setuptools
-    - libffi-devel 
+    - libffi-devel
+    - gcc 
 
 - name: Fix the Setup wizard and security question
   lineinfile:

@@ -40,9 +40,22 @@
     group: jenkins
   when: deploy_temenos_ansible_private_ssh_key is defined
 
+- name: Copy T24 Pipeline Job Template
+  template:
+    src: t24_pipeline.xml.j2
+    dest: /tmp/t24_pipeline.xml
+    owner: jenkins
+    mode: 0644
+  tags: test
+
+- name: Check plugins
+  shell: "java -jar /root/jenkins-cli.jar -s http://localhost:8080 list-plugins | wc -l"
+  register: result  
+
 - name: Install Jenkins Plugins
   command: "java -jar /root/jenkins-cli.jar -s http://localhost:8080/ install-plugin {{ item }}"
   with_items: "{{ plugins_list }}"
+  when: result.stdout == "0"
 
 - name: Copy Global Credentials
   template:
@@ -59,9 +72,7 @@
     owner: jenkins
     group: jenkins
     mode: 0644
-  notify:
-    - Restart Jenkins
-
+  
 - name: Download Pip depdency list file
   copy:
     content: " {{ pip_dependency_for_azure }}"
@@ -92,16 +103,17 @@
   copy:
    content: " {{ azure_temenos_credentials }}"
    dest: "/var/lib/jenkins/.azure/credentials"
+   owner: jenkins
+   group: jenkins
   tags: test
+  notify:
+    - Restart Jenkins
 
-- name: Copy T24 Pipeline Job Template
-  template:
-    src: t24_pipeline.xml.j2
-    dest: /tmp/t24_pipeline.xml
-    owner: jenkins
-    mode: 0644
-  tags: test  
+- name: Force all services to restart "now"
+  meta: flush_handlers
+
+- name: Wait for Jenkins to start
+  wait_for: port=8080 host=localhost delay=45  
 
 - name: Load Pipeline job
   shell: "java -jar /root/jenkins-cli.jar -s http://localhost:8080 create-job T24_Pipeline < /tmp/t24_pipeline.xml"
-  tags: test

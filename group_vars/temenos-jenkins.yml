@@ -126,7 +126,7 @@ pip_dependency_for_azure: |
   pyasn1==0.1.9
   pycrypto==2.6.1
   python-dateutil==2.6.0
-  requests==2.12.1
+  requests==2.11.1
   requests-oauthlib==0.7.0
   six==1.10.0
   wsgiref==0.1.2
