@@ -40,26 +40,80 @@
     group: jenkins
   when: deploy_temenos_ansible_private_ssh_key is defined
 
+- name: Copy T24 Pipeline Job Template
+  template:
+    src: t24_pipeline.xml.j2
+    dest: /tmp/t24_pipeline.xml
+    owner: jenkins
+    mode: 0644
+  tags: test
+
+- name: Check plugins
+  shell: "java -jar /root/jenkins-cli.jar -s http://localhost:8080 list-plugins | wc -l"
+  register: result  
+
 - name: Install Jenkins Plugins
   command: "java -jar /root/jenkins-cli.jar -s http://localhost:8080/ install-plugin {{ item }}"
-  with_items: "{{ plugins-list }}"
-  notify:
-    - Restart Jenkins
+  with_items: "{{ plugins_list }}"
+  when: result.stdout == "0"
 
+- name: Copy Global Credentials
+  template:
+    src: credentials-configuration.xml.j2
+    dest: /var/lib/jenkins/credentials-configuration.xml
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+
+- name: Copy Github Credentials
+  template:
+    src: credentials.xml.j2
+    dest: /var/lib/jenkins/credentials.xml
+    owner: jenkins
+    group: jenkins
+    mode: 0644
+  
 - name: Download Pip depdency list file
   copy:
     content: " {{ pip_dependency_for_azure }}"
     dest: "/tmp/requirements.txt"
     mode: 0400
+  tags: test
 
 - name: Install pip
   command: "easy_install pip"
+  tags: test
+
 
 - name: Install Pip dependencies for Ansible and Azure
   pip:
-   requirements: /tmp/requirments.txt
+   requirements: /tmp/requirements.txt
+  tags: test
+
+- name: Create Azure directory
+  file:
+   path: /var/lib/jenkins/.azure
+   owner: jenkins
+   group: jenkins
+   mode: 0775
+   state: directory
+  tags: test
 
 - name: Add Temenos Azure Credentials
   copy:
    content: " {{ azure_temenos_credentials }}"
    dest: "/var/lib/jenkins/.azure/credentials"
+   owner: jenkins
+   group: jenkins
+  tags: test
+  notify:
+    - Restart Jenkins
+
+- name: Force all services to restart "now"
+  meta: flush_handlers
+
+- name: Wait for Jenkins to start
+  wait_for: port=8080 host=localhost delay=45  
+
+- name: Load Pipeline job
+  shell: "java -jar /root/jenkins-cli.jar -s http://localhost:8080 create-job T24_Pipeline < /tmp/t24_pipeline.xml"

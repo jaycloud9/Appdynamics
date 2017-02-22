@@ -1,7 +1,7 @@
 def pubip
 node {
   stage 'Git Checkout'
-  git branch: 'shobin/jenkins-pipeline', credentialsId: 'c45cd60b-fda6-4137-84a3-530860ca3d5e', url: 'git@github.com:temenostech/Temenos-PaaS-infra.git'
+  git branch: 'master', credentialsId: 'c45cd60b-fda6-4137-84a3-530860ca3d5e', url: 'git@github.com:temenostech/Temenos-PaaS-infra.git'
   stage 'Build Infra'
   sh 'python infra_provision.py create azure t24dev $BUILD_NUMBER'
   stage 'Checkout T24'
