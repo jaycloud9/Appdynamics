@@ -2,9 +2,8 @@
 
 export FLASK_APP = platforminfra
 
-
 setup:
-	pip install -e . 
+	pip install -e .
 
 clean: clean-pyc clean-test
 
@@ -17,8 +16,11 @@ clean-pyc:
 clean-test:
 	@echo "Not implemented yet"
 
-test: 
+test:
 	@echo "Not implemented yet"
 
 run:
 	flask run
+
+run-debug:
+	FLASK_DEBUG=1 flask run
