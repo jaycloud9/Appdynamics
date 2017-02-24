@@ -1,0 +1,24 @@
+.PHONY: test setup clean clean-pyc clean-test run
+
+export FLASK_APP = platforminfra
+
+
+setup:
+	pip install -e . 
+
+clean: clean-pyc clean-test
+
+clean-pyc:
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+
+clean-test:
+	@echo "Not implemented yet"
+
+test: 
+	@echo "Not implemented yet"
+
+run:
+	flask run
