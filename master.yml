@@ -1,0 +1,40 @@
+---
+  - hosts: Type_gitlab
+    sudo: true
+    vars:
+     -  ansible_ssh_user: mpadmin
+     -  ansible_ssh_private_key_file: ./keys/key.pem
+     -  gitlab_external_url: "http://gitlab.temenos.cloud/"
+     -  gitlab_redirect_http_to_https: 'true'
+     -  gitlab_nginx_listen_https: 'true'
+     -  gitlab_nginx_listen_port: 443
+     -  gitlab_nginx_listen_addresses: "*"
+     -  gitlab_unicorn_port: 8081
+     -  gitlab_create_self_signed_cert: true
+     -  gitlab_self_signed_cert_subj: "/C=GB/ST=London/L=Hemel Hempstead/O=TemenosMP/CN=gitlab"
+     -  gitlab_pv_disk: '/dev/sdc'
+     -  gitlab_lv_size: '95G'
+     -  gitlab_root_password: 'mARKETpLACE99'
+    roles:
+      - gitlab
+    vars_files:
+    - "group_vars/temenos-secrets"
+
+  - hosts: Type_jenkins
+    sudo: true
+    roles:
+     - java
+     - jenkins
+    vars_files:
+    - "group_vars/temenos-secrets"
+
+  - hosts: Type_yum
+    sudo: true
+    roles:
+     - yumserver
+    vars:
+     - ansible_ssh_user: mpadmin
+     - ansible_ssh_private_key_file: './keys/key.pem'
+     - yumserver_pv_disk: '/dev/sdc'
+     - yumserver_lv_size: '95G'
+     - yumserver_data_dir: '/temenos-artificats'

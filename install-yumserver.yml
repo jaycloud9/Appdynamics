@@ -1,6 +1,0 @@
----
-- hosts: temenos-yumserver
-  sudo: true
-  user: mpadmin
-  roles:
-   - yumserver

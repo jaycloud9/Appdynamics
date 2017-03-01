@@ -20,7 +20,8 @@ if [[ $1 != "" ]]; then
     fi
     playbook=$3
     echo "Running configuration"
-    ansible-playbook -i $inventory $playbook  -u $user --private-key=keys/key.pem --extra-vars "platform=$provider"
+    export ANSIBLE_HOST_KEY_CHECKING=False
+    ansible-playbook -i $inventory $playbook  -u $user --private-key=keys/key.pem --extra-vars "platform=$provider" --limit $service-$env-build
   else
     echo "Please specify a valid provider: aws | azure"
     exit 1
