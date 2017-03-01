@@ -34,7 +34,7 @@
 - name: Add iptables rule
   iptables:
    chain: INPUT
-   action: append
+   jump: ACCEPT
    source: 10.0.0.0/24
    destination: 80
 

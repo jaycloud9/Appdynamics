@@ -1,7 +1,0 @@
----
-- hosts: temenos-jenkins
-  sudo: true
-  user: mpadmin
-  roles:
-   - java
-   - jenkins

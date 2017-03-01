@@ -1,6 +1,0 @@
----
-- hosts: temenos-gitlab
-  sudo: true
-  user: mpadmin
-  roles:
-   - gitlab

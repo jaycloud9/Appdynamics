@@ -1,4 +1,7 @@
 ---
+- name: Set up VG
+  lvg: vg=vg_oscp pvs={{ gitlab_pv_disk }} pesize=32
+
 - name: Set up LV
   lvol: vg=vg_oscp lv=gitlab size=95G
 
