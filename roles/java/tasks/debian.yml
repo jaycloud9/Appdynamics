@@ -1,4 +1,0 @@
----
-# Ubuntu specific guardrail stuff
-- name: Install openjdk-7-jre
-  apt: name=openjdk-7-jre state=present

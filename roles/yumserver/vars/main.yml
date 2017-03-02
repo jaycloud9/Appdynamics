@@ -1,4 +1,0 @@
----
- yumserver_pv_disk: '/dev/sdc'
- yumserver_lv_size: '95G'
- yumserver_data_dir: '/temenos-artificats'
