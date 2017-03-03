@@ -50,24 +50,22 @@ class FakeData(object):
         """Create a new environment."""
         if 'id' and 'application' in data:
             response = jsonify({
-                'id': data['id'],
-                'application': data['application']
+                'response': 'Success'
             })
             response.status_code = 200
             return response
         else:
             raise InvalidUsage(
                 'No id or application provided for environment',
-                status_code=400
+                status_code=400,
+                payload={'response': 'Fail'}
             )
 
     def environmentsByIdGet(data):
         """Return data about a specific environment."""
         response = jsonify(
             {
-                'id': data['uuid'],
-                'application': 'Retail_Suite',
-                'vm_count': 3
+                'response': 'Success'
             }
         )
         response.status_code = 200
@@ -82,9 +80,7 @@ class FakeData(object):
         if 'application' and 'vm_count' in data:
             response = jsonify(
                 {
-                    'id': data['uuid'],
-                    'application': data['application'],
-                    'vm_count': data['vm_count']
+                    'response': 'Success'
                 }
             )
             response.status_code = 200
@@ -92,15 +88,16 @@ class FakeData(object):
         else:
             raise InvalidUsage(
                 'No application or vm_count provided for environment',
-                status_code=400)
+                status_code=400,
+                payload={'response': 'Fail'}
+                )
 
     def environmentsByIdDelete(data):
         """Delete an Environment."""
         if 'uuid' and 'application' in data:
             response = jsonify(
                 {
-                    'id': data['uuid'],
-                    'application': data['application']
+                    'response': 'Success'
                 }
             )
             response.status_code = 200
@@ -108,22 +105,31 @@ class FakeData(object):
         else:
             raise InvalidUsage(
                 'No id or application provided for environment',
-                status_code=400)
+                status_code=400,
+                payload={'response': 'Fail'}
+                )
 
     def environmentsByIdActionGet(data, action):
         """Carry out a non-state changing action."""
         if action == 'status':
             response = jsonify(
                 {
-                    'uuid': data['uuid'],
-                    'application': 'Retail_Suite',
+                    'response': 'Success',
+                    'status': 'OK',
+                    'application': [
+                        {'name': 'Retail_Suite'}
+                    ],
                     'resources': [
-                        {'loadbalancer': "OK"},
-                        {'network': "OK"},
+                        {'loadbalancer': "Creating"},
+                        {'network': "Created"},
                         {'vm': [
-                            {data['uuid']+'1': 'OK'},
-                            {data['uuid']+'2': 'OK'},
-                            {data['uuid']+'4': 'OK'}
+                            {data['uuid']+'1': 'Creating'},
+                            {data['uuid']+'2': 'Starting'},
+                            {data['uuid']+'3': 'Stopping'},
+                            {data['uuid']+'4': 'Started'},
+                            {data['uuid']+'5': 'Stopped'},
+                            {data['uuid']+'6': 'Destroying'},
+                            {data['uuid']+'7': 'Destroyed'},
                         ]}
                     ]
                 }
@@ -133,16 +139,15 @@ class FakeData(object):
         else:
             raise InvalidUsage(
                 '%s is not a valid action' % action,
-                status_code=400)
+                status_code=400,
+                payload={'response': 'Fail'}
+                )
 
     def environmentsByIdActionPut(data, action):
         """Carry out a state changing action on an environemnt in-place."""
         response = jsonify(
             {
-                'id': data['uuid'],
-                'application': 'Retail_Suite',
-                'vm_count': 3,
-                'action': action + 'ed'
+                'response': 'Success'
             }
         )
         response.status_code = 200
@@ -151,32 +156,12 @@ class FakeData(object):
         elif action == 'stop':
             return response
         elif action == 'rebuild':
-            response = jsonify(
-                {
-                    'id': data['uuid'],
-                    'application': 'Retail_Suite',
-                    'action': action
-                }
-            )
-            response.status_code = 200
             return response
         elif action == 'scale':
-            if 'vm_count' in data:
-                response = jsonify(
-                    {
-                        'id': data['uuid'],
-                        'application': 'Retail_Suite',
-                        'vm_count': data['vm_count'],
-                        'action': action
-                    }
-                )
-                response.status_code = 200
-                return response
-            else:
-                raise InvalidUsage(
-                    'scale action requires a vm_count',
-                    status_code=400)
+            return response
         else:
             raise InvalidUsage(
                 '%s is not a valid action' % action,
-                status_code=400)
+                status_code=400,
+                payload={'response': 'Fail'}
+                )
