@@ -20,7 +20,7 @@ def environments():
     elif request.method == 'POST':
         return FakeData.environmentsPost(request.get_json())
     else:
-        raise InvalidUsage('Not supported', status_code=405)
+        raise InvalidUsage('Not supported', status_code=404)
 
 
 @app.route(
@@ -42,7 +42,7 @@ def environmentsById(uuid):
         req['uuid'] = uuid
         return FakeData.environmentsByIdDelete(req)
     else:
-        raise InvalidUsage('Not supported', status_code=405)
+        raise InvalidUsage('Not supported', status_code=404)
 
 
 @app.route(
@@ -65,4 +65,4 @@ def environmentsByIdAction(uuid, action):
         req['uuid'] = uuid
         return FakeData.environmentsByIdActionPut(req, action)
     else:
-        raise InvalidUsage('Not supported', status_code=405)
+        raise InvalidUsage('Not supported', status_code=404)
