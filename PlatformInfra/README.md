@@ -6,3 +6,6 @@
 
 # Test
 1. make test
+
+# API
+See the Postman file for details on this.
