@@ -31,21 +31,15 @@ def environmentsById(uuid):
     """GET, PUT or DELETE a Specific env."""
     req = dict()
     req['uuid'] = uuid
-    req['id'] = uuid[0:6]
-    req['env_id'] = uuid[6:12]
     if request.method == 'GET':
         return FakeData.environmentsByIdGet(req)
     elif request.method == 'PUT':
         req = request.get_json()
         req['uuid'] = uuid
-        req['id'] = uuid[0:6]
-        req['env_id'] = uuid[6:12]
         return FakeData.environmentsByIdPut(req)
     elif request.method == 'DELETE':
         req = request.get_json()
         req['uuid'] = uuid
-        req['id'] = uuid[0:6]
-        req['env_id'] = uuid[6:12]
         return FakeData.environmentsByIdDelete(req)
     else:
         raise InvalidUsage('Not supported', status_code=405)
@@ -59,20 +53,16 @@ def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
     req = dict()
     req['uuid'] = uuid
-    req['id'] = uuid[0:6]
-    req['env_id'] = uuid[6:12]
     if request.method == 'GET' and action == 'status':
         return FakeData.environmentsByIdActionGet(req, action)
     elif request.method == 'PUT' and (
         action == 'start' or
         action == 'stop' or
-        action == 'restart' or
+        action == 'rebuild' or
         action == 'scale'
     ):
         req = request.get_json()
         req['uuid'] = uuid
-        req['id'] = uuid[0:6]
-        req['env_id'] = uuid[6:12]
         return FakeData.environmentsByIdActionPut(req, action)
     else:
         raise InvalidUsage('Not supported', status_code=405)

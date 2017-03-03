@@ -37,14 +37,12 @@ class FakeData(object):
     def environmentsGet():
         """Provide a list of environments."""
         response = jsonify(
-            {'environments': (
-                {'ghy543': [{'env_id': '73ufd8', 'id': 'ghy543'}]},
-                {'77h89d': [{'env_id': 'skj864', 'id': '77h89d'}]},
-                {'s8sf8s': [
-                    {'env_id': 'shduwop', 'id': 's8sf8s'},
-                    {'env_id': 'dhj835', 'id': 's8sf8s'}
-                ]}
-            )})
+            {'environments': [
+                'ghy543',
+                '77h89d',
+                's8sf8s'
+            ]}
+        )
         response.status_code = 200
         return response
 
@@ -53,8 +51,7 @@ class FakeData(object):
         if 'id' and 'application' in data:
             response = jsonify({
                 'id': data['id'],
-                'application': data['application'],
-                'env_id': '356hsy'
+                'application': data['application']
             })
             response.status_code = 200
             return response
@@ -68,8 +65,7 @@ class FakeData(object):
         """Return data about a specific environment."""
         response = jsonify(
             {
-                'id': data['id'],
-                'env_id': data['env_id'],
+                'id': data['uuid'],
                 'application': 'Retail_Suite',
                 'vm_count': 3
             }
@@ -83,11 +79,10 @@ class FakeData(object):
         Builds a new environment alongside the existing
         with the new configuration.
         """
-        if 'application' and 'env_id' and 'vm_count' in data:
+        if 'application' and 'vm_count' in data:
             response = jsonify(
                 {
-                    'id': data['id'],
-                    'env_id': data['env_id'],
+                    'id': data['uuid'],
                     'application': data['application'],
                     'vm_count': data['vm_count']
                 }
@@ -101,11 +96,10 @@ class FakeData(object):
 
     def environmentsByIdDelete(data):
         """Delete an Environment."""
-        if 'id' and 'application' and 'env_id' in data:
+        if 'uuid' and 'application' in data:
             response = jsonify(
                 {
-                    'id': data['id'],
-                    'env_id': data['env_id'],
+                    'id': data['uuid'],
                     'application': data['application']
                 }
             )
@@ -113,7 +107,7 @@ class FakeData(object):
             return response
         else:
             raise InvalidUsage(
-                'No env_id or application provided for environment',
+                'No id or application provided for environment',
                 status_code=400)
 
     def environmentsByIdActionGet(data, action):
@@ -121,8 +115,7 @@ class FakeData(object):
         if action == 'status':
             response = jsonify(
                 {
-                    'id': data['id'],
-                    'env_id': data['env_id'],
+                    'uuid': data['uuid'],
                     'application': 'Retail_Suite',
                     'resources': [
                         {'loadbalancer': "OK"},
@@ -130,7 +123,6 @@ class FakeData(object):
                         {'vm': [
                             {data['uuid']+'1': 'OK'},
                             {data['uuid']+'2': 'OK'},
-                            {data['uuid']+'3': 'NOK'},
                             {data['uuid']+'4': 'OK'}
                         ]}
                     ]
@@ -147,8 +139,7 @@ class FakeData(object):
         """Carry out a state changing action on an environemnt in-place."""
         response = jsonify(
             {
-                'id': data['id'],
-                'env_id': data['env_id'],
+                'id': data['uuid'],
                 'application': 'Retail_Suite',
                 'vm_count': 3,
                 'action': action + 'ed'
@@ -159,14 +150,21 @@ class FakeData(object):
             return response
         elif action == 'stop':
             return response
-        elif action == 'restart':
+        elif action == 'rebuild':
+            response = jsonify(
+                {
+                    'id': data['uuid'],
+                    'application': 'Retail_Suite',
+                    'action': action
+                }
+            )
+            response.status_code = 200
             return response
         elif action == 'scale':
             if 'vm_count' in data:
                 response = jsonify(
                     {
-                        'id': data['id'],
-                        'env_id': data['env_id'],
+                        'id': data['uuid'],
                         'application': 'Retail_Suite',
                         'vm_count': data['vm_count'],
                         'action': action

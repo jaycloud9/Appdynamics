@@ -41,7 +41,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"id\":\"w7hf6h\", \"application\": \"Retail_Suite\"}"
+					"raw": "{\"id\":\"w7hf6hsd34f\", \"application\": \"Retail_Suite\"}"
 				},
 				"description": "POST"
 			},
@@ -168,9 +168,9 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:5000/api/1.0/environments/<uuid>/restart",
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/rebuild",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/restart",
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/rebuild",
 				"method": "PUT",
 				"header": [
 					{
