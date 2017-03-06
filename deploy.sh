@@ -13,10 +13,10 @@ if [[ $1 != "" ]]; then
       export AWS_ACCESS_KEY_ID='AKIAJBA2IIPAYO3ESTKA'
       export AWS_SECRET_ACCESS_KEY='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'
       user="ec2-user"
-      inventory= "inventory/ec2.py"
+      inventory= "../inventory/ec2.py"
     else
       user=mpadmin
-      inventory="inventory/azure_rm.py"
+      inventory="../inventory/azure_rm.py"
     fi
     playbook=$3
     echo "Running configuration"
