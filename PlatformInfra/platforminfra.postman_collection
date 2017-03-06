@@ -71,26 +71,6 @@
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
 				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76",
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"description": ""
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\", \"vm_count\":4}"
-				},
-				"description": "PUT"
-			},
-			"response": []
-		},
-		{
-			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
-			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76",
 				"method": "DELETE",
 				"header": [
 					{
@@ -181,7 +161,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": "{\n\t\"application\": \"Retail_Suite\",\n\t\"persist_data\": \"False\"\n}"
 				},
 				"description": "PUT"
 			},

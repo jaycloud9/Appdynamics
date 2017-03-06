@@ -65,32 +65,14 @@ class FakeData(object):
         """Return data about a specific environment."""
         response = jsonify(
             {
-                'response': 'Success'
+                'response': 'Success',
+                'id': data['uuid'],
+                'application': 'Retail_suite',
+                'vm_count': 3
             }
         )
         response.status_code = 200
         return response
-
-    def environmentsByIdPut(data):
-        """Update a running environment."""
-        """
-        Builds a new environment alongside the existing
-        with the new configuration.
-        """
-        if 'application' and 'vm_count' in data:
-            response = jsonify(
-                {
-                    'response': 'Success'
-                }
-            )
-            response.status_code = 200
-            return response
-        else:
-            raise InvalidUsage(
-                'No application or vm_count provided for environment',
-                status_code=400,
-                payload={'response': 'Fail'}
-                )
 
     def environmentsByIdDelete(data):
         """Delete an Environment."""
@@ -156,6 +138,28 @@ class FakeData(object):
         elif action == 'stop':
             return response
         elif action == 'rebuild':
+            if 'persist_data' in data:
+                if data['persist_data'] == 'True':
+                    response = jsonify(
+                        {
+                            'response': 'Success',
+                            'persist_data': 'True'
+                        }
+                    )
+                else:
+                    response = jsonify(
+                        {
+                            'response': 'Success',
+                            'persist_data': 'False'
+                        }
+                    )
+            else:
+                response = jsonify(
+                    {
+                        'response': 'Success',
+                        'persist_data': 'True'
+                    }
+                )
             return response
         elif action == 'scale':
             return response
