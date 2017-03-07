@@ -1,0 +1,147 @@
+"""Helpers package for platformInfra."""
+from flask import jsonify
+
+
+class Response(object):
+    """Class to handle responses simply and consistantly."""
+
+    def __init__(self, payload=None):
+        """Constructing the ResponseHandler."""
+        if payload is not None:
+            self.payload = payload
+        else:
+            self.payload = {}
+
+    def httpResponse(self, status_code, msg=None):
+        """Create the response."""
+        self.status_code = status_code
+        if self.status_code is 200:
+            self.response = {'response': 'Success'}
+        else:
+            self.response = {'response': 'Failure'}
+
+        if msg is not None:
+            response_message = {
+                **self.payload,
+                **self.response,
+                **{'message': msg}
+            }
+        else:
+            response_message = {
+                **self.payload,
+                **self.response
+            }
+        rsp = jsonify(response_message)
+        rsp.status_code = self.status_code
+        return rsp
+
+
+class FakeData(object):
+    """Temporary Class to generate fake data on the API for testing."""
+
+    def environmentsGet():
+        """Provide a list of environments."""
+        env_list = {
+            'environments': [
+                'ghy543',
+                '77h89d',
+                's8sf8s'
+            ]
+        }
+        rsp = Response(env_list)
+        return rsp.httpResponse(200)
+
+    def environmentsPost(data):
+        """Create a new environment."""
+        rsp = Response()
+        if 'id' and 'application' in data:
+            return rsp.httpResponse(200)
+        else:
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
+            )
+
+    def environmentsByIdGet(data):
+        """Return data about a specific environment."""
+        rsp = Response(
+            {
+                'response': 'Success',
+                'id': data['uuid'],
+                'application': 'Retail_suite',
+                'vm_count': 3
+            }
+        )
+        return rsp.httpResponse(200)
+
+    def environmentsByIdDelete(data):
+        """Delete an Environment."""
+        rsp = Response()
+        if 'uuid' and 'application' in data:
+            return rsp.httpResponse(200)
+        else:
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
+            )
+
+    def environmentsByIdActionGet(data, action):
+        """Carry out a non-state changing action."""
+        rsp = Response()
+        if action == 'status':
+            rsp.payload = {
+                    'response': 'Success',
+                    'status': 'OK',
+                    'application': [
+                        {'name': 'Retail_Suite'}
+                    ],
+                    'resources': [
+                        {'loadbalancer': "Creating"},
+                        {'network': "Created"},
+                        {'vm': [
+                            {data['uuid']+'1': 'Creating'},
+                            {data['uuid']+'2': 'Starting'},
+                            {data['uuid']+'3': 'Stopping'},
+                            {data['uuid']+'4': 'Started'},
+                            {data['uuid']+'5': 'Stopped'},
+                            {data['uuid']+'6': 'Destroying'},
+                            {data['uuid']+'7': 'Destroyed'},
+                        ]}
+                    ]
+                }
+            return rsp.httpResponse(200)
+        else:
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
+            )
+
+    def environmentsByIdActionPut(data, action):
+        """Carry out a state changing action on an environemnt in-place."""
+        rsp = Response()
+        if action == 'start':
+            return rsp.httpResponse(200)
+        elif action == 'stop':
+            return rsp.httpResponse(200)
+        elif action == 'rebuild':
+            if 'persist_data' in data:
+                if data['persist_data'] == 'True':
+                    rsp.payload = {
+                            'persist_data': 'True'
+                        }
+                else:
+                    rsp.payload = {
+                            'persist_data': 'False'
+                        }
+            else:
+                rsp.payload = {
+                        'persist_data': 'True'
+                    }
+            return rsp.httpResponse(200)
+        elif action == 'scale':
+            return rsp.httpResponse(200)
+        else:
+            return rsp.httpResponse(
+                400,
+                "%s is not a valid action" % action
+            )

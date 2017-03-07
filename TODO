@@ -1,1 +1,0 @@
-Re-try insatll of Openshift with SELinux set to targetd not enforcing to see if it allows for kibana to work properly

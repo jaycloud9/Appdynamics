@@ -1,0 +1,191 @@
+{
+	"variables": [],
+	"info": {
+		"name": "platforminfra",
+		"_postman_id": "34aee833-453a-5e65-5581-67df1f6f0947",
+		"description": "The collection for the platforminfra project",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://localhost:5000/api/1.0/environments",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":\"w7hf6h\"}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":\"w7hf6hsd34f\", \"application\": \"Retail_Suite\"}"
+				},
+				"description": "POST"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<id>",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12g6hddft263",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":\"w7hf6h\", \"application\": \"Retail_Suite\"}"
+				},
+				"description": "GET an Environment"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76",
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"application\": \"Retail_Suite\"}"
+				},
+				"description": "DELETE"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/status",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/status",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"application\": \"Retail_Suite\"}"
+				},
+				"description": "GET"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/stop",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/stop",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"application\": \"Retail_Suite\"}"
+				},
+				"description": "PUT"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/start",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/start",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"application\": \"Retail_Suite\"}"
+				},
+				"description": "PUT"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/rebuild",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/rebuild",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"application\": \"Retail_Suite\",\n\t\"persist_data\": \"False\"\n}"
+				},
+				"description": "PUT"
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:5000/api/1.0/environments/<uuid>/scale",
+			"request": {
+				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/scale",
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"application\": \"Retail_Suite\", \"vm_count\": 4}"
+				},
+				"description": "PUT"
+			},
+			"response": []
+		}
+	]
+}
