@@ -1,34 +1,39 @@
 """Helpers package for platformInfra."""
-from platforminfra import app
 from flask import jsonify
 
 
-class InvalidUsage(Exception):
-    """InvalidUsage Class for consistent responses to messages."""
+class Response(object):
+    """Class to handle responses simply and consistantly."""
 
-    status_code = 400
+    def __init__(self, payload=None):
+        """Constructing the ResponseHandler."""
+        if payload is not None:
+            self.payload = payload
+        else:
+            self.payload = {}
 
-    def __init__(self, message, status_code=None, payload=None):
-        """Constructorfor InvalidUsage class."""
-        Exception.__init__(self)
-        self.message = message
-        if status_code is not None:
-            self.status_code = status_code
-        self.payload = payload
+    def httpResponse(self, status_code, msg=None):
+        """Create the response."""
+        self.status_code = status_code
+        if self.status_code is 200:
+            self.response = {'response': 'Success'}
+        else:
+            self.response = {'response': 'Failure'}
 
-    def to_dict(self):
-        """Conver to Dictionary."""
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
-
-
-@app.errorhandler(InvalidUsage)
-def handle_invalid_usage(error):
-    """Register InvalidUsage Handler with Flask app."""
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
+        if msg is not None:
+            response_message = {
+                **self.payload,
+                **self.response,
+                **{'message': msg}
+            }
+        else:
+            response_message = {
+                **self.payload,
+                **self.response
+            }
+        rsp = jsonify(response_message)
+        rsp.status_code = self.status_code
+        return rsp
 
 
 class FakeData(object):
@@ -36,34 +41,30 @@ class FakeData(object):
 
     def environmentsGet():
         """Provide a list of environments."""
-        response = jsonify(
-            {'environments': [
+        env_list = {
+            'environments': [
                 'ghy543',
                 '77h89d',
                 's8sf8s'
-            ]}
-        )
-        response.status_code = 200
-        return response
+            ]
+        }
+        rsp = Response(env_list)
+        return rsp.httpResponse(200)
 
     def environmentsPost(data):
         """Create a new environment."""
+        rsp = Response()
         if 'id' and 'application' in data:
-            response = jsonify({
-                'response': 'Success'
-            })
-            response.status_code = 200
-            return response
+            return rsp.httpResponse(200)
         else:
-            raise InvalidUsage(
-                'No id or application provided for environment',
-                status_code=400,
-                payload={'response': 'Fail'}
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
             )
 
     def environmentsByIdGet(data):
         """Return data about a specific environment."""
-        response = jsonify(
+        rsp = Response(
             {
                 'response': 'Success',
                 'id': data['uuid'],
@@ -71,31 +72,24 @@ class FakeData(object):
                 'vm_count': 3
             }
         )
-        response.status_code = 200
-        return response
+        return rsp.httpResponse(200)
 
     def environmentsByIdDelete(data):
         """Delete an Environment."""
+        rsp = Response()
         if 'uuid' and 'application' in data:
-            response = jsonify(
-                {
-                    'response': 'Success'
-                }
-            )
-            response.status_code = 200
-            return response
+            return rsp.httpResponse(200)
         else:
-            raise InvalidUsage(
-                'No id or application provided for environment',
-                status_code=400,
-                payload={'response': 'Fail'}
-                )
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
+            )
 
     def environmentsByIdActionGet(data, action):
         """Carry out a non-state changing action."""
+        rsp = Response()
         if action == 'status':
-            response = jsonify(
-                {
+            rsp.payload = {
                     'response': 'Success',
                     'status': 'OK',
                     'application': [
@@ -115,57 +109,39 @@ class FakeData(object):
                         ]}
                     ]
                 }
-            )
-            response.status_code = 200
-            return response
+            return rsp.httpResponse(200)
         else:
-            raise InvalidUsage(
-                '%s is not a valid action' % action,
-                status_code=400,
-                payload={'response': 'Fail'}
-                )
+            return rsp.httpResponse(
+                400,
+                'No id or application provided for environment'
+            )
 
     def environmentsByIdActionPut(data, action):
         """Carry out a state changing action on an environemnt in-place."""
-        response = jsonify(
-            {
-                'response': 'Success'
-            }
-        )
-        response.status_code = 200
+        rsp = Response()
         if action == 'start':
-            return response
+            return rsp.httpResponse(200)
         elif action == 'stop':
-            return response
+            return rsp.httpResponse(200)
         elif action == 'rebuild':
             if 'persist_data' in data:
                 if data['persist_data'] == 'True':
-                    response = jsonify(
-                        {
-                            'response': 'Success',
+                    rsp.payload = {
                             'persist_data': 'True'
                         }
-                    )
                 else:
-                    response = jsonify(
-                        {
-                            'response': 'Success',
+                    rsp.payload = {
                             'persist_data': 'False'
                         }
-                    )
             else:
-                response = jsonify(
-                    {
-                        'response': 'Success',
+                rsp.payload = {
                         'persist_data': 'True'
                     }
-                )
-            return response
+            return rsp.httpResponse(200)
         elif action == 'scale':
-            return response
+            return rsp.httpResponse(200)
         else:
-            raise InvalidUsage(
-                '%s is not a valid action' % action,
-                status_code=400,
-                payload={'response': 'Fail'}
-                )
+            return rsp.httpResponse(
+                400,
+                "%s is not a valid action" % action
+            )

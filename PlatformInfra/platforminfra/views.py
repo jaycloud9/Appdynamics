@@ -1,7 +1,7 @@
 """Views defines the routes for the platformInfra application."""
 
 from platforminfra import app
-from platforminfra.helpers import InvalidUsage, FakeData
+from platforminfra.helpers import Response, FakeData
 from flask import request
 
 root_path = 'api'
@@ -15,12 +15,13 @@ base_path = '/' + root_path + '/' + api_version + '/'
 )
 def environments():
     """Get a list of environments."""
+    rsp = Response()
     if request.method == 'GET':
         return FakeData.environmentsGet()
     elif request.method == 'POST':
         return FakeData.environmentsPost(request.get_json())
     else:
-        raise InvalidUsage('Not supported', status_code=404)
+        return rsp.httpResponse(404, 'Not Found')
 
 
 @app.route(
@@ -29,6 +30,7 @@ def environments():
 )
 def environmentsById(uuid):
     """GET, PUT or DELETE a Specific env."""
+    rsp = Response()
     req = dict()
     req['uuid'] = uuid
     if request.method == 'GET':
@@ -42,7 +44,7 @@ def environmentsById(uuid):
         req['uuid'] = uuid
         return FakeData.environmentsByIdDelete(req)
     else:
-        raise InvalidUsage('Not supported', status_code=404)
+        return rsp.httpResponse(404, 'Not Found')
 
 
 @app.route(
@@ -51,6 +53,7 @@ def environmentsById(uuid):
 )
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
+    rsp = Response()
     req = dict()
     req['uuid'] = uuid
     if request.method == 'GET' and action == 'status':
@@ -65,4 +68,4 @@ def environmentsByIdAction(uuid, action):
         req['uuid'] = uuid
         return FakeData.environmentsByIdActionPut(req, action)
     else:
-        raise InvalidUsage('Not supported', status_code=404)
+        return rsp.httpResponse(404, 'Not Found')
