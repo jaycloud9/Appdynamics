@@ -1,5 +1,0 @@
----
-- hosts: temenos-t24
-  sudo: true
-  roles:
-   - t24
