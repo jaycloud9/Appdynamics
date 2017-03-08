@@ -37,10 +37,6 @@ def environmentsById(uuid):
     req['uuid'] = uuid
     if request.method == 'GET':
         return FakeData.environmentsByIdGet(req)
-    elif request.method == 'PUT':
-        req = request.get_json()
-        req['uuid'] = uuid
-        return FakeData.environmentsByIdPut(req)
     elif request.method == 'DELETE':
         req = request.get_json()
         req['uuid'] = uuid

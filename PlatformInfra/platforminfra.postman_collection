@@ -41,7 +41,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"id\":\"w7hf6hsd34f\", \"application\": \"Retail_Suite\"}"
+					"raw": "{\"id\":\"w7hf6hsd34f\", \"application\": \"Retail_Suite\", \"infrastructureTemplateID\": \"test\"}"
 				},
 				"description": "POST"
 			},
