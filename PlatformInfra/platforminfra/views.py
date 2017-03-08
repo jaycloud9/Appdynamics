@@ -2,11 +2,13 @@
 
 from platforminfra import app
 from platforminfra.helpers import Response, FakeData
+from platforminfra.controller import Controller
 from flask import request
 
 root_path = 'api'
 api_version = '1.0'
 base_path = '/' + root_path + '/' + api_version + '/'
+controller = Controller()
 
 
 @app.route(
@@ -19,7 +21,7 @@ def environments():
     if request.method == 'GET':
         return FakeData.environmentsGet()
     elif request.method == 'POST':
-        return FakeData.environmentsPost(request.get_json())
+        return controller.createEnvironment(request.get_json())
     else:
         return rsp.httpResponse(404, 'Not Found')
 
