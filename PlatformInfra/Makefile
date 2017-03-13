@@ -20,6 +20,9 @@ test:
 	@echo "Not implemented yet"
 
 run:
+	flask run -h 0.0.0.0
+
+run-dev:
 	flask run
 
 run-debug:
