@@ -2,6 +2,7 @@
 
 from platforminfra.templates import Template
 from platforminfra.helpers import Response
+from platforminfra.infrastructure.azure import Azure
 
 
 class Controller(object):
@@ -20,5 +21,10 @@ class Controller(object):
         template = self.templates.loadTemplate(
             config['infrastructureTemplateID']
         )
-        rsp = Response(template)
-        return rsp.httpResponse(200)
+        provider = Azure(template)
+        if 'error' in provider.credentials:
+            rsp = Response(provider.credentials)
+            return rsp.httpResponse(404)
+        else:
+            rsp = Response(provider.resources)
+            return rsp.httpResponse(200)
