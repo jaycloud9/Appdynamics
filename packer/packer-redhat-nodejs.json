@@ -23,12 +23,18 @@
 	}],
 
 	"provisioners": [
+
+		{
+      "type": "file",
+      "source": "Scripts/nodejs.repo",
+      "destination": "/tmp/"
+    },
 		{
 			"type": "shell",
       "inline": [
                   "echo '**** Configuring application'",
+									"sudo cp /tmp/nodejs.repo /etc/yum.repos.d/",
                   "sudo yum update -y",
-									"sudo curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -",
 									"sudo yum install nodejs-7.7.2-2nodesource.el6 -y"
                  ]
       },
