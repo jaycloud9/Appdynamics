@@ -41,6 +41,13 @@
     			 "inventory_file": "../paas-config/hosts",
     			 "role_paths": "../paas-app/"
   		},
+			{
+				"type": "shell",
+				"inline": [
+										"sudo subscription-manager remove --all",
+										"sudo subscription-manager unregister"
+									]
+			},
 
 		{
                          "type": "shell",
@@ -49,5 +56,5 @@
                   }
 
       ]
-	
+
 }

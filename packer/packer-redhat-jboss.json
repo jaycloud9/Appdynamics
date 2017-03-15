@@ -19,36 +19,45 @@
 		"vm_size": "Standard_A2",
 		"os_type": "Linux",
  		"ssh_username": "{{user `ssh_user`}}",
-		"ssh_password": "{{user `ssh_pass`}}"
+		"ssh_password": "{{user `ssh_pass`}}",
+		"azure_tags": {
+      							"image_type": "temenos_jboss"
+    							}
 	}],
 
 	"provisioners": [
 		{
-												"type": "shell",
-                        "scripts": "Scripts/ansible.sh",
-                        "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -S -E sh '{{ .Path }}'"
+			"type": "shell",
+      "scripts": "Scripts/ansible.sh",
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -S -E sh '{{ .Path }}'"
  		},
 		{
-                        "type": "shell",
-                        "inline": [
-                                "echo '**** Configuring application'",
-                                "sudo yum update -y"
-                         ]
-                 },
+      "type": "shell",
+      "inline": [
+                	"echo '**** Updating Packages'",
+                  "sudo yum update -y"
+                ]
+      },
   		{
-   			 	 							"type": "ansible-local",
-    			 							"playbook_file": "../paas-config/t24image.yml",
-    			 							"inventory_file": "../paas-config/hosts",
-					 						  "command": "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook --tags add-sub",
-    			 							"role_paths": "../paas-app/"
+				"type": "ansible-local",
+				"playbook_file": "../../paas-config/t24image.yml",
+    		"inventory_file": "../../paas-config/hosts",
+				"command": "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook --tags jboss6",
+    		"role_paths": "../../paas-app/"
   		},
-
+			{
+				"type": "shell",
+				"inline": [
+										"sudo subscription-manager remove --all",
+										"sudo subscription-manager unregister"
+									]
+			},
 		{
-          							"type": "shell",
-			 									"inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
-          							"skip_clean": "true"
+      "type": "shell",
+			"inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
+      "skip_clean": "true"
     }
 
-      ]
+    ]
 
 }
