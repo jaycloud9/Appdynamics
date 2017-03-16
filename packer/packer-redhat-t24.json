@@ -29,17 +29,17 @@
                         "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -S -E sh '{{ .Path }}'"
  		},
 		{
-                        "type": "shell",
-                        "inline": [
-                                "echo '**** Configuring application'",
-                                "sudo yum update -y"
-                         ]
-                 },
+			"type": "shell",
+      "inline": [
+                  "echo '**** Configuring application'",
+                  "sudo yum update -y"
+                 ]
+      },
   		{
-   			 "type": "ansible-local",
-    			 "playbook_file": "../paas-config/t24image.yml",
-    			 "inventory_file": "../paas-config/hosts",
-    			 "role_paths": "../paas-app/"
+				"type": "ansible-local",
+    		"playbook_file": "../paas-config/t24image.yml",
+    		"inventory_file": "../paas-config/hosts",
+    		"role_paths": "../paas-app/"
   		},
 			{
 				"type": "shell",
@@ -50,11 +50,11 @@
 			},
 
 		{
-                         "type": "shell",
-			 "inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
-                         "skip_clean": "true"
-                  }
+			"type": "shell",
+			"inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
+      "skip_clean": "true"
+    }
 
-      ]
+    ]
 
 }

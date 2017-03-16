@@ -39,15 +39,6 @@
                  ]
       },
   		{
-				"type": "shell",
-				"inline": [
-										"echo '**** Removing Subscription'",
-										"sudo subscription-manager remove --all",
-										"sudo subscription-manager unregister"
-									]
-			},
-
-		{
 			"type": "shell",
 			"inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
 			"skip_clean": "true"
