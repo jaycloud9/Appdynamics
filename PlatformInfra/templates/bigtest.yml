@@ -6,13 +6,13 @@ provider:
           client_id: 03ead528-650b-4c11-8abc-624aa2569c4a
           secret: FSgtsqf8TuV6Sb2mrdVuTDozc43HYY9ltksCw/ytbmk=
           tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
-      - server_size: Standard_D1_v2
+      server_size: Standard_D1_v2
+      region: ukwest
 services:
   tags:
     - name: cluster1
     - stack: oscp
     - owner: marketplace
-    - region: ukwest
   networks:
     - name: cluster1
       cidr: 10.10.0.0/16
