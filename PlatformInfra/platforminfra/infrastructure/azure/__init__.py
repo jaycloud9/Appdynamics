@@ -1,5 +1,6 @@
 """Azure Infrastructure module."""
 from .. import Infrastructure
+from . import dependencies
 
 
 def getCredentials(template):
@@ -7,10 +8,8 @@ def getCredentials(template):
     for provider in template:
         if "azure" in provider:
             for details in provider['azure']:
-                print(details)
                 if "config" in details:
                     for configItem in details['config']:
-                        print(configItem)
                         if "credentials" in configItem:
                             return configItem
                         else:
@@ -26,7 +25,7 @@ def getCredentials(template):
 
 def getResources(template):
     """Given a list of Resources reply with an ordered Execution list."""
-    deploymentOrder = {'resources': template}
+    deploymentOrder = {'resources': dependencies.getOrderedList(template)}
     return deploymentOrder
 
 
