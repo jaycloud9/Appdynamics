@@ -10,9 +10,9 @@ provider:
       region: ukwest
 services:
   tags:
-    - name: t24dev
-    - stack: t24
-    - owner: marketplace
+    name: t24dev
+    stack: t24
+    owner: marketplace
   networks:
     - name: t24dev
       cidr: 10.10.0.0/16

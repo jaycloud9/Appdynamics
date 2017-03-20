@@ -10,9 +10,9 @@ provider:
       region: ukwest
 services:
   tags:
-    - name: cluster1
-    - stack: oscp
-    - owner: marketplace
+    name: cluster1
+    stack: oscp
+    owner: marketplace
   networks:
     - name: cluster1
       cidr: 10.10.0.0/16
