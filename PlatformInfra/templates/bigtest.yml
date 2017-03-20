@@ -8,15 +8,30 @@ provider:
           tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
       - server_size: Standard_D1_v2
 services:
- -
-   name: cluster1
-   stack: oscp
-   owner: marketplace
-   region: ukwest
-   cidr: 10.10.0.0/16
-   dns_servers: 8.8.8.8,4.4.4.4
-   subnet: 10.10.1.0/24
-   load_balancers:
+  tags:
+    - name: cluster1
+    - stack: oscp
+    - owner: marketplace
+    - region: ukwest
+  networks:
+    - name: cluster1
+      cidr: 10.10.0.0/16
+      dns_servers: 8.8.8.8,4.4.4.4
+      subnet: 10.10.1.0/24
+  servers:
+    - name: gitlab
+      count: 1
+    - name: storage
+      count: 1
+    - name: formation
+      count: 1
+    - name: master
+      count: 1
+    - name: node_infra
+      count: 1
+    - name: node_worker
+      count: 1
+  load_balancers:
     - name: gitlab
       be_servers: gitlab
       health_port: 8081
@@ -51,22 +66,5 @@ services:
          protocol: 'Tcp'
          frontend_port: 443
          backend_port: 443
-   servers:
-    - name: gitlab
-      count: 1
-      lb: true
-    - name: storage
-      count: 1
-    - name: formation
-      count: 1
-    - name: master
-      count: 1
-      lb: true
-    - name: node_infra
-      count: 1
-      lb: true
-    - name: node_worker
-      count: 1
 global:
  user: mpadmin
-
