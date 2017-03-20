@@ -59,6 +59,13 @@ def getOrderedList(data):
         items = dict()
         items[k] = v
         orderedList.append(items)
+    order = {
+        "tags": 0,
+        "networks": 1,
+        "servers": 2,
+        "load_balancers": 3
+    }
+    orderedList.sort(key=lambda val: order[list(val)[0]])
     return orderedList
 
 
