@@ -1,13 +1,16 @@
 """Azure Infrastructure module."""
-from .. import Infrastructure
+# from .. import Infrastructure
 from . import dependencies
+from .vm import Vm
+
 
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
-# from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.compute import ComputeManagementClient
 # from azure.mgmt.dns import DnsManagementClient
+from multiprocessing import Process
 
 
 def getCredentials(template):
@@ -49,14 +52,16 @@ def getResources(template):
     return deploymentOrder
 
 
-class Azure(Infrastructure):
+# class Azure(Infrastructure):
+class Azure(object):
     """Azure class for Generic Azure operations."""
 
-    def __init__(self, config):
+    def __init__(self, config, id):
         """The Azure Class."""
-        Infrastructure.__init__(self, 'Azure')
+        # Infrastructure.__init__(self, 'Azure')
         self.credentials = getCredentials(config['provider'])
         self.config = getConfig(config['provider'])
+        self.id = id
         self.resources = getResources(config['services'])
         self.authAccount = ServicePrincipalCredentials(
             client_id=self.credentials['client_id'],
@@ -66,19 +71,19 @@ class Azure(Infrastructure):
 
     def resourceGroupAvailable(self, rg):
         """Test to See if TG is available."""
-        resource_client = ResourceManagementClient(
+        resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        return resource_client.resource_groups.check_existence(rg)
+        return resClient.resource_groups.check_existence(rg)
 
     def resourceGroup(self, rg):
         """Create a RG if not already created."""
-        resource_client = ResourceManagementClient(
+        resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         self.resourceGroup = rg
         if not self.resourceGroupAvailable(self.resourceGroup):
-            resource_client.resource_groups.create_or_update(
+            resClient.resource_groups.create_or_update(
               self.resourceGroup,
               {
                 'location': self.config['region']
@@ -88,22 +93,22 @@ class Azure(Infrastructure):
 
     def storageAccountAvailable(self, sa):
         """Test to see if a SA is available."""
-        storage_client = StorageManagementClient(
+        strClient = StorageManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        availability = storage_client.storage_accounts.check_name_availability(
+        availability = strClient.storage_accounts.check_name_availability(
             sa
         )
         return availability.name_available
 
     def storageAccount(self, sa):
         """Create a SA if not already created."""
-        storage_client = StorageManagementClient(
+        strClient = StorageManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         self.storageAccount = sa
         if self.storageAccountAvailable(self.storageAccount):
-            sa_async_op = storage_client.storage_accounts.create(
+            saAsyncOp = strClient.storage_accounts.create(
               self.resourceGroup,
               self.storageAccount,
               {
@@ -112,11 +117,11 @@ class Azure(Infrastructure):
                 'location': self.config['region']
               }
             )
-            sa_async_op.wait()
+            saAsyncOp.wait()
 
-    def network(self, network, id, tags):
+    def network(self, network, netName, tags, subNets):
         """Create networks."""
-        network_client = NetworkManagementClient(
+        netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         params = {
@@ -127,16 +132,184 @@ class Azure(Infrastructure):
         }
         if len(tags) > 0:
             params["tags"] = tags
-        async_vnet_creation = network_client.virtual_networks.create_or_update(
-          self.resourceGroup,
-          id,
-          params
+
+        subFound = False
+        netFound = False
+        try:
+            network = netClient.virtual_networks.get(
+                self.resourceGroup,
+                netName
+            )
+            if network.provisioning_state == 'Succeeded':
+                netFound = True
+            if len(network.subnets) != 0:
+                subFound = True
+        except:
+            pass
+
+        print("netFound: {} subFound: {}".format(netFound, subFound))
+        if not netFound:
+            asyncVnetCreation = netClient.virtual_networks.create_or_update(
+              self.resourceGroup,
+              netName,
+              params
+            )
+            asyncVnetCreation.wait()
+            print("Network Created: {}".format(netName))
+        # This will need to loop when we want more than 1 subnet per network
+        if not subFound:
+            asyncSubnetCreation = netClient.subnets.create_or_update(
+              self.resourceGroup,
+              netName,
+              netName + "sub1",
+              {'address_prefix': network['subnet']}
+            )
+            asyncSubnetCreation.wait()
+            subNets.put(asyncSubnetCreation.result())
+        else:
+            subNets.put(network.subnets[0])
+
+    def nsg(self, vm):
+        """Create NSG."""
+        netClient = NetworkManagementClient(
+            self.authAccount, self.credentials['subscription_id']
         )
-        async_vnet_creation.wait()
-        async_subnet_creation = network_client.subnets.create_or_update(
-          self.resourceGroup,
-          id,
-          id + "1",
-          {'address_prefix': network['subnet']}
+        nsgName = self.id + vm['name'] + "Nsg"
+        rules = {
+          "location": self.config['region'],
+          "security_rules": [
+            {
+              "description": "SSH Access",
+              "protocol": "Tcp",
+              "source_port_range": "*",
+              "source_address_prefix": "*",
+              "destination_address_prefix": "*",
+              "destination_port_range": "22",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound",
+              "name": nsgName + "-22-nsg"
+            },
+            {
+              "description": nsgName + "-" + str(vm['service_port']),
+              "protocol": "Tcp",
+              "source_port_range": "*",
+              "source_address_prefix": "*",
+              "destination_address_prefix": "*",
+              "destination_port_range": str(vm['service_port']),
+              "access": "Allow",
+              "priority": 110,
+              "direction":"Inbound",
+              "name": nsgName + "-" + str(vm['service_port']) + "-nsg"
+            }
+          ]
+        }
+        asyncNsgOp = netClient.network_security_groups.create_or_update(
+            self.resourceGroup,
+            nsgName,
+            rules
         )
-        return async_subnet_creation.result()
+        asyncNsgOp.wait()
+        nsg = asyncNsgOp.result()
+        return nsg
+
+    def generateNicParams(self, vm, vmName, subnet, pubIP, beId):
+        """Generate the Nic Parameters."""
+        params = {
+            'location': self.config['region'],
+          }
+        ipConfig = [{
+          'name': vmName + '-nic',
+          'subnet': {
+            'id': subnet.id
+          },
+          'public_ip_address': {
+            'id': pubIP.id
+          }
+        }]
+
+        if 'service_port' in vm:
+            nsg = self.nsg(vm)
+            params['network_security_group'] = nsg
+        if beId:
+            ipConfig[0]['load_balancer_backend_address_pools'] = [{'id': beId}]
+
+        params['ip_configurations'] = ipConfig
+        return params
+
+    def nic(self, vm, vmName, subnet, beId=None):
+        """Create a Network interface for a vm."""
+        netClient = NetworkManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        pubIPName = vmName + "pubip"
+        asyncPubIPCreation = netClient.public_ip_addresses.create_or_update(
+          self.resourceGroup,
+          pubIPName,
+          {
+            'public_ip_allocation_method': 'Dynamic',
+            'location': self.config['region'],
+            'public_ip_address_version': 'IPv4'
+          }
+        )
+        asyncPubIPCreation.wait()
+        pubIP = asyncPubIPCreation.result()
+
+        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, beId)
+        print("Create Nic")
+        asyncNicCreation = netClient.network_interfaces.create_or_update(
+          self.resourceGroup,
+          vmName + "nic",
+          nicParams
+        )
+        details = dict()
+        details['public_ip_name'] = pubIPName
+        details['nic'] = asyncNicCreation.result()
+        return details
+
+    def virtualMachine(self, vm, tags, subnet, vmQueue):
+        """Create a VM."""
+        print("Creating VM")
+        cmpClient = ComputeManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        print("Creating AS")
+        asInfo = cmpClient.availability_sets.create_or_update(
+          self.resourceGroup,
+          self.id + '-as',
+          {
+            'location': self.config['region'],
+            'tags': tags
+          }
+        )
+        i = 0
+        vmProcList = list()
+        opts = dict()
+        opts['config'] = self.config
+        opts['sa'] = self.storageAccount
+        opts['rg'] = self.resourceGroup
+        opts['authAccount'] = self.authAccount
+        opts['credentials'] = self.credentials
+        while i < vm['count']:
+            i = i + 1
+            tmpVm = Vm(opts)
+            vmName = self.id + vm['name'].translate({
+                None: '` ~!@#$%^&*()=+_[]{}\|;:\'",<>/?.'
+            }) + str(i)
+            vmNic = self.nic(vm, vmName, subnet)
+            tmpVm.generateParams(
+                vmNic['nic'].id,
+                vmName,
+                asInfo.id,
+                tags
+            )
+            p = Process(
+                target=tmpVm.create,
+                args=(vmName, vmNic, vmQueue)
+            )
+            vmProcList.append(p)
+            p.start()
+
+        for proc in vmProcList:
+            # Wait for all VM's to create
+            proc.join()
