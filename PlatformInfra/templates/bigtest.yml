@@ -24,15 +24,15 @@ services:
     - name: gitlab
       count: 1
     - name: storage
-      count: 1
+      count: 2
     - name: formation
-      count: 1
+      count: 2
     - name: master
       count: 1
     - name: node_infra
       count: 1
     - name: node_worker
-      count: 1
+      count: 3
   load_balancers:
     - name: gitlab
       be_servers: gitlab
