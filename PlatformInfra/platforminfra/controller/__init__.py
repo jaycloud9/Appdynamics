@@ -55,7 +55,9 @@ class Controller(object):
         # Processes that can be run in parrallel
         serverProcs = list()
         try:
+            print("Data is of type {}".format(type(data)))
             for server in data:
+                print("server {}".format(server))
                 for i in self.subnets:
                     if "subnets" in i:
                         p = Process(
@@ -83,47 +85,40 @@ class Controller(object):
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
-        lbQueue = Queue
         print("Creating Load Balancers")
-        print(data)
-        for lb in data:
-            lbRules = list()
-            for rule in lb['load_balancer']['rules']:
-                lbRules.append({
-                    'name': rule['name'],
-                    'protocol': rule['protocol'],
-                    'frontendPort': str(rule['frontend_port']),
-                    'backendPort': str(rule['backend_port'])
-                })
-            if lb['load_balancer']['health_protocol'] == 'Tcp' or \
-                    lb['load_balancer']['health_protocol'] == 'Http':
-                if lb['load_balancer']['health_protocol'] == 'Http':
-                    if 'health_path' not in lb['load_balancer']:
-                        e = {
-                            'error': "Must specify health_path with Http"
-                        }
-                        raise Exception(e)
+        for item in data:
+            for lbName, details in item.items():
+                if details['load_balancer']['health_protocol'] == 'Tcp' or \
+                        details['load_balancer']['health_protocol'] == 'Http':
+                    if details['load_balancer']['health_protocol'] == 'Http':
+                        if 'health_path' not in details['load_balancer']:
+                            e = {
+                                'error': "Must specify health_path with Http"
+                            }
+                            raise Exception(e)
 
-                # Create LB here
-                lbData = provider.LoadBalancer(
-                    lb['load_balancer'],
-                    self.tags,
-                    lbRules,
-                    lbQueue
-                )
-                # Create Vm's Here
-                lb['servers']['beId'] = lbData['lbInfo'] \
-                    .backend_address_pools[0].id
-                print("Creating LB Vms {}".format(lb['servers']))
-                self.createVms(
-                    lb['servers'],
-                    provider
-                )
-            else:
-                e = {
-                    'error': "back_end_protocol must be 'Http' or 'Tcp'"
-                }
-                raise Exception(e)
+                    # Create LB here
+                    print("Creating LB: {}".format(lbName))
+                    lbData = provider.loadBalancer(
+                        details['load_balancer'],
+                        self.tags
+                    )
+                    print("LBData {}".format(lbData))
+                    # Create Vm's Here
+                    details['servers']['beId'] = lbData['lbInfo'] \
+                        .backend_address_pools[0].id
+                    serverList = list()
+                    serverList.append(details['servers'])
+                    print("Creating LB Vms {}".format(serverList))
+                    self.createVms(
+                        serverList,
+                        provider
+                    )
+                else:
+                    e = {
+                        'error': "back_end_protocol must be 'Http' or 'Tcp'"
+                    }
+                    raise Exception(e)
 
     def createEnvironment(self, config):
         """Create an Environment."""

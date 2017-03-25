@@ -11,7 +11,7 @@ from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 # from azure.mgmt.dns import DnsManagementClient
-from msrestazure.azure_exceptions import CloudError
+# from msrestazure.azure_exceptions import CloudError
 from multiprocessing import Process, Queue
 
 
@@ -338,12 +338,13 @@ class Azure(object):
 
         vmQueue.put({'servers': vm['name'], 'vms': results})
 
-    def lbWorker(self, opts, lb, rules, tags, lbQ):
+    def lbWorker(self, opts, lb, tags):
         """Worker to create a LB."""
-        tmpLb = LoadBalancer(opts, lb, rules, tags)
-        tmpLb.create(lbQ)
+        tmpLb = LoadBalancer(opts, lb, tags)
+        result = tmpLb.create()
+        return result
 
-    def loadBalancer(self, lb, tags, rules, lbQueue):
+    def loadBalancer(self, lb, tags):
         """Create Load Balancer."""
         opts = dict()
         opts['config'] = self.config
@@ -351,3 +352,5 @@ class Azure(object):
         opts['rg'] = self.resourceGroup
         opts['authAccount'] = self.authAccount
         opts['credentials'] = self.credentials
+
+        return self.lbWorker(opts, lb, tags)

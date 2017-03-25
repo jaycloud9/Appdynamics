@@ -6,7 +6,7 @@ from azure.mgmt.network import NetworkManagementClient
 class LoadBalancer(object):
     """Class for managing LB."""
 
-    def __init__(self, opts, lb, rules, tags):
+    def __init__(self, opts, lb, tags):
         """Init LB Class with Azure parent."""
         self.vmParams = dict()
         self.config = opts['config']
@@ -15,7 +15,6 @@ class LoadBalancer(object):
         self.authAccount = opts['authAccount']
         self.credentials = opts['credentials']
         self.lb = lb
-        self.rules = rules
         self.tags = tags
 
     def createPublicIp(self, lbName):
@@ -61,14 +60,14 @@ class LoadBalancer(object):
         """Generate Health probe Config."""
         print('Create HealthProbe configuration')
         probes = [{
-          'name': lbName + self.lb['hp_proto'] + '-probe',
-          'protocol': self.lb['hp_proto'],
-          'port': self.lb['hp_proto'],
+          'name': lbName + self.lb['health_protocol'] + '-probe',
+          'protocol': self.lb['health_protocol'],
+          'port': self.lb['health_port'],
           'interval_in_seconds': 15,
           'number_of_probes': 4,
         }]
-        if self.lb['hp_proto'] == 'Http':
-            probes[0]['request_path'] = self.lb['hp_path']
+        if self.lb['health_protocol'] == 'Http':
+            probes[0]['request_path'] = self.lb['health_path']
 
         return probes
 
@@ -82,7 +81,7 @@ class LoadBalancer(object):
                     self.credentials['subscription_id'],
                     self.resourceGroup,
                     lbName,
-                    lbName + 'fip'
+                    lbName + '-fip'
                 )
 
     def generateBapId(self, lbName):
@@ -108,19 +107,19 @@ class LoadBalancer(object):
                     self.credentials['subscription_id'],
                     self.resourceGroup,
                     lbName,
-                    lbName + self.lb['hp_proto'] + '-probe'
+                    lbName + self.lb['health_protocol'] + '-probe'
                 )
 
-    def generateLbrules(self, lbName):
+    def generateLbRules(self, lbName):
         """Generate LB Rules."""
         print('Create LoadBalancerRule configuration')
-        loadBalancingRules = []
-        for rule in self.rules:
+        loadBalancingRules = list()
+        for rule in self.lb['rules']:
             loadBalancingRules.append({
                 'name': lbName + rule['name'] + '-rule',
                 'protocol': rule['protocol'],
-                'frontend_port': rule['frontend_port'],
-                'backend_port': rule['backend_port'],
+                'frontend_port': str(rule['frontend_port']),
+                'backend_port': str(rule['backend_port']),
                 'idle_timeout_in_minutes': 4,
                 'enable_floating_ip': False,
                 'load_distribution': 'Default',
@@ -134,13 +133,24 @@ class LoadBalancer(object):
                   'id': self.generateProbeId(lbName)
                 }
             })
+        return loadBalancingRules
+
+    def generateLbParams(self, feConfig, beConfig, probe, rules):
+        """Generate LB Params."""
+        return {
+          'location': self.config['region'],
+          'frontend_ip_configurations': feConfig,
+          'backend_address_pools': beConfig,
+          'probes': probe,
+          'load_balancing_rules': rules
+        }
 
     def create(self):
         """Create a Load Balancer."""
         netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        lbName = self.config['id'] + '-lb'
+        lbName = self.tags['id'] + self.lb['name'] + 'lb'
         # Create PublicIP
         pubIp = self.createPublicIp(lbName)
         # Building a FrontEndIpPool
@@ -150,22 +160,17 @@ class LoadBalancer(object):
         # Building a HealthProbe
         probe = self.generateHealthProbeConfiguration(lbName)
         # Building a LoadBalancer rule
-        rules = self.generateLbrules(lbName)
+        rules = self.generateLbRules(lbName)
+        # Building LB params
+        lbParams = self.generateLbParams(feConfig, beConfig, probe, rules)
         # Creating Load Balancer
         print('Creating Load Balancer')
         lbAsyncCreation = netClient.load_balancers.create_or_update(
             self.resourceGroup,
             lbName,
-            {
-              'location': self.config['region'],
-              'frontend_ip_configurations': feConfig,
-              'backend_address_pools': beConfig,
-              'probes': probe,
-              'load_balancing_rules': rules
-            }
+            lbParams
         )
         lbInfo = lbAsyncCreation.result()
-
         return {
             'name': lbName,
             'lbInfo': lbInfo,
