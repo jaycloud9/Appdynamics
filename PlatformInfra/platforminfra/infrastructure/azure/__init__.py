@@ -245,7 +245,7 @@ class Azure(object):
             asyncNsgOp.wait()
             nsg = asyncNsgOp.result()
             return nsg
-        except:
+        except Exception:
             pass
         if not nsgCreated:
             aNsgOp = netClient \
@@ -325,22 +325,28 @@ class Azure(object):
             tags
         )
         tmpVm.create(vmName, vmNic, vmQ)
+        print("VM Created")
 
-    def virtualMachine(self, vm, tags, subnet, vmQueue):
+    def virtualMachine(self, vm, tags, subnet, vmQueue, vmLock):
         """Create a VM."""
         print("Creating VMs: {}".format(vm['name']))
+        vmLock.acquire()
         cmpClient = ComputeManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         asName = self.id + '-as' + vm['name']
-        asInfo = cmpClient.availability_sets.create_or_update(
-          self.resourceGroup,
-          asName,
-          {
-            'location': self.config['region'],
-            'tags': tags
-          }
-        )
+        try:
+            asInfo = cmpClient.availability_sets.create_or_update(
+              self.resourceGroup,
+              asName,
+              {
+                'location': self.config['region'],
+                'tags': tags
+              }
+            )
+        except:
+            pass
+        vmLock.release()
         vmProcList = list()
         opts = dict()
         opts['config'] = self.config

@@ -3,7 +3,7 @@
 from platforminfra.templates import Template
 from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Lock
 
 
 class Controller(object):
@@ -52,6 +52,7 @@ class Controller(object):
         """Create VMs."""
         print("Creating Servers")
         vms = Queue()
+        vmLock = Lock()
         # Processes that can be run in parrallel
         serverProcs = list()
         try:
@@ -64,7 +65,8 @@ class Controller(object):
                                 server,
                                 self.tags,
                                 i['subnets']['subnet'],
-                                vms
+                                vms,
+                                vmLock
                             )
                         )
                         vmDetails = {
@@ -79,12 +81,10 @@ class Controller(object):
             for proc in serverProcs:
                 proc['thread'].join()
                 tmpData = vms.get()
-                print("proc {}".formart(proc))
-                print("tmpdata {}".format(tmpData))
                 if 'dns' in proc:
-                    print("Adding DNS {}".format(proc['dns']))
+                    # Only apply to the first server
                     result = provider.addDNS(
-                        tmpData['public_ip'],
+                        tmpData['vms'][0]['public_ip'],
                         proc['dns'] + '-' + self.tags['id']
                     )
                     tmpData['dns'] = result
@@ -175,6 +175,7 @@ class Controller(object):
                             buildMap[k](v, provider)
                         continue
         except Exception as e:
+            print("Something failed :'(")
             rsp = Response(e)
             return rsp.httpResponse(404)
 

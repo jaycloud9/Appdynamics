@@ -1,7 +1,7 @@
 """Module for managing VM's."""
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
-# from msrestazure.azure_exceptions import CloudError
+from msrestazure.azure_exceptions import CloudError
 
 
 class Vm(object):
@@ -93,13 +93,17 @@ class Vm(object):
             self.authAccount,
             self.credentials['subscription_id']
         )
-        asyncVmCreation = cmpClient.virtual_machines.create_or_update(
-          self.resourceGroup,
-          vmName,
-          self.vmParams
-        )
-        asyncVmCreation.wait()
-        vmQueue.put({
-            'name': vmName,
-            'public_ip': self.publicIp(vmNic['public_ip_name'])
-        })
+        try:
+            asyncVmCreation = cmpClient.virtual_machines.create_or_update(
+              self.resourceGroup,
+              vmName,
+              self.vmParams
+            )
+            asyncVmCreation.wait()
+            vmQueue.put({
+                'name': vmName,
+                'public_ip': self.publicIp(vmNic['public_ip_name'])
+            })
+        except CloudError as e:
+            print(e)
+            pass
