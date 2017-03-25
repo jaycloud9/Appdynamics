@@ -21,10 +21,10 @@ def getLoadBalancerDeps(LBs, data):
             for server in servers:
                 if lb['be_servers'] == server['name']:
                     loadBalancers.append(
-                        {lb['name']: [
-                            {"load_balancer": lb},
-                            {"servers": server}
-                        ]}
+                        {lb['name']: {
+                            "load_balancer": lb,
+                            "servers": server
+                        }}
                     )
                     removeItem(data["servers"], server)
     removeItem(data, "load_balancers", key=True)

@@ -81,6 +81,50 @@ class Controller(object):
         except Exception as e:
             raise Exception(e)
 
+    def createLoadBalancers(self, data, provider):
+        """Create Load balancers."""
+        lbQueue = Queue
+        print("Creating Load Balancers")
+        print(data)
+        for lb in data:
+            lbRules = list()
+            for rule in lb['load_balancer']['rules']:
+                lbRules.append({
+                    'name': rule['name'],
+                    'protocol': rule['protocol'],
+                    'frontendPort': str(rule['frontend_port']),
+                    'backendPort': str(rule['backend_port'])
+                })
+            if lb['load_balancer']['health_protocol'] == 'Tcp' or \
+                    lb['load_balancer']['health_protocol'] == 'Http':
+                if lb['load_balancer']['health_protocol'] == 'Http':
+                    if 'health_path' not in lb['load_balancer']:
+                        e = {
+                            'error': "Must specify health_path with Http"
+                        }
+                        raise Exception(e)
+
+                # Create LB here
+                lbData = provider.LoadBalancer(
+                    lb['load_balancer'],
+                    self.tags,
+                    lbRules,
+                    lbQueue
+                )
+                # Create Vm's Here
+                lb['servers']['beId'] = lbData['lbInfo'] \
+                    .backend_address_pools[0].id
+                print("Creating LB Vms {}".format(lb['servers']))
+                self.createVms(
+                    lb['servers'],
+                    provider
+                )
+            else:
+                e = {
+                    'error': "back_end_protocol must be 'Http' or 'Tcp'"
+                }
+                raise Exception(e)
+
     def createEnvironment(self, config):
         """Create an Environment."""
         template = self.templates.loadTemplate(
@@ -95,6 +139,7 @@ class Controller(object):
         buildMap = {
             "servers": self.createVms,
             "networks": self.createNetworks,
+            "load_balancers": self.createLoadBalancers,
             "tags": self.setTags
         }
         # Build core resources

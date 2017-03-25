@@ -2,6 +2,7 @@
 # from .. import Infrastructure
 from . import dependencies
 from .vm import Vm
+from .loadBalancer import LoadBalancer
 
 
 from azure.common.credentials import ServicePrincipalCredentials
@@ -336,3 +337,17 @@ class Azure(object):
             results.append(vmQ.get())
 
         vmQueue.put({'servers': vm['name'], 'vms': results})
+
+    def lbWorker(self, opts, lb, rules, tags, lbQ):
+        """Worker to create a LB."""
+        tmpLb = LoadBalancer(opts, lb, rules, tags)
+        tmpLb.create(lbQ)
+
+    def loadBalancer(self, lb, tags, rules, lbQueue):
+        """Create Load Balancer."""
+        opts = dict()
+        opts['config'] = self.config
+        opts['sa'] = self.storageAccount
+        opts['rg'] = self.resourceGroup
+        opts['authAccount'] = self.authAccount
+        opts['credentials'] = self.credentials
