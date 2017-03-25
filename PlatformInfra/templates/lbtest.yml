@@ -33,6 +33,5 @@ services:
          backend_port: 8080
   servers:
     - name: t24
-      count: 3
-      dns: t24
+      count: 1
       service_port: 8080

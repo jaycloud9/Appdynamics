@@ -67,16 +67,28 @@ class Controller(object):
                                 vms
                             )
                         )
-                        print("Threading servers {}".format(server['name']))
-                        serverProcs.append({
+                        vmDetails = {
                             'servers': server['name'],
                             'thread': p
-                        })
+                        }
+                        if 'dns' in server:
+                            vmDetails['dns'] = server['dns']
+                        serverProcs.append(vmDetails)
                         p.start()
 
             for proc in serverProcs:
                 proc['thread'].join()
-                self.vms.append(vms.get())
+                tmpData = vms.get()
+                print("proc {}".formart(proc))
+                print("tmpdata {}".format(tmpData))
+                if 'dns' in proc:
+                    print("Adding DNS {}".format(proc['dns']))
+                    result = provider.addDNS(
+                        tmpData['public_ip'],
+                        proc['dns'] + '-' + self.tags['id']
+                    )
+                    tmpData['dns'] = result
+                self.vms.append(tmpData)
         except Exception as e:
             raise Exception(e)
 
@@ -109,6 +121,21 @@ class Controller(object):
                         serverList,
                         provider
                     )
+                    record = self.tags['id']
+                    if 'domain' in details['load_balancer']:
+                        record = details['load_balancer']['domain'] + '-' + \
+                            record
+                    else:
+                        record = details['load_balancer']['name'] + '-' + \
+                            record
+
+                    result = provider.addDNS(
+                        lbData['publicIp'].ip_address,
+                        record
+                    )
+                    self.response.append({
+                        details['load_balancer']['name']: result
+                    })
                 else:
                     e = {
                         'error': "back_end_protocol must be 'Http' or 'Tcp'"

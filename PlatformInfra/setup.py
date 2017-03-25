@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name='platforminfra',
     packages=['platforminfra'],
-    version='0.0.3',
+    version='0.0.4',
     include_package_data=True,
     install_requires=[
         'flask',
@@ -16,5 +16,6 @@ setup(
         'azure-mgmt-resource',
         'azure-mgmt-network',
         'azure-mgmt-compute',
+        'azure-mgmt-dns'
     ],
 )

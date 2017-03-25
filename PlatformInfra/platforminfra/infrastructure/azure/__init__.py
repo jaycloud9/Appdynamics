@@ -10,9 +10,9 @@ from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
-# from azure.mgmt.dns import DnsManagementClient
-# from msrestazure.azure_exceptions import CloudError
-from multiprocessing import Process, Queue
+from azure.mgmt.dns import DnsManagementClient
+from msrestazure.azure_exceptions import CloudError
+from multiprocessing import Process, Queue, Lock
 
 
 def getCredentials(template):
@@ -93,6 +93,30 @@ class Azure(object):
               }
             )
         return self.resourceGroup
+
+    def addDNS(self, ip, record, domain='dev.temenos.cloud'):
+        """Add DNS Record."""
+        print("Adding DNS Record")
+        dnsClient = DnsManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        try:
+            dnsClient.record_sets.create_or_update(
+                "mp_dev_core",
+                domain,
+                record,
+                'A',
+                {
+                    "ttl": 300,
+                    "arecords": [{
+                        "ipv4_address": ip
+                    }]
+                }
+            )
+        except CloudError as e:
+            raise Exception(e)
+
+        return record + "." + domain
 
     def storageAccountAvailable(self, sa):
         """Test to see if a SA is available."""
@@ -220,21 +244,19 @@ class Azure(object):
             )
             asyncNsgOp.wait()
             nsg = asyncNsgOp.result()
+            return nsg
         except:
             pass
         if not nsgCreated:
-            try:
-                aNsgOp = netClient.network_security_groups.create_or_update(
+            aNsgOp = netClient \
+                .network_security_groups.create_or_update(
                     self.resourceGroup,
                     nsgName,
                     rules
                 )
-                aNsgOp.wait()
-                nsg = aNsgOp.result()
-            except:
-                # Sometimes when in parrallel it causes a failure...
-                pass
-        return nsg
+            aNsgOp.wait()
+            nsg = aNsgOp.result()
+            return nsg
 
     def generateNicParams(self, vm, vmName, subnet, pubIP):
         """Generate the Nic Parameters."""
@@ -290,10 +312,12 @@ class Azure(object):
         details['nic'] = asyncNicCreation.result()
         return details
 
-    def vmWorker(self, opts, vm, vmName, tags, asInfo, subnet, vmQ):
+    def vmWorker(self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
+        lock.acquire()
         vmNic = self.nic(vm, vmName, subnet)
+        lock.release()
         tmpVm.generateParams(
             vmNic['nic'].id,
             vmName,
@@ -325,6 +349,7 @@ class Azure(object):
         opts['authAccount'] = self.authAccount
         opts['credentials'] = self.credentials
         vmQ = Queue()
+        lock = Lock()
         results = list()
         i = 0
         while i < vm['count']:
@@ -333,7 +358,7 @@ class Azure(object):
             vmName = ''.join(e for e in tmpStr if e.isalnum())
             p = Process(
                 target=self.vmWorker,
-                args=(opts, vm, vmName, tags, asInfo, subnet, vmQ)
+                args=(opts, vm, vmName, tags, asInfo, subnet, vmQ, lock)
             )
             vmProcList.append(p)
             p.start()
