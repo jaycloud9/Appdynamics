@@ -51,13 +51,11 @@ class Controller(object):
     def createVms(self, data, provider):
         """Create VMs."""
         print("Creating Servers")
-        print(data)
         vms = Queue()
         # Processes that can be run in parrallel
         serverProcs = list()
         try:
             for server in data:
-                print("Threading {}".format(server))
                 for i in self.subnets:
                     if "subnets" in i:
                         p = Process(
