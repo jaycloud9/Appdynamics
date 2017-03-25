@@ -55,9 +55,7 @@ class Controller(object):
         # Processes that can be run in parrallel
         serverProcs = list()
         try:
-            print("Data is of type {}".format(type(data)))
             for server in data:
-                print("server {}".format(server))
                 for i in self.subnets:
                     if "subnets" in i:
                         p = Process(
@@ -74,7 +72,6 @@ class Controller(object):
                             'servers': server['name'],
                             'thread': p
                         })
-                        print("Started thread process")
                         p.start()
 
             for proc in serverProcs:
@@ -103,13 +100,11 @@ class Controller(object):
                         details['load_balancer'],
                         self.tags
                     )
-                    print("LBData {}".format(lbData))
                     # Create Vm's Here
                     details['servers']['beId'] = lbData['lbInfo'] \
                         .backend_address_pools[0].id
                     serverList = list()
                     serverList.append(details['servers'])
-                    print("Creating LB Vms {}".format(serverList))
                     self.createVms(
                         serverList,
                         provider
@@ -157,7 +152,6 @@ class Controller(object):
             return rsp.httpResponse(404)
 
         for vmRsp in self.vms:
-            print(vmRsp)
             self.response.append(vmRsp)
 
         rsp = Response({'Servers': self.response})

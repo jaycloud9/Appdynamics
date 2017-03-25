@@ -223,16 +223,20 @@ class Azure(object):
         except:
             pass
         if not nsgCreated:
-            aNsgOp = netClient.network_security_groups.create_or_update(
-                self.resourceGroup,
-                nsgName,
-                rules
-            )
-            aNsgOp.wait()
-            nsg = aNsgOp.result()
+            try:
+                aNsgOp = netClient.network_security_groups.create_or_update(
+                    self.resourceGroup,
+                    nsgName,
+                    rules
+                )
+                aNsgOp.wait()
+                nsg = aNsgOp.result()
+            except:
+                # Sometimes when in parrallel it causes a failure...
+                pass
         return nsg
 
-    def generateNicParams(self, vm, vmName, subnet, pubIP, beId):
+    def generateNicParams(self, vm, vmName, subnet, pubIP):
         """Generate the Nic Parameters."""
         params = {
             'location': self.config['region'],
@@ -250,13 +254,15 @@ class Azure(object):
         if 'service_port' in vm:
             nsg = self.nsg(vm)
             params['network_security_group'] = nsg
-        if beId:
-            ipConfig[0]['load_balancer_backend_address_pools'] = [{'id': beId}]
+        if 'beId' in vm:
+            ipConfig[0]['load_balancer_backend_address_pools'] = [{
+                'id': vm['beId']
+            }]
 
         params['ip_configurations'] = ipConfig
         return params
 
-    def nic(self, vm, vmName, subnet, beId=None):
+    def nic(self, vm, vmName, subnet):
         """Create a Network interface for a vm."""
         netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
@@ -273,7 +279,7 @@ class Azure(object):
         )
         asycPubIPCreation.wait()
         pubIP = asycPubIPCreation.result()
-        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, beId)
+        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP)
         asyncNicCreation = netClient.network_interfaces.create_or_update(
           self.resourceGroup,
           vmName + "nic",
