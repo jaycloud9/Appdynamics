@@ -1,0 +1,63 @@
+{
+	"builders": [{
+		"type": "azure-arm",
+		"client_id": "585b08ee-20fd-4824-97aa-16a65f631916",
+		"client_secret": "Blue1Sky$",
+		"subscription_id": "51df121a-2371-45a4-8387-d72ef028239f",
+		"tenant_id": "d5d2540f-f60a-45ad-86a9-e2e792ee6669",
+		"resource_group_name": "PACKER",
+		"storage_account": "packerstore",
+		"capture_container_name": "packer-images",
+		"capture_name_prefix": "packer",
+		"ssh_username": "mpadmin",
+		"ssh_password": "mARKETpLACE99",
+		"image_publisher": "redhat",
+		"image_offer": "RHEL",
+		"image_sku": "7.2",
+		"ssh_pty": "true",
+		"location": "UK West",
+		"vm_size": "Standard_A2",
+		"os_type": "Linux",
+ 		"ssh_username": "{{user `ssh_user`}}",
+		"ssh_password": "{{user `ssh_pass`}}",
+		"azure_tags": {
+      							"image_type": "temenos_jboss"
+    							}
+	}],
+
+	"provisioners": [
+		{
+			"type": "shell",
+      "scripts": "Scripts/ansible.sh",
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -S -E sh '{{ .Path }}'"
+ 		},
+		{
+      "type": "shell",
+      "inline": [
+                	"echo '**** Updating Packages'",
+                  "sudo yum update -y"
+                ]
+      },
+  		{
+				"type": "ansible-local",
+				"playbook_file": "../paas-config/t24image.yml",
+    		"inventory_file": "../paas-config/hosts",
+				"command": "ANSIBLE_FORCE_COLOR=1 PYTHONUNBUFFERED=1 ansible-playbook --tags jboss6",
+    		"role_paths": "../paas-app/"
+  		},
+			{
+				"type": "shell",
+				"inline": [
+										"sudo subscription-manager remove --all",
+										"sudo subscription-manager unregister"
+									]
+			},
+		{
+      "type": "shell",
+			"inline": "sudo waagent -deprovision+user -force && export HISTSIZE=0 && sync",
+      "skip_clean": "true"
+    }
+
+    ]
+
+}
