@@ -5,7 +5,7 @@ from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
 
-from ..helpers import Jenkins
+from ..helpers import Jenkins, Gitlab, Helpers
 
 
 class Controller(object):
@@ -197,6 +197,25 @@ class Controller(object):
                 "UUID": self.tags['uuid']
             }
         )
+        print("Connecting to Gitlab")
+        glServerConn = "https://gitlab.temenos.cloud"
+        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        glSourceProject = "customer-demo"
+        glSourceTeam = "root"
+        glServer = Gitlab(glServerConn, glServerToken)
+        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
 
+        print("Create user")
+        user = glServer.createUser(
+            self.tags['uuid'],
+            self.tags['uuid'],
+            Helpers.randStr(10),
+            self.tags['uuid'] + '@example.net'
+        )
+        forked = glServer.forkProject(
+            user.username,
+            glSourceProject.id
+        )
+        self.response.append({'git_url': forked.web_url})
         rsp = Response({'Servers': self.response})
         return rsp.httpResponse(200)

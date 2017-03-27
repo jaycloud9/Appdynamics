@@ -17,6 +17,7 @@ setup(
         'azure-mgmt-network',
         'azure-mgmt-compute',
         'azure-mgmt-dns',
-        'python-jenkins'
+        'python-jenkins',
+        'python-gitlab'
     ],
 )

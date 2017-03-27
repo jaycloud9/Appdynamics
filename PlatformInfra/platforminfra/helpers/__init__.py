@@ -1,6 +1,18 @@
 """Helpers package for platformInfra."""
 from flask import jsonify
 import jenkins
+import gitlab
+import random
+import string
+
+class Helpers(object):
+    """Heleprs Class."""
+
+    def randStr(length):
+        """Generate random string."""
+        return ''.join(
+            random.choice(string.ascii_lowercase) for i in range(length)
+        )
 
 
 class Response(object):
@@ -55,6 +67,39 @@ class Jenkins(object):
             build)['lastCompletedBuild']['number']
         buildInfo = self.server.get_build_info(build, lastBuildNumber)
         return buildInfo
+
+
+class Gitlab(object):
+    """Class to manage Gitlab interactions."""
+
+    def __init__(self, uri, token):
+        """Create a connection to Gitlab."""
+        self.conn = gitlab.Gitlab(uri, token)
+
+    def forkProject(self, user, projectId):
+        """Fork a project."""
+        result = self.conn.project_forks.create(
+            {},
+            project_id=projectId,
+            sudo=user
+        )
+        return result
+
+    def getProject(self, team, project):
+        """Get a single project."""
+        projectName = team + '/' + project
+        result = self.conn.projects.get(projectName)
+        return result
+
+    def createUser(self, uname, name, password, email):
+        """Create a new GitLab User."""
+        user = self.conn.users.create({
+            'email': email,
+            'password': password,
+            'username': uname,
+            'name': name
+        })
+        return user
 
 
 class FakeData(object):
