@@ -150,7 +150,7 @@ class LoadBalancer(object):
         netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        lbName = self.tags['id'] + self.lb['name'] + 'lb'
+        lbName = self.tags['uuid'] + self.lb['name'] + 'lb'
         # Create PublicIP
         pubIp = self.createPublicIp(lbName)
         # Building a FrontEndIpPool

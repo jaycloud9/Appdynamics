@@ -1,5 +1,6 @@
 """Helpers package for platformInfra."""
 from flask import jsonify
+import jenkins
 
 
 class Response(object):
@@ -34,6 +35,26 @@ class Response(object):
         rsp = jsonify(response_message)
         rsp.status_code = self.status_code
         return rsp
+
+
+class Jenkins(object):
+    """Class to manage Jenkins interactions."""
+
+    def __init__(self, connection, user, password):
+        """Create a connection to the Server."""
+        self.server = jenkins.Jenkins(
+            connection,
+            username=user,
+            password=password
+        )
+
+    def runBuildWithParams(self, build, params):
+        """Run a build with params and return it's info."""
+        self.server.build_job(build, params)
+        lastBuildNumber = self.server.get_job_info(
+            build)['lastCompletedBuild']['number']
+        buildInfo = self.server.get_build_info(build, lastBuildNumber)
+        return buildInfo
 
 
 class FakeData(object):

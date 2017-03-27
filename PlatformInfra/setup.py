@@ -16,6 +16,7 @@ setup(
         'azure-mgmt-resource',
         'azure-mgmt-network',
         'azure-mgmt-compute',
-        'azure-mgmt-dns'
+        'azure-mgmt-dns',
+        'python-jenkins'
     ],
 )

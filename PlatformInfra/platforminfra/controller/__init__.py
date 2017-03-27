@@ -5,6 +5,8 @@ from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
 
+from ..helpers import Jenkins
+
 
 class Controller(object):
     """Controls the platformInfra."""
@@ -33,7 +35,7 @@ class Controller(object):
         print("Creating network")
         netProcs = list()
         for idx, network in enumerate(data):
-            netId = str(self.tags['id'])+str(idx)
+            netId = str(self.tags['uuid'])+str(idx)
             p = Process(
                 target=provider.network,
                 args=(network, netId, self.tags, subNets)
@@ -85,7 +87,7 @@ class Controller(object):
                     # Only apply to the first server
                     result = provider.addDNS(
                         tmpData['vms'][0]['public_ip'],
-                        proc['dns'] + '-' + self.tags['id']
+                        proc['dns'] + '-' + self.tags['uuid']
                     )
                     tmpData['dns'] = result
                 self.vms.append(tmpData)
@@ -121,7 +123,7 @@ class Controller(object):
                         serverList,
                         provider
                     )
-                    record = self.tags['id']
+                    record = self.tags['uuid']
                     if 'domain' in details['load_balancer']:
                         record = details['load_balancer']['domain'] + '-' + \
                             record
@@ -147,7 +149,7 @@ class Controller(object):
         template = self.templates.loadTemplate(
             config['infrastructureTemplateID']
         )
-        self.tags['id'] = config['id']
+        self.tags['uuid'] = config['id']
         provider = Azure(template, config['id'])
         if 'error' in provider.credentials:
             rsp = Response(provider.credentials)
@@ -161,10 +163,9 @@ class Controller(object):
         }
         # Build core resources
         print("Creating RG")
-        provider.resourceGroup("mpdevtestrg" + self.tags['id'])
+        provider.resourceGroup("mpdevtestrg" + self.tags['uuid'])
         print("Creating SA")
-        provider.storageAccount("mpdevtestsa" + self.tags['id'])
-        # lbProcs = list()
+        provider.storageAccount("mpdevtestsa" + self.tags['uuid'])
         try:
             for resource in provider.resources['resources']:
                 for k, v in resource.items():
@@ -181,6 +182,21 @@ class Controller(object):
 
         for vmRsp in self.vms:
             self.response.append(vmRsp)
+
+        # By this point an environment should be created so Execute Jenkins job
+        jenkinsServerConn = "http://51.141.7.30:8080"
+        jenkinsServer = Jenkins(
+            jenkinsServerConn,
+            user='admin',
+            password='Blue1Sky'
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            "T24-Pipeline",
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
 
         rsp = Response({'Servers': self.response})
         return rsp.httpResponse(200)
