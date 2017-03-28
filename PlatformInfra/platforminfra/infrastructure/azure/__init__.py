@@ -11,6 +11,7 @@ from azure.mgmt.storage import StorageManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.dns import DnsManagementClient
+from azure.storage.blob import BlockBlobService
 from msrestazure.azure_exceptions import CloudError
 from multiprocessing import Process, Queue, Lock
 
@@ -61,11 +62,12 @@ def getResources(template):
 class Azure(object):
     """Azure class for Generic Azure operations."""
 
-    def __init__(self, credentials, rg, config=None, id=None):
+    def __init__(self, credentials, rg, sa, config=None, id=None):
         """The Azure Class."""
         # Infrastructure.__init__(self, 'Azure')
         self.setConfig(credentials, config)
         self.resourceGroup = rg
+        self.storageAccount = sa
         if id:
             self.setId(id)
 
@@ -88,6 +90,55 @@ class Azure(object):
         """Set the Id."""
         self.id = id
 
+    def getDNSRecords(self, id, domain="dev.temenos.cloud"):
+        """Get DNS Records by ID."""
+        dnsClient = DnsManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        records = dnsClient.record_sets.list_by_type(
+            "mp_dev_core",
+            domain,
+            'A'
+        )
+        results = list()
+        for record in records:
+            if id in record.name:
+                results.append(record.name)
+        return results
+
+    def getStorageDisks(self, id):
+        """Get a list of Storage disks."""
+        saKey = self.getStorageAccountKey()
+        disks = list()
+        blockBlobService = BlockBlobService(
+            account_name=self.storageAccount,
+            account_key=saKey
+        )
+        blobs = blockBlobService.list_blobs("vhds")
+        for blob in blobs:
+            if id in blob.name:
+                disks.append(blob.name)
+        return disks
+
+    def getStorageAccountKey(self):
+        """Return a Storage account Key."""
+        strClient = StorageManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        saKeys = strClient.storage_accounts.list_keys(
+            self.resourceGroup,
+            self.storageAccount
+        )
+        return saKeys.keys[0].value
+
+    def deleteStorageAccountBlob(self, blob):
+        """Delete a storage Blob."""
+        blockBlobService = BlockBlobService(
+            account_name=self.storageAccount,
+            account_key=self.getStorageAccountKey()
+        )
+        blockBlobService.delete_blob('vhds', blob)
+
     def getResources(self, id=None):
         """Get all resources."""
         resClient = ResourceManagementClient(
@@ -95,24 +146,39 @@ class Azure(object):
         )
         filterStr = str()
         if id:
-            filterStr = "tagname eq 'uuid' and tagvalue eq {}".format(id)
+            filterStr = "tagname eq 'uuid' and tagvalue eq '{}'".format(id)
+            resourceList = resClient.resources.list(
+                filter=filterStr
+            )
+            resources = list()
+            try:
+                for page in resourceList.next():
+                    resources.append(page.id)
+                dnsEntries = self.getDNSRecords(id)
+                resources.append({'dns': dnsEntries})
+                disks = self.getStorageDisks(id)
+                resources.append({'vhds': disks})
+
+            except CloudError as e:
+                print("Error: {}".format(e))
+                pass
+            return resources
         else:
             filterStr = "tagname eq 'uuid'"
-        print("filterStr is  {}".format(filterStr))
-        resourceList = resClient.resource_groups.list_resources(
-            self.resourceGroup,
-            filter=filterStr
-        )
-
-        ids = set()
-        try:
-            for page in resourceList.next():
-                resource = self.getResourceById(page.type, page.id)
-                ids.add(resource.tags['uuid'])
-        except CloudError as e:
-            print("Error: {}".format(e))
-            pass
-        return list(ids)
+            print("filterStr is  {}".format(filterStr))
+            resourceList = resClient.resource_groups.list_resources(
+                self.resourceGroup,
+                filter=filterStr
+            )
+            ids = set()
+            try:
+                for page in resourceList.next():
+                    resource = self.getResourceById(page.type, page.id)
+                    ids.add(resource.tags['uuid'])
+            except CloudError as e:
+                print("Error: {}".format(e))
+                pass
+            return list(ids)
 
     def getResourceById(self, type, id):
         """Get a resource by ID."""
@@ -176,23 +242,22 @@ class Azure(object):
 
         return record + "." + domain
 
-    def storageAccountAvailable(self, sa):
+    def storageAccountAvailable(self):
         """Test to see if a SA is available."""
         strClient = StorageManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         availability = strClient.storage_accounts.check_name_availability(
-            sa
+            self.storageAccount
         )
         return availability.name_available
 
-    def storageAccount(self, sa):
+    def createStorageAccount(self):
         """Create a SA if not already created."""
         strClient = StorageManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        self.storageAccount = sa
-        if self.storageAccountAvailable(self.storageAccount):
+        if self.storageAccountAvailable():
             saAsyncOp = strClient.storage_accounts.create(
               self.resourceGroup,
               self.storageAccount,
@@ -259,7 +324,7 @@ class Azure(object):
                 'subnet': network.subnets[0]
             })
 
-    def nsg(self, vm):
+    def nsg(self, vm, tags):
         """Create NSG."""
         netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
@@ -294,6 +359,8 @@ class Azure(object):
             }
           ]
         }
+        if len(tags) > 0:
+            rules["tags"] = tags
         nsgCreated = False
         try:
             asyncNsgOp = netClient.network_security_groups.get(
@@ -316,7 +383,7 @@ class Azure(object):
             nsg = aNsgOp.result()
             return nsg
 
-    def generateNicParams(self, vm, vmName, subnet, pubIP):
+    def generateNicParams(self, vm, vmName, subnet, pubIP, tags):
         """Generate the Nic Parameters."""
         params = {
             'location': self.config['region'],
@@ -330,6 +397,8 @@ class Azure(object):
             'id': pubIP.id
           }
         }]
+        if len(tags) > 0:
+            params["tags"] = tags
 
         if 'service_port' in vm:
             nsg = self.nsg(vm)
@@ -342,24 +411,28 @@ class Azure(object):
         params['ip_configurations'] = ipConfig
         return params
 
-    def nic(self, vm, vmName, subnet):
+    def nic(self, vm, vmName, subnet, tags):
         """Create a Network interface for a vm."""
         netClient = NetworkManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         pubIPName = vmName + "pubip"
+        pubIpParams = {
+          'public_ip_allocation_method': 'Dynamic',
+          'location': self.config['region'],
+          'public_ip_address_version': 'IPv4',
+        }
+        if len(tags) > 0:
+            pubIpParams['tags'] = tags
+
         asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
           self.resourceGroup,
           pubIPName,
-          {
-            'public_ip_allocation_method': 'Dynamic',
-            'location': self.config['region'],
-            'public_ip_address_version': 'IPv4'
-          }
+          pubIpParams
         )
         asycPubIPCreation.wait()
         pubIP = asycPubIPCreation.result()
-        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP)
+        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
         asyncNicCreation = netClient.network_interfaces.create_or_update(
           self.resourceGroup,
           vmName + "nic",
@@ -374,7 +447,7 @@ class Azure(object):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
         lock.acquire()
-        vmNic = self.nic(vm, vmName, subnet)
+        vmNic = self.nic(vm, vmName, subnet, tags)
         lock.release()
         tmpVm.generateParams(
             vmNic['nic'].id,

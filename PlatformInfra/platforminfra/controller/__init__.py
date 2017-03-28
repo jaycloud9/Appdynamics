@@ -155,6 +155,7 @@ class Controller(object):
         provider = Azure(
             self.config.credentials,
             self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
             template,
             config['id']
         )
@@ -172,8 +173,7 @@ class Controller(object):
         print("Creating RG")
         provider.createResourceGroup()
         print("Creating SA")
-        provider.storageAccount(
-            self.config.defaults['storage_account_name'])
+        provider.createStorageAccount()
         try:
             for resource in provider.resources['resources']:
                 for k, v in resource.items():
@@ -230,13 +230,33 @@ class Controller(object):
 
     def listEnvironments(self):
         """Return a list of environments."""
-        print("Config Credentials: {}".format(self.config.credentials))
         provider = Azure(
             self.config.credentials,
-            self.config.defaults['resource_group_name']
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name']
         )
 
         rsp = Response({
             "Environments": provider.getResources()
+        })
+        return rsp.httpResponse(200)
+
+    def deleteEnvironment(self, config):
+        """Delete a specific Environments Resources."""
+        provider = Azure(
+            self.config.credentials,
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name']
+        )
+        deleteResources = {'Azure': provider.getResources(config['uuid'])}
+        glServerConn = "https://gitlab.temenos.cloud"
+        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        glServer = Gitlab(glServerConn, glServerToken)
+        user = glServer.getUser(config['uuid'])
+        if user:
+            deleteResources['Gitlab'] = user
+
+        rsp = Response({
+            "Resources": deleteResources
         })
         return rsp.httpResponse(200)

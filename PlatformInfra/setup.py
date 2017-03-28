@@ -13,6 +13,7 @@ setup(
         'msrest',
         'msrestazure',
         'azure-mgmt-storage',
+        'azure-storage',
         'azure-mgmt-resource',
         'azure-mgmt-network',
         'azure-mgmt-compute',

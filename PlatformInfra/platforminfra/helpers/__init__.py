@@ -101,6 +101,25 @@ class Gitlab(object):
         })
         return user
 
+    def getUser(self, uname):
+        """Get a User."""
+        try:
+            user = self.conn.users.list(username=uname)[0]
+        except:
+            print("No User: {}".format(uname))
+            return None
+        return user.username
+
+    def deleteUser(self, uname):
+        """Delete a user."""
+        try:
+            user = self.conn.users.list(username=uname)[0]
+            user.delete()
+        except:
+            print("No User: {}".format(uname))
+            return None
+        return user.username
+
 
 class FakeData(object):
     """Temporary Class to generate fake data on the API for testing."""

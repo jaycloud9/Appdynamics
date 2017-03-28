@@ -40,7 +40,7 @@ def environmentsById(uuid):
     elif request.method == 'DELETE':
         req = request.get_json()
         req['uuid'] = uuid
-        return FakeData.environmentsByIdDelete(req)
+        return controller.deleteEnvironment(req)
     else:
         return rsp.httpResponse(404, 'Not Found')
 
