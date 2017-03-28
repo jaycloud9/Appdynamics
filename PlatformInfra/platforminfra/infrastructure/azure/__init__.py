@@ -15,24 +15,27 @@ from msrestazure.azure_exceptions import CloudError
 from multiprocessing import Process, Queue, Lock
 
 
-def getCredentials(template):
+def getCredentials(config):
     """Given provider details Get the Credentials."""
-    for provider in template:
-        if "azure" in provider:
-            for details in provider['azure']:
-                if "config" in details:
-                    for configItem in details['config']:
-                        if "credentials" in configItem:
-                            return configItem["credentials"]
-                        else:
-                            return {
-                                'error': 'No credentials in config'
-                            }
-                else:
-                    return {'error': 'No config found in Azure provider'}
-        else:
-            return {'error': 'No Azure provider details'}
-    return {'error': 'No Credentials found for Azure'}
+    if 'provider' in config:
+        for provider in config['provider']:
+            if "azure" in provider:
+                for details in provider['azure']:
+                    if "config" in details:
+                        for configItem in details['config']:
+                            if "credentials" in configItem:
+                                return configItem["credentials"]
+                            else:
+                                return {
+                                    'error': 'No credentials in config'
+                                }
+                    else:
+                        return {'error': 'No config found in Azure provider'}
+            else:
+                return {'error': 'No Azure provider details'}
+        return {'error': 'No Credentials found for Azure'}
+    else:
+        return config
 
 
 def getConfig(template):
@@ -58,18 +61,74 @@ def getResources(template):
 class Azure(object):
     """Azure class for Generic Azure operations."""
 
-    def __init__(self, config, id):
+    def __init__(self, credentials, rg, config=None, id=None):
         """The Azure Class."""
         # Infrastructure.__init__(self, 'Azure')
-        self.credentials = getCredentials(config['provider'])
-        self.config = getConfig(config['provider'])
-        self.id = id
-        self.resources = getResources(config['services'])
+        self.setConfig(credentials, config)
+        self.resourceGroup = rg
+        if id:
+            self.setId(id)
+
+    def setConfig(self, credentials, config):
+        """Set the config."""
+        if config:
+            self.credentials = getCredentials(config)
+            self.config = getConfig(config['provider'])
+            self.resources = getResources(config['services'])
+        else:
+            self.credentials = getCredentials(credentials)
+
         self.authAccount = ServicePrincipalCredentials(
             client_id=self.credentials['client_id'],
             secret=self.credentials['secret'],
             tenant=self.credentials['tenant']
         )
+
+    def setId(self, id):
+        """Set the Id."""
+        self.id = id
+
+    def getResources(self, id=None):
+        """Get all resources."""
+        resClient = ResourceManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        filterStr = str()
+        if id:
+            filterStr = "tagname eq 'uuid' and tagvalue eq {}".format(id)
+        else:
+            filterStr = "tagname eq 'uuid'"
+        print("filterStr is  {}".format(filterStr))
+        resourceList = resClient.resource_groups.list_resources(
+            self.resourceGroup,
+            filter=filterStr
+        )
+
+        ids = set()
+        try:
+            for page in resourceList.next():
+                resource = self.getResourceById(page.type, page.id)
+                ids.add(resource.tags['uuid'])
+        except CloudError as e:
+            print("Error: {}".format(e))
+            pass
+        return list(ids)
+
+    def getResourceById(self, type, id):
+        """Get a resource by ID."""
+        apiVersions = {
+            'Microsoft.Network/virtualNetworks': '2017-03-01',
+            'Microsoft.Compute/availabilitySets': '2017-03-30',
+            'Microsoft.Compute/virtualMachines': '2017-03-30'
+        }
+        resClient = ResourceManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        result = resClient.resources.get_by_id(
+            id,
+            apiVersions[type]
+        )
+        return result
 
     def resourceGroupAvailable(self, rg):
         """Test to See if TG is available."""
@@ -79,12 +138,11 @@ class Azure(object):
         result = resClient.resource_groups.check_existence(rg)
         return result
 
-    def resourceGroup(self, rg):
+    def createResourceGroup(self):
         """Create a RG if not already created."""
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        self.resourceGroup = rg
         if not self.resourceGroupAvailable(self.resourceGroup):
             resClient.resource_groups.create_or_update(
               self.resourceGroup,

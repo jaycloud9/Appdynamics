@@ -1,6 +1,7 @@
 """PlatformInfra Controller."""
 
 from platforminfra.templates import Template
+from platforminfra.config import Config
 from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
@@ -18,6 +19,7 @@ class Controller(object):
         self.response = list()
         self.subnets = list()
         self.vms = list()
+        self.config = Config()
 
     def getTemplate(self, templateName):
         """Get a Template by Name."""
@@ -150,7 +152,12 @@ class Controller(object):
             config['infrastructureTemplateID']
         )
         self.tags['uuid'] = config['id']
-        provider = Azure(template, config['id'])
+        provider = Azure(
+            self.config.credentials,
+            self.config.defaults['resource_group_name'],
+            template,
+            config['id']
+        )
         if 'error' in provider.credentials:
             rsp = Response(provider.credentials)
             return rsp.httpResponse(404)
@@ -163,9 +170,10 @@ class Controller(object):
         }
         # Build core resources
         print("Creating RG")
-        provider.resourceGroup("mpdevtestrg" + self.tags['uuid'])
+        provider.createResourceGroup()
         print("Creating SA")
-        provider.storageAccount("mpdevtestsa" + self.tags['uuid'])
+        provider.storageAccount(
+            self.config.defaults['storage_account_name'])
         try:
             for resource in provider.resources['resources']:
                 for k, v in resource.items():
@@ -218,4 +226,17 @@ class Controller(object):
         )
         self.response.append({'git_url': forked.web_url})
         rsp = Response({'Servers': self.response})
+        return rsp.httpResponse(200)
+
+    def listEnvironments(self):
+        """Return a list of environments."""
+        print("Config Credentials: {}".format(self.config.credentials))
+        provider = Azure(
+            self.config.credentials,
+            self.config.defaults['resource_group_name']
+        )
+
+        rsp = Response({
+            "Environments": provider.getResources()
+        })
         return rsp.httpResponse(200)

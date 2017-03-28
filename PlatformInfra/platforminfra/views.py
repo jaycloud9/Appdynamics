@@ -19,7 +19,7 @@ def environments():
     """Get a list of environments."""
     rsp = Response()
     if request.method == 'GET':
-        return FakeData.environmentsGet()
+        return controller.listEnvironments()
     elif request.method == 'POST':
         return controller.createEnvironment(request.get_json())
     else:
