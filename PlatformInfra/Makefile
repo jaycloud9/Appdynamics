@@ -17,7 +17,8 @@ clean-test:
 	@echo "Not implemented yet"
 
 test:
-	@echo "Not implemented yet"
+	pip install -r test-requirements.txt
+	python -m unittest discover
 
 run:
 	flask run -h 0.0.0.0
@@ -27,3 +28,4 @@ run-dev:
 
 run-debug:
 	FLASK_DEBUG=1 flask run
+
