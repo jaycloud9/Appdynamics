@@ -401,7 +401,7 @@ class Azure(object):
             params["tags"] = tags
 
         if 'service_port' in vm:
-            nsg = self.nsg(vm)
+            nsg = self.nsg(vm, tags)
             params['network_security_group'] = nsg
         if 'beId' in vm:
             ipConfig[0]['load_balancer_backend_address_pools'] = [{
