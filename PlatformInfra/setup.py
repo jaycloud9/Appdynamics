@@ -2,7 +2,7 @@
 import sys
 from setuptools import setup
 
-if sys.version_info < (3,5):
+if sys.version_info < (3, 5):
     sys.exit('Sorry, Python < 3.5 is not supported')
 
 setup(

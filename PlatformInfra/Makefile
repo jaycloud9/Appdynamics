@@ -17,7 +17,6 @@ clean-test:
 	@echo "Not implemented yet"
 
 test:
-	pip install -r test-requirements.txt
 	python -m unittest discover
 
 run:

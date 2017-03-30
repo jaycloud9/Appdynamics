@@ -1,11 +1,11 @@
 import platforminfra
 import unittest
 from platforminfra.views import base_path
-from platforminfra.helpers import FakeData
 import urllib.parse as urlp
 import json
 
-TEST_ENVIRONMENTS = ['ghy543','77h89d','s8sf8s']
+TEST_ENVIRONMENTS = ['ghy543', '77h89d', 's8sf8s']
+
 
 class PlatformInfraTestCase(unittest.TestCase):
 
@@ -19,13 +19,13 @@ class PlatformInfraTestCase(unittest.TestCase):
     def test_root(self):
         """Test that root page does not exist, to get some tests started"""
         rv = self.app.get(base_path)
-        self.assertEqual(rv.status_code,404,"Checking "+base_path)
+        self.assertEqual(rv.status_code, 404, "Checking "+base_path)
 
     def test_get_environment(self):
-        url = urlp.urljoin(base_path,"environments/")
-        url = urlp.urljoin(url,TEST_ENVIRONMENTS[0])
+        url = urlp.urljoin(base_path, "environments/")
+        url = urlp.urljoin(url, TEST_ENVIRONMENTS[0])
         rv = self.app.get(url)
-        self.assertEqual(rv.status_code,200,"Checking "+url)
+        self.assertEqual(rv.status_code, 200, "Checking "+url)
         data = json.loads(rv.get_data().decode("utf-8"))
 
         self.assertEqual(
@@ -42,10 +42,10 @@ class PlatformInfraTestCase(unittest.TestCase):
 
     def test_get_unknown_environment(self):
         """Test that the system responds correctly to unknown env IDs"""
-        url = urlp.urljoin(base_path,"environments/")
-        url = urlp.urljoin(url,"INCORRECT_ENV_ID")
+        url = urlp.urljoin(base_path, "environments/")
+        url = urlp.urljoin(url, "INCORRECT_ENV_ID")
         rv = self.app.get(url)
-        self.assertEqual(rv.status_code,200,"Checking "+url)
+        self.assertEqual(rv.status_code, 200, "Checking "+url)
         data = json.loads(rv.get_data().decode("utf-8"))
 
         self.assertEqual(
@@ -54,6 +54,6 @@ class PlatformInfraTestCase(unittest.TestCase):
             "Checking reported failure for "+url
         )
 
+
 if __name__ == '__main__':
     unittest.main()
-
