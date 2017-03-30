@@ -5,6 +5,7 @@ import gitlab
 import random
 import string
 
+
 class Helpers(object):
     """Heleprs Class."""
 
@@ -176,10 +177,12 @@ class FakeData(object):
         if action == 'status':
             rsp.payload = {
                     'response': 'Success',
-                    'status': 'OK',
-                    'application': [
-                        {'name': 'Retail_Suite'}
-                    ],
+                    'status': 'Pending',
+                    'application': {
+                        'name': 'Retail_Suite',
+                        'jobId': 1234,
+                        'status': "Pending"
+                    },
                     'resources': [
                         {'loadbalancer': "Creating"},
                         {'network': "Created"},
