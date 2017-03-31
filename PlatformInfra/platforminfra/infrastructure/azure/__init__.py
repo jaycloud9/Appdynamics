@@ -185,7 +185,10 @@ class Azure(object):
         apiVersions = {
             'Microsoft.Network/virtualNetworks': '2017-03-01',
             'Microsoft.Compute/availabilitySets': '2017-03-30',
-            'Microsoft.Compute/virtualMachines': '2017-03-30'
+            'Microsoft.Compute/virtualMachines': '2017-03-30',
+            'Microsoft.Network/networkInterfaces': '2016-09-01',
+            'Microsoft.Network/networkSecurityGroups': '2017-03-01',
+            'Microsoft.Network/publicIPAddresses': '2017-03-01'
         }
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
