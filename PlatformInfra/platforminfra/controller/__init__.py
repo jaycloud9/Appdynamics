@@ -201,7 +201,7 @@ class Controller(object):
         )
         print("Running Jenkins Job")
         jenkinsServer.runBuildWithParams(
-            "T24-Pipeline",
+            config["application"],
             params={
                 "UUID": self.tags['uuid']
             }
@@ -226,7 +226,7 @@ class Controller(object):
             glSourceProject.id
         )
         self.response.append({'git_url': forked.web_url})
-        rsp = Response({'Servers': self.response})
+        rsp = Response({'Resources': self.response})
         return rsp.httpResponse(200)
 
     def listEnvironments(self):

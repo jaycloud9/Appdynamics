@@ -26,7 +26,8 @@ class LoadBalancer(object):
         publicIpParameters = {
           'location': self.config['region'],
           'public_ip_allocation_method': 'static',
-          'idle_timeout_in_minutes': 4
+          'idle_timeout_in_minutes': 4,
+          'tags': self.tags
         }
         asyncPublicIpCreation = netClient.public_ip_addresses.create_or_update(
           self.resourceGroup,
@@ -139,6 +140,7 @@ class LoadBalancer(object):
         """Generate LB Params."""
         return {
           'location': self.config['region'],
+          'tags': self.tags,
           'frontend_ip_configurations': feConfig,
           'backend_address_pools': beConfig,
           'probes': probe,

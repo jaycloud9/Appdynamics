@@ -15,6 +15,7 @@ from azure.storage.blob import BlockBlobService
 from msrestazure.azure_exceptions import CloudError
 from multiprocessing import Process, Queue, Lock
 import re
+import time
 
 
 def getCredentials(config):
@@ -77,7 +78,8 @@ class Azure(object):
             'Microsoft.Compute/virtualMachines': '2017-03-30',
             'Microsoft.Network/networkInterfaces': '2016-09-01',
             'Microsoft.Network/networkSecurityGroups': '2017-03-01',
-            'Microsoft.Network/publicIPAddresses': '2017-03-01'
+            'Microsoft.Network/publicIPAddresses': '2017-03-01',
+            'Microsoft.Network/loadBalancers': '2017-03-01'
         }
 
     def setConfig(self, credentials, config):
@@ -174,17 +176,24 @@ class Azure(object):
             if containerName == container.name:
                 found = True
         if found:
-            blockBlobService.delete_container(containerName)
+            deleting = True
+            retries = 0
+            while deleting and retries < 10:
+                try:
+                    blockBlobService.delete_container(containerName)
+                    deleting = False
+                except:
+                    time.sleep(10)
 
     def deleteResourceById(self, ids):
         """Delete a Resource by it's ID."""
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
-        retry = ids
+        retry = ids.copy()
         count = 0
-        previousId = str()
-        while retry and count < 3:
+        previousIds = list()
+        while retry and count < 20:
             for id in retry:
                 idSplit = re.split(r"/", id.strip())
                 resourceType = idSplit[6] + "/" + idSplit[7]
@@ -196,13 +205,11 @@ class Azure(object):
                     result.wait()
                     retry.remove(id)
                 except Exception as e:
-                    if previousId == id:
+                    if id in previousIds:
                         count = count + 1
                     else:
-                        count = 0
-                        previousId = id
+                        previousIds.append(id)
                     print("Adding resource to retry list: {}".format(id))
-                    print(e)
 
     def getResources(self, id=None):
         """Get all resources."""
