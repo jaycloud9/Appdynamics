@@ -50,8 +50,10 @@ class Vm(object):
               'caching': 'None',
               'create_option': 'fromImage',
               'vhd': {
-                'uri': 'https://{}.blob.core.windows.net/vhds/{}.vhd'.format(
-                  self.storageAccount, vmName
+                'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
+                    self.storageAccount,
+                    tags['uuid'],
+                    vmName + '.vhd'
                  )
               },
             },
@@ -60,8 +62,9 @@ class Vm(object):
               'disk_size_gb': 200,
               'lun': 0,
               'vhd': {
-                'uri': "https://{}.blob.core.windows.net/vhds/{}".format(
+                'uri': "https://{}.blob.core.windows.net/{}/{}".format(
                     self.storageAccount,
+                    tags['uuid'],
                     vmName + 'datadisk1.vhd')
               },
               'create_option': 'Empty'

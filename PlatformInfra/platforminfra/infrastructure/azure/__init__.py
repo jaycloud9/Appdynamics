@@ -14,6 +14,7 @@ from azure.mgmt.dns import DnsManagementClient
 from azure.storage.blob import BlockBlobService
 from msrestazure.azure_exceptions import CloudError
 from multiprocessing import Process, Queue, Lock
+import re
 
 
 def getCredentials(config):
@@ -70,6 +71,14 @@ class Azure(object):
         self.storageAccount = sa
         if id:
             self.setId(id)
+        self.apiVersions = {
+            'Microsoft.Network/virtualNetworks': '2017-03-01',
+            'Microsoft.Compute/availabilitySets': '2017-03-30',
+            'Microsoft.Compute/virtualMachines': '2017-03-30',
+            'Microsoft.Network/networkInterfaces': '2016-09-01',
+            'Microsoft.Network/networkSecurityGroups': '2017-03-01',
+            'Microsoft.Network/publicIPAddresses': '2017-03-01'
+        }
 
     def setConfig(self, credentials, config):
         """Set the config."""
@@ -102,9 +111,26 @@ class Azure(object):
         )
         results = list()
         for record in records:
-            if id in record.name:
+            if id == re.split(r"-", record.name.strip())[-1]:
                 results.append(record.name)
         return results
+
+    def deleteDNSRecord(self, records, domain="dev.temenos.cloud"):
+        """Delete a record from the domain."""
+        dnsClient = DnsManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        try:
+            for record in records:
+                dnsClient.record_sets.delete(
+                    "mp_dev_core",
+                    domain,
+                    record,
+                    'A'
+                )
+        except CloudError as e:
+            print("Error: {}".format(e))
+            raise e
 
     def getStorageDisks(self, id):
         """Get a list of Storage disks."""
@@ -114,9 +140,14 @@ class Azure(object):
             account_name=self.storageAccount,
             account_key=saKey
         )
-        blobs = blockBlobService.list_blobs("vhds")
-        for blob in blobs:
-            if id in blob.name:
+        found = False
+        containers = blockBlobService.list_containers()
+        for container in containers:
+            if id == container.name:
+                found = True
+        if found:
+            blobs = blockBlobService.list_blobs(id)
+            for blob in blobs:
                 disks.append(blob.name)
         return disks
 
@@ -131,13 +162,47 @@ class Azure(object):
         )
         return saKeys.keys[0].value
 
-    def deleteStorageAccountBlob(self, blob):
+    def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
         blockBlobService = BlockBlobService(
             account_name=self.storageAccount,
             account_key=self.getStorageAccountKey()
         )
-        blockBlobService.delete_blob('vhds', blob)
+        found = False
+        containers = blockBlobService.list_containers()
+        for container in containers:
+            if containerName == container.name:
+                found = True
+        if found:
+            blockBlobService.delete_container(containerName)
+
+    def deleteResourceById(self, ids):
+        """Delete a Resource by it's ID."""
+        resClient = ResourceManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        retry = ids
+        count = 0
+        previousId = str()
+        while retry and count < 3:
+            for id in retry:
+                idSplit = re.split(r"/", id.strip())
+                resourceType = idSplit[6] + "/" + idSplit[7]
+                try:
+                    result = resClient.resources.delete_by_id(
+                        id,
+                        self.apiVersions[resourceType]
+                    )
+                    result.wait()
+                    retry.remove(id)
+                except Exception as e:
+                    if previousId == id:
+                        count = count + 1
+                    else:
+                        count = 0
+                        previousId = id
+                    print("Adding resource to retry list: {}".format(id))
+                    print(e)
 
     def getResources(self, id=None):
         """Get all resources."""
@@ -150,14 +215,19 @@ class Azure(object):
             resourceList = resClient.resources.list(
                 filter=filterStr
             )
-            resources = list()
+            resources = dict()
+            ids = list()
             try:
                 for page in resourceList.next():
-                    resources.append(page.id)
+                    ids.append(page.id)
+                if ids:
+                    resources["ids"] = ids
                 dnsEntries = self.getDNSRecords(id)
-                resources.append({'dns': dnsEntries})
+                if dnsEntries:
+                    resources["dns"] = dnsEntries
                 disks = self.getStorageDisks(id)
-                resources.append({'vhds': disks})
+                if disks:
+                    resources["vhds"] = disks
 
             except CloudError as e:
                 print("Error: {}".format(e))
@@ -182,20 +252,12 @@ class Azure(object):
 
     def getResourceById(self, type, id):
         """Get a resource by ID."""
-        apiVersions = {
-            'Microsoft.Network/virtualNetworks': '2017-03-01',
-            'Microsoft.Compute/availabilitySets': '2017-03-30',
-            'Microsoft.Compute/virtualMachines': '2017-03-30',
-            'Microsoft.Network/networkInterfaces': '2016-09-01',
-            'Microsoft.Network/networkSecurityGroups': '2017-03-01',
-            'Microsoft.Network/publicIPAddresses': '2017-03-01'
-        }
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
         )
         result = resClient.resources.get_by_id(
             id,
-            apiVersions[type]
+            self.apiVersions[type]
         )
         return result
 
@@ -318,13 +380,11 @@ class Azure(object):
             )
             asyncSubnetCreation.wait()
             subNets.put({
-                'name': netName + "sub1",
-                'subnet': asyncSubnetCreation.result()
+                self.id: asyncSubnetCreation.result()
             })
         else:
             subNets.put({
-                'name': netName + "sub1",
-                'subnet': network.subnets[0]
+                self.id: network.subnets[0]
             })
 
     def nsg(self, vm, tags):
@@ -401,6 +461,7 @@ class Azure(object):
           }
         }]
         if len(tags) > 0:
+            print("Adding Nic tags params")
             params["tags"] = tags
 
         if 'service_port' in vm:

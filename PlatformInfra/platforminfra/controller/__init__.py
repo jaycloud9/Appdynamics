@@ -60,27 +60,28 @@ class Controller(object):
         # Processes that can be run in parrallel
         serverProcs = list()
         try:
+            for i in self.subnets:
+                if self.tags['uuid'] in i['subnets']:
+                    vmSubnet = i['subnets'][self.tags['uuid']]
             for server in data:
-                for i in self.subnets:
-                    if "subnets" in i:
-                        p = Process(
-                            target=provider.virtualMachine,
-                            args=(
-                                server,
-                                self.tags,
-                                i['subnets']['subnet'],
-                                vms,
-                                vmLock
-                            )
-                        )
-                        vmDetails = {
-                            'servers': server['name'],
-                            'thread': p
-                        }
-                        if 'dns' in server:
-                            vmDetails['dns'] = server['dns']
-                        serverProcs.append(vmDetails)
-                        p.start()
+                p = Process(
+                    target=provider.virtualMachine,
+                    args=(
+                        server,
+                        self.tags,
+                        vmSubnet,
+                        vms,
+                        vmLock
+                    )
+                )
+                vmDetails = {
+                    'servers': server['name'],
+                    'thread': p
+                }
+                if 'dns' in server:
+                    vmDetails['dns'] = server['dns']
+                serverProcs.append(vmDetails)
+                p.start()
 
             for proc in serverProcs:
                 proc['thread'].join()
@@ -255,6 +256,15 @@ class Controller(object):
         user = glServer.getUser(config['uuid'])
         if user:
             deleteResources['Gitlab'] = user
+
+        if "ids" in deleteResources["Azure"]:
+            provider.deleteResourceById(deleteResources["Azure"]["ids"])
+        if "vhds" in deleteResources["Azure"]:
+            provider.deleteStorageAccountContainer(config['uuid'])
+        if "dns" in deleteResources["Azure"]:
+            provider.deleteDNSRecord(deleteResources["Azure"]["dns"])
+        if "Gitlab" in deleteResources:
+            glServer.deleteUser(user)
 
         rsp = Response({
             "Resources": deleteResources
