@@ -41,7 +41,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"id\":\"w7hf6hsd34f2\", \"application\": \"Retail_Suite\", \"infrastructureTemplateID\": \"test\"}"
+					"raw": "{\"id\":\"w7hf6hsd34f2\", \"application\": \"T24-Pipeline\", \"infrastructureTemplateID\": \"test\"}"
 				},
 				"description": "POST"
 			},
@@ -70,7 +70,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -81,7 +81,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": ""
 				},
 				"description": "DELETE"
 			},
