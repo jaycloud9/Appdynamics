@@ -16,8 +16,11 @@ class Vm(object):
         self.authAccount = opts['authAccount']
         self.credentials = opts['credentials']
 
-    def generateParams(self, nicId, vmName, asId, tags):
+    def generateParams(self, nicId, vmName, asId, tags, persistData=False):
         """Create the VM parameters structure."""
+        createOption = "Empty"
+        if persistData:
+            createOption = "Attach"
         self.vmParams = {
           'location': self.config['region'],
           'tags': tags,
@@ -67,7 +70,7 @@ class Vm(object):
                     tags['uuid'],
                     vmName + 'datadisk1.vhd')
               },
-              'create_option': 'Empty'
+              'create_option': createOption
             }]
           },
           'network_profile': {

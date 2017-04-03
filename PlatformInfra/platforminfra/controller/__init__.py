@@ -66,7 +66,7 @@ class Controller(object):
 
         self.subnets.append(subnets)
 
-    def createVms(self, data, provider):
+    def createVms(self, data, provider, persistData=False):
         """Create VMs."""
         print("Creating Servers")
         vms = Queue()
@@ -85,7 +85,8 @@ class Controller(object):
                         self.tags,
                         vmSubnet,
                         vms,
-                        vmLock
+                        vmLock,
+                        persistData
                     )
                 )
                 vmDetails = {
@@ -302,22 +303,46 @@ class Controller(object):
             template,
             data['uuid']
         )
+        print("Rebuilding: {}".format(data['servers']))
         vms = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
         })
         count = 0
+        beDict = dict()
         for server in template['services']['servers']:
             if server['name'] == data['servers']:
                 count = server['count']
         if 'ids' in vms:
             count = len(vms['ids'])
+            # Check if server is part of a Load Balancer
+            vmResult = provider.getResourceById(
+                "Microsoft.Compute/virtualMachines",
+                vms['ids'][0],
+            )
+            nicResult = provider.getResourceById(
+                "Microsoft.Network/networkInterfaces",
+                vmResult.properties['networkProfile']
+                ['networkInterfaces'][0]['id'],
+            )
+            if 'loadBalancerBackendAddressPools' in \
+                    nicResult.properties['ipConfigurations'][0]['properties']:
+                    # Assignment over multiple lines didn't work
+                    ipConfig = nicResult.properties['ipConfigurations'][0]
+                    prop = ipConfig['properties']
+                    lb = prop['loadBalancerBackendAddressPools'][0]
+                    beDict['beId'] = lb['id']
             # Delete Resources
             provider.deleteResourceById(vms['ids'])
+
         vm = {'name': data['servers'], 'count': count}
+        if 'beId' in beDict:
+            vm['beId'] = beDict['beId']
+
+        persisteData = False
         if 'vhds' in vms:
             if data["persist_data"]:
-                print("Persist Data True")
+                persisteData = data['persist_data']
                 # Delete OS Disks
                 delDisks = list()
                 for disk in vms['vhds']:
@@ -334,7 +359,7 @@ class Controller(object):
         self.tags['uuid'] = data['uuid']
         self.subnets.append({'subnets': {data['uuid']: subnet}})
         vmList = [vm]
-        self.createVms(vmList, provider)
+        self.createVms(vmList, provider, persisteData)
         for vmRsp in self.vms:
             self.response.append(vmRsp)
 

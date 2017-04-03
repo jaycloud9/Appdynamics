@@ -134,7 +134,7 @@ class Azure(object):
             print("Error: {}".format(e))
             raise e
 
-    def getStorageDisks(self, id):
+    def getStorageDisks(self, id, filter):
         """Get a list of Storage disks."""
         saKey = self.getStorageAccountKey()
         disks = list()
@@ -150,7 +150,12 @@ class Azure(object):
         if found:
             blobs = blockBlobService.list_blobs(id)
             for blob in blobs:
-                disks.append(blob.name)
+                if filter:
+                    search = ''.join(e for e in filter['value'] if e.isalnum())
+                    if search in blob.name:
+                        disks.append(blob.name)
+                else:
+                    disks.append(blob.name)
         return disks
 
     def getStorageAccountKey(self):
@@ -261,7 +266,7 @@ class Azure(object):
                 dnsEntries = self.getDNSRecords(id)
                 if dnsEntries:
                     resources["dns"] = dnsEntries
-                disks = self.getStorageDisks(id)
+                disks = self.getStorageDisks(id, filter)
                 if disks:
                     resources["vhds"] = disks
 
@@ -522,7 +527,6 @@ class Azure(object):
           }
         }]
         if len(tags) > 0:
-            print("Adding Nic tags params")
             params["tags"] = tags
 
         if 'service_port' in vm:
@@ -568,7 +572,10 @@ class Azure(object):
         details['nic'] = asyncNicCreation.result()
         return details
 
-    def vmWorker(self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock):
+    def vmWorker(
+                self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                persistData
+            ):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
         lock.acquire()
@@ -579,12 +586,16 @@ class Azure(object):
             vmNic['nic'].id,
             vmName,
             asInfo.id,
-            {**tags, **tmpDict}
+            {**tags, **tmpDict},
+            persistData
         )
         tmpVm.create(vmName, vmNic, vmQ)
         print("VM Created")
 
-    def virtualMachine(self, vm, tags, subnet, vmQueue, vmLock):
+    def virtualMachine(
+                self, vm, tags, subnet, vmQueue, vmLock,
+                persistData=False
+            ):
         """Create a VM."""
         print("Creating VMs: {}".format(vm['name']))
         vmLock.acquire()
@@ -621,7 +632,10 @@ class Azure(object):
             vmName = ''.join(e for e in tmpStr if e.isalnum())
             p = Process(
                 target=self.vmWorker,
-                args=(opts, vm, vmName, tags, asInfo, subnet, vmQ, lock)
+                args=(
+                    opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                    persistData
+                )
             )
             vmProcList.append(p)
             p.start()
