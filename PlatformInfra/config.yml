@@ -1,8 +1,16 @@
 credentials:
-  subscription_id: 51df121a-2371-45a4-8387-d72ef028239f
-  client_id: 03ead528-650b-4c11-8abc-624aa2569c4a
-  secret: FSgtsqf8TuV6Sb2mrdVuTDozc43HYY9ltksCw/ytbmk=
-  tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
+  azure:
+    subscription_id: 51df121a-2371-45a4-8387-d72ef028239f
+    client_id: 03ead528-650b-4c11-8abc-624aa2569c4a
+    secret: FSgtsqf8TuV6Sb2mrdVuTDozc43HYY9ltksCw/ytbmk=
+    tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
+  gitlab:
+    url: "https://gitlab.temenos.cloud"
+    token: "FHcv_bHjHnAvd6uug7x_"
+  jenkins:
+    url: "http://51.141.7.30:8080"
+    user: "admin"
+    password: "Blue1Sky"
 defaults:
   resource_group_name: "mpdevtestrg"
   storage_account_name: "mpdevtestsa"

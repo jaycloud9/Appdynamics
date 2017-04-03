@@ -147,18 +147,18 @@ class Controller(object):
                     }
                     raise Exception(e)
 
-    def createEnvironment(self, config):
+    def createEnvironment(self, data):
         """Create an Environment."""
         template = self.templates.loadTemplate(
-            config['infrastructureTemplateID']
+            data['infrastructureTemplateID']
         )
-        self.tags['uuid'] = config['id']
+        self.tags['uuid'] = data['id']
         provider = Azure(
             self.config.credentials,
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name'],
             template,
-            config['id']
+            data['id']
         )
         if 'error' in provider.credentials:
             rsp = Response(provider.credentials)
@@ -193,22 +193,22 @@ class Controller(object):
             self.response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
-        jenkinsServerConn = "http://51.141.7.30:8080"
         jenkinsServer = Jenkins(
-            jenkinsServerConn,
-            user='admin',
-            password='Blue1Sky'
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
         )
         print("Running Jenkins Job")
         jenkinsServer.runBuildWithParams(
-            config["application"],
+            data["application"],
             params={
                 "UUID": self.tags['uuid']
             }
         )
         print("Connecting to Gitlab")
-        glServerConn = "https://gitlab.temenos.cloud"
-        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
+        # When we know if theres more than one or not move to config.yml
         glSourceProject = "customer-demo"
         glSourceTeam = "root"
         glServer = Gitlab(glServerConn, glServerToken)
@@ -232,7 +232,7 @@ class Controller(object):
     def listEnvironments(self):
         """Return a list of environments."""
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
@@ -242,25 +242,25 @@ class Controller(object):
         })
         return rsp.httpResponse(200)
 
-    def deleteEnvironment(self, config):
+    def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         provider = Azure(
             self.config.credentials,
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
-        deleteResources = {'Azure': provider.getResources(config['uuid'])}
-        glServerConn = "https://gitlab.temenos.cloud"
-        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        deleteResources = {'Azure': provider.getResources(data['uuid'])}
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
         glServer = Gitlab(glServerConn, glServerToken)
-        user = glServer.getUser(config['uuid'])
+        user = glServer.getUser(data['uuid'])
         if user:
             deleteResources['Gitlab'] = user
 
         if "ids" in deleteResources["Azure"]:
             provider.deleteResourceById(deleteResources["Azure"]["ids"])
         if "vhds" in deleteResources["Azure"]:
-            provider.deleteStorageAccountContainer(config['uuid'])
+            provider.deleteStorageAccountContainer(data['uuid'])
         if "dns" in deleteResources["Azure"]:
             provider.deleteDNSRecord(deleteResources["Azure"]["dns"])
         if "Gitlab" in deleteResources:
