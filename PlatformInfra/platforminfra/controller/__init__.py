@@ -269,6 +269,7 @@ class Controller(object):
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
+        print("Deleting Resources")
         deleteResources = {'Azure': provider.getResources(data['uuid'])}
         glServerConn = self.config.credentials['gitlab']['url']
         glServerToken = self.config.credentials['gitlab']['token']
