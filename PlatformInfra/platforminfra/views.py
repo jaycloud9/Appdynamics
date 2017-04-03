@@ -31,7 +31,7 @@ def environments():
     methods=['GET', 'PUT', 'DELETE']
 )
 def environmentsById(uuid):
-    """GET, PUT or DELETE a Specific env."""
+    """GET or DELETE a Specific env."""
     rsp = Response()
     req = dict()
     req['uuid'] = uuid
@@ -54,10 +54,13 @@ def environmentsByIdAction(uuid, action):
     req['uuid'] = uuid
     if request.method == 'GET' and action == 'status':
         return FakeData.environmentsByIdActionGet(req, action)
+    elif request.method == 'PUT' and action == 'rebuild':
+        req = request.get_json()
+        req['uuid'] = uuid
+        return controller.rebuildEnvironmentServer(req)
     elif request.method == 'PUT' and (
         action == 'start' or
         action == 'stop' or
-        action == 'rebuild' or
         action == 'scale'
     ):
         req = request.get_json()

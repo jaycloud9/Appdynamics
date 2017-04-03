@@ -164,6 +164,27 @@ class Azure(object):
         )
         return saKeys.keys[0].value
 
+    def deleteStorageAccountDisk(self, containerName, disks):
+        """Delete a storage Blob."""
+        blockBlobService = BlockBlobService(
+            account_name=self.storageAccount,
+            account_key=self.getStorageAccountKey()
+        )
+        found = False
+        containers = blockBlobService.list_containers()
+        for container in containers:
+            if containerName == container.name:
+                found = True
+        if found:
+            try:
+                for disk in disks:
+                    blockBlobService.delete_blob(
+                        containerName,
+                        disk
+                    )
+            except Exception as e:
+                print(e)
+
     def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
         blockBlobService = BlockBlobService(
@@ -211,7 +232,7 @@ class Azure(object):
                         previousIds.append(id)
                     print("Adding resource to retry list: {}".format(id))
 
-    def getResources(self, id=None):
+    def getResources(self, id=None, filter=None):
         """Get all resources."""
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
@@ -219,6 +240,10 @@ class Azure(object):
         filterStr = str()
         if id:
             filterStr = "tagname eq 'uuid' and tagvalue eq '{}'".format(id)
+            if filter:
+                filterStr = " tagname eq '{key}' and tagvalue eq '{value}'"\
+                    .format(**filter)
+
             resourceList = resClient.resources.list(
                 filter=filterStr
             )
@@ -226,7 +251,11 @@ class Azure(object):
             ids = list()
             try:
                 for page in resourceList.next():
-                    ids.append(page.id)
+                    if filter:
+                        if id in page.id:
+                            ids.append(page.id)
+                    else:
+                        ids.append(page.id)
                 if ids:
                     resources["ids"] = ids
                 dnsEntries = self.getDNSRecords(id)
@@ -339,6 +368,32 @@ class Azure(object):
               }
             )
             saAsyncOp.wait()
+
+    def getSubnetID(self, netName):
+        """Get the Subnets for a network."""
+        netClient = NetworkManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        subFound = False
+        netFound = False
+        try:
+            network = netClient.virtual_networks.get(
+                self.resourceGroup,
+                netName
+            )
+            if network.provisioning_state == 'Succeeded':
+                netFound = True
+            if len(network.subnets) != 0:
+                subFound = True
+        except:
+            pass
+
+        if not netFound:
+            return {'error': "No network of name: {}".format(netName)}
+        if not subFound:
+            return {'error': "No Subnets foing in network: {}".format(netName)}
+
+        return network.subnets[0]
 
     def network(self, network, netName, tags, subNets):
         """Create networks."""

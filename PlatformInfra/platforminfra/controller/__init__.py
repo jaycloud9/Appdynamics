@@ -173,7 +173,7 @@ class Controller(object):
 
         self.tags['uuid'] = data['id']
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name'],
             template,
@@ -288,4 +288,67 @@ class Controller(object):
         rsp = Response({
             "Resources": deleteResources
         })
+        return rsp.httpResponse(200)
+
+    def rebuildEnvironmentServer(self, data):
+        """Rebuild a portion of an environment."""
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
+            template,
+            data['uuid']
+        )
+        vms = provider.getResources(id=data['uuid'], filter={
+            'key': 'type',
+            'value': data['servers']
+        })
+        count = 0
+        for server in template['services']['servers']:
+            if server['name'] == data['servers']:
+                count = server['count']
+        if 'ids' in vms:
+            count = len(vms['ids'])
+            # Delete Resources
+            provider.deleteResourceById(vms['ids'])
+        vm = {'name': data['servers'], 'count': count}
+        if 'vhds' in vms:
+            if data["persist_data"]:
+                print("Persist Data True")
+                # Delete OS Disks
+                delDisks = list()
+                for disk in vms['vhds']:
+                    if 'data' not in disk:
+                        delDisks.append(disk)
+                if delDisks:
+                    provider.deleteStorageAccountDisk(data['uuid'], delDisks)
+            else:
+                print("persist_data False")
+                # Delete All Disks
+                provider.deleteStorageAccountDisk(data['uuid'], vms['vhds'])
+        # There's only a single subnet per network
+        subnet = provider.getSubnetID(data['uuid'] + "0")
+        self.tags['uuid'] = data['uuid']
+        self.subnets.append({'subnets': {data['uuid']: subnet}})
+        vmList = [vm]
+        self.createVms(vmList, provider)
+        for vmRsp in self.vms:
+            self.response.append(vmRsp)
+
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            data["application"],
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
+        rsp = Response({'Resources': self.response})
         return rsp.httpResponse(200)
