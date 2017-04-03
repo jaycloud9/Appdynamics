@@ -30,6 +30,20 @@ class Controller(object):
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
+    def checkUUID(self, uuid):
+        """Given a UUID validate if it is in use or not."""
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name']
+        )
+
+        uuids = provider.getResources()
+        if uuid in uuids:
+            return {'error': "UUID in use"}
+        else:
+            return {}
+
     def createNetworks(self, data, provider):
         """Create Networks."""
         # Must complete before everything else is built
@@ -152,6 +166,11 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
+        uuidCheck = self.checkUUID(data['id'])
+        if 'error' in uuidCheck:
+            rsp = Response(uuidCheck)
+            return rsp.httpResponse(404)
+
         self.tags['uuid'] = data['id']
         provider = Azure(
             self.config.credentials,
