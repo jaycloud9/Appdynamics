@@ -242,7 +242,6 @@ class Azure(object):
             return resources
         else:
             filterStr = "tagname eq 'uuid'"
-            print("filterStr is  {}".format(filterStr))
             resourceList = resClient.resource_groups.list_resources(
                 self.resourceGroup,
                 filter=filterStr
@@ -520,11 +519,12 @@ class Azure(object):
         lock.acquire()
         vmNic = self.nic(vm, vmName, subnet, tags)
         lock.release()
+        tmpDict = {'type': vm['name']}
         tmpVm.generateParams(
             vmNic['nic'].id,
             vmName,
             asInfo.id,
-            tags
+            {**tags, **tmpDict}
         )
         tmpVm.create(vmName, vmNic, vmQ)
         print("VM Created")
