@@ -19,6 +19,7 @@ setup(
         'azure-mgmt-compute',
         'azure-mgmt-dns',
         'python-jenkins',
-        'python-gitlab'
+        'python-gitlab',
+        'PyYAML'
     ],
 )
