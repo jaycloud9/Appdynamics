@@ -264,7 +264,7 @@ class Controller(object):
     def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
