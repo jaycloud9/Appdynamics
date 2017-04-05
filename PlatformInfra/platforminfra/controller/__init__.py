@@ -435,10 +435,16 @@ class Controller(object):
         if 'ids' in resources:
             count = len(resources['ids'])
 
+        # For some reason even if I created a template.copy()
+        # the copy (templateCopy) was still being modivied by the provider
+        # init. The copy() shoud break the reference...
+        templateCopy = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
         self.addVM(
             vmDetails,
             provider,
-            template,
+            templateCopy,
             data['uuid'],
             data['application'],
             count=count,
