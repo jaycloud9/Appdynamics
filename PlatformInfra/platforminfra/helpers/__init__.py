@@ -1,5 +1,19 @@
 """Helpers package for platformInfra."""
 from flask import jsonify
+import jenkins
+import gitlab
+import random
+import string
+
+
+class Helpers(object):
+    """Heleprs Class."""
+
+    def randStr(length):
+        """Generate random string."""
+        return ''.join(
+            random.choice(string.ascii_lowercase) for i in range(length)
+        )
 
 
 class Response(object):
@@ -34,6 +48,78 @@ class Response(object):
         rsp = jsonify(response_message)
         rsp.status_code = self.status_code
         return rsp
+
+
+class Jenkins(object):
+    """Class to manage Jenkins interactions."""
+
+    def __init__(self, connection, user, password):
+        """Create a connection to the Server."""
+        self.server = jenkins.Jenkins(
+            connection,
+            username=user,
+            password=password
+        )
+
+    def runBuildWithParams(self, build, params):
+        """Run a build with params and return it's info."""
+        self.server.build_job(build, params)
+        lastBuildNumber = self.server.get_job_info(
+            build)['lastCompletedBuild']['number']
+        buildInfo = self.server.get_build_info(build, lastBuildNumber)
+        return buildInfo
+
+
+class Gitlab(object):
+    """Class to manage Gitlab interactions."""
+
+    def __init__(self, uri, token):
+        """Create a connection to Gitlab."""
+        self.conn = gitlab.Gitlab(uri, token)
+
+    def forkProject(self, user, projectId):
+        """Fork a project."""
+        result = self.conn.project_forks.create(
+            {},
+            project_id=projectId,
+            sudo=user
+        )
+        return result
+
+    def getProject(self, team, project):
+        """Get a single project."""
+        projectName = team + '/' + project
+        result = self.conn.projects.get(projectName)
+        return result
+
+    def createUser(self, uname, name, password, email):
+        """Create a new GitLab User."""
+        user = self.conn.users.create({
+            'email': email,
+            'password': password,
+            'username': uname,
+            'name': name
+        })
+        return user
+
+    def getUser(self, uname):
+        """Get a User."""
+        try:
+            user = self.conn.users.list(username=uname)[0]
+        except:
+            print("No User: {}".format(uname))
+            return None
+        return user.username
+
+    def deleteUser(self, uname):
+        """Delete a user."""
+        try:
+            user = self.conn.users.list(username=uname)[0]
+            user.delete()
+        except:
+            print("No User: {}".format(uname))
+            return None
+        return user.username
 
 
 class FakeData(object):
@@ -91,10 +177,12 @@ class FakeData(object):
         if action == 'status':
             rsp.payload = {
                     'response': 'Success',
-                    'status': 'OK',
-                    'application': [
-                        {'name': 'Retail_Suite'}
-                    ],
+                    'status': 'Pending',
+                    'application': {
+                        'name': 'Retail_Suite',
+                        'jobId': 1234,
+                        'status': "Pending"
+                    },
                     'resources': [
                         {'loadbalancer': "Creating"},
                         {'network': "Created"},

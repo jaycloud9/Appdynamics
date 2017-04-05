@@ -12,59 +12,26 @@ provider:
       public_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR"
 services:
   tags:
-    name: cluster1
-    stack: oscp
+    name: t24dev
+    stack: t24
     owner: marketplace
   networks:
-    - name: cluster1
+    - name: t24dev
       cidr: 10.10.0.0/16
       dns_servers: 8.8.8.8,4.4.4.4
       subnet: 10.10.1.0/24
-  servers:
-    - name: gitlab
-      count: 1
-    - name: storage
-      count: 2
-    - name: formation
-      count: 2
-    - name: master
-      count: 1
-    - name: node_infra
-      count: 1
-    - name: node_worker
-      count: 3
   load_balancers:
-    - name: gitlab
-      be_servers: gitlab
-      health_port: 8081
+    - name: t24
+      be_servers: t24
+      health_port: 8080
       health_protocol: 'Http'
-      health_path: '/users/sign_in'
+      health_path: '/BrowserWeb/'
       rules:
        - name: web
          protocol: 'Tcp'
          frontend_port: 80
-         backend_port: 8081
-    - name: console
-      domain: cluster1
-      be_servers: master
-      health_port: 443
-      health_protocol: 'Tcp'
-      rules:
-       - name: ssl
-         protocol: 'Tcp'
-         frontend_port: 443
-         backend_port: 443
-    - name: apps
-      domain: '*.apps.cluster1'
-      be_servers: node_infra
-      health_port: 443
-      health_protocol: 'Tcp'
-      rules:
-       - name: router-http
-         protocol: 'Tcp'
-         frontend_port: 80
-         backend_port: 80
-       - name: router-ssl
-         protocol: 'Tcp'
-         frontend_port: 443
-         backend_port: 443
+         backend_port: 8080
+  servers:
+    - name: t24
+      count: 1
+      service_port: 8080

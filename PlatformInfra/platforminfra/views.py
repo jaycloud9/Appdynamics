@@ -19,7 +19,7 @@ def environments():
     """Get a list of environments."""
     rsp = Response()
     if request.method == 'GET':
-        return FakeData.environmentsGet()
+        return controller.listEnvironments()
     elif request.method == 'POST':
         return controller.createEnvironment(request.get_json())
     else:
@@ -31,16 +31,14 @@ def environments():
     methods=['GET', 'PUT', 'DELETE']
 )
 def environmentsById(uuid):
-    """GET, PUT or DELETE a Specific env."""
+    """GET or DELETE a Specific env."""
     rsp = Response()
     req = dict()
     req['uuid'] = uuid
     if request.method == 'GET':
         return FakeData.environmentsByIdGet(req)
     elif request.method == 'DELETE':
-        req = request.get_json()
-        req['uuid'] = uuid
-        return FakeData.environmentsByIdDelete(req)
+        return controller.deleteEnvironment(req)
     else:
         return rsp.httpResponse(404, 'Not Found')
 
@@ -56,10 +54,13 @@ def environmentsByIdAction(uuid, action):
     req['uuid'] = uuid
     if request.method == 'GET' and action == 'status':
         return FakeData.environmentsByIdActionGet(req, action)
+    elif request.method == 'PUT' and action == 'rebuild':
+        req = request.get_json()
+        req['uuid'] = uuid
+        return controller.rebuildEnvironmentServer(req)
     elif request.method == 'PUT' and (
         action == 'start' or
         action == 'stop' or
-        action == 'rebuild' or
         action == 'scale'
     ):
         req = request.get_json()

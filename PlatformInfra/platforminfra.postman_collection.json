@@ -2,7 +2,7 @@
 	"variables": [],
 	"info": {
 		"name": "platforminfra",
-		"_postman_id": "34aee833-453a-5e65-5581-67df1f6f0947",
+		"_postman_id": "908df017-708b-2074-2d27-2e9d03a4fb74",
 		"description": "The collection for the platforminfra project",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
@@ -41,7 +41,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"id\":\"w7hf6hsd34f\", \"application\": \"Retail_Suite\", \"infrastructureTemplateID\": \"test\"}"
+					"raw": "{\"id\":\"w7hf6hsd34f2\", \"application\": \"T24-Pipeline\", \"infrastructureTemplateID\": \"test\"}"
 				},
 				"description": "POST"
 			},
@@ -70,7 +70,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -81,7 +81,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": ""
 				},
 				"description": "DELETE"
 			},
@@ -121,7 +121,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": "{\"application\": \"Retail_Suite\", \"servers\": \"t24\"}"
 				},
 				"description": "PUT"
 			},
@@ -150,7 +150,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/rebuild",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/rebuild",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/rebuild",
 				"method": "PUT",
 				"header": [
 					{
@@ -161,7 +161,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"application\": \"Retail_Suite\",\n\t\"persist_data\": \"False\"\n}"
+					"raw": "{\n\t\"application\": \"T24-Pipeline\",\n\t\"persist_data\": true,\n\t\"servers\": \"t24\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},
@@ -181,7 +181,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\", \"vm_count\": 4}"
+					"raw": "{\t\"application\": \"Retail_Suite\",\n\t\"vm_count\": 4,\n\t\"servers\": \"t24\"\n}"
 				},
 				"description": "PUT"
 			},

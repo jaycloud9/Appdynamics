@@ -6,18 +6,22 @@ provider:
           client_id: 03ead528-650b-4c11-8abc-624aa2569c4a
           secret: FSgtsqf8TuV6Sb2mrdVuTDozc43HYY9ltksCw/ytbmk=
           tenant: d5d2540f-f60a-45ad-86a9-e2e792ee6669
-      - server_size: Standard_D1_v2
+      server_size: Standard_D1_v2
+      region: ukwest
+      user: mpadmin
+      public_ssh_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR"
 services:
- -
-   name: t24dev
-   stack: t24
-   owner: marketplace
-   region: ukwest
-   cidr: 10.10.0.0/16
-   dns_servers: 8.8.8.8,4.4.4.4
-   subnet: 10.10.1.0/24
-   servers:
+  tags:
+    name: t24dev
+    stack: t24
+    owner: marketplace
+  networks:
+    - name: t24dev
+      cidr: 10.10.0.0/16
+      dns_servers: 8.8.8.8,4.4.4.4
+      subnet: 10.10.1.0/24
+  servers:
     - name: t24
       count: 1
-      dns: t24
+      dns: bob
       service_port: 8080
