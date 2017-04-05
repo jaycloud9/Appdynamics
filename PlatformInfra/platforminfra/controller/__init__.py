@@ -69,15 +69,16 @@ class Controller(object):
                     if lb['be_servers'] == server:
                         lbName = lb['name']
                 resources = provider.getResources(id=uuid)
-                for id in resources:
+                for id in resources['ids']:
                     idSplit = re.split(r"/", id.strip())
                     resourceType = idSplit[6] + "/" + idSplit[7]
                     resourceName = idSplit[-1]
                     if resourceType == 'Microsoft.Network/loadBalancers' and \
                             lbName in resourceName:
+                        print("Getting LB")
                         # Found the Id of the Load balancer for the server
                         lb = provider.getResourceById(resourceType, id)
-                        print(lb)
+                        beId = lb.properties['backendAddressPools'][0]['id']
         return beId
 
     def addVM(
@@ -465,6 +466,12 @@ class Controller(object):
             template,
             data['uuid']
         )
+        # For some reason even if I created a template.copy()
+        # the copy (templateCopy) was still being modivied by the provider
+        # init. The copy() shoud break the reference...
+        templateCopy = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
         resources = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
@@ -489,7 +496,7 @@ class Controller(object):
             self.addVM(
                 vms,
                 provider,
-                template,
+                templateCopy,
                 data['uuid'],
                 data['application'],
                 count=data['count']
