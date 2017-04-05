@@ -24,6 +24,7 @@ setup(
         'python-jenkins',
         'python-gitlab',
         'pyyaml'
+
     ],
     tests_require=[
         'dnspython'

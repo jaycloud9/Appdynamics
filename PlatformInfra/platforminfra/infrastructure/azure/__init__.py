@@ -134,7 +134,7 @@ class Azure(object):
             print("Error: {}".format(e))
             raise e
 
-    def getStorageDisks(self, id):
+    def getStorageDisks(self, id, filter):
         """Get a list of Storage disks."""
         saKey = self.getStorageAccountKey()
         disks = list()
@@ -150,7 +150,12 @@ class Azure(object):
         if found:
             blobs = blockBlobService.list_blobs(id)
             for blob in blobs:
-                disks.append(blob.name)
+                if filter:
+                    search = ''.join(e for e in filter['value'] if e.isalnum())
+                    if search in blob.name:
+                        disks.append(blob.name)
+                else:
+                    disks.append(blob.name)
         return disks
 
     def getStorageAccountKey(self):
@@ -163,6 +168,27 @@ class Azure(object):
             self.storageAccount
         )
         return saKeys.keys[0].value
+
+    def deleteStorageAccountDisk(self, containerName, disks):
+        """Delete a storage Blob."""
+        blockBlobService = BlockBlobService(
+            account_name=self.storageAccount,
+            account_key=self.getStorageAccountKey()
+        )
+        found = False
+        containers = blockBlobService.list_containers()
+        for container in containers:
+            if containerName == container.name:
+                found = True
+        if found:
+            try:
+                for disk in disks:
+                    blockBlobService.delete_blob(
+                        containerName,
+                        disk
+                    )
+            except Exception as e:
+                print(e)
 
     def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
@@ -211,7 +237,7 @@ class Azure(object):
                         previousIds.append(id)
                     print("Adding resource to retry list: {}".format(id))
 
-    def getResources(self, id=None):
+    def getResources(self, id=None, filter=None):
         """Get all resources."""
         resClient = ResourceManagementClient(
             self.authAccount, self.credentials['subscription_id']
@@ -219,6 +245,10 @@ class Azure(object):
         filterStr = str()
         if id:
             filterStr = "tagname eq 'uuid' and tagvalue eq '{}'".format(id)
+            if filter:
+                filterStr = " tagname eq '{key}' and tagvalue eq '{value}'"\
+                    .format(**filter)
+
             resourceList = resClient.resources.list(
                 filter=filterStr
             )
@@ -226,13 +256,17 @@ class Azure(object):
             ids = list()
             try:
                 for page in resourceList.next():
-                    ids.append(page.id)
+                    if filter:
+                        if id in page.id:
+                            ids.append(page.id)
+                    else:
+                        ids.append(page.id)
                 if ids:
                     resources["ids"] = ids
                 dnsEntries = self.getDNSRecords(id)
                 if dnsEntries:
                     resources["dns"] = dnsEntries
-                disks = self.getStorageDisks(id)
+                disks = self.getStorageDisks(id, filter)
                 if disks:
                     resources["vhds"] = disks
 
@@ -242,7 +276,6 @@ class Azure(object):
             return resources
         else:
             filterStr = "tagname eq 'uuid'"
-            print("filterStr is  {}".format(filterStr))
             resourceList = resClient.resource_groups.list_resources(
                 self.resourceGroup,
                 filter=filterStr
@@ -340,6 +373,32 @@ class Azure(object):
               }
             )
             saAsyncOp.wait()
+
+    def getSubnetID(self, netName):
+        """Get the Subnets for a network."""
+        netClient = NetworkManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        subFound = False
+        netFound = False
+        try:
+            network = netClient.virtual_networks.get(
+                self.resourceGroup,
+                netName
+            )
+            if network.provisioning_state == 'Succeeded':
+                netFound = True
+            if len(network.subnets) != 0:
+                subFound = True
+        except:
+            pass
+
+        if not netFound:
+            return {'error': "No network of name: {}".format(netName)}
+        if not subFound:
+            return {'error': "No Subnets foing in network: {}".format(netName)}
+
+        return network.subnets[0]
 
     def network(self, network, netName, tags, subNets):
         """Create networks."""
@@ -468,7 +527,6 @@ class Azure(object):
           }
         }]
         if len(tags) > 0:
-            print("Adding Nic tags params")
             params["tags"] = tags
 
         if 'service_port' in vm:
@@ -514,22 +572,30 @@ class Azure(object):
         details['nic'] = asyncNicCreation.result()
         return details
 
-    def vmWorker(self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock):
+    def vmWorker(
+                self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                persistData
+            ):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
         lock.acquire()
         vmNic = self.nic(vm, vmName, subnet, tags)
         lock.release()
+        tmpDict = {'type': vm['name']}
         tmpVm.generateParams(
             vmNic['nic'].id,
             vmName,
             asInfo.id,
-            tags
+            {**tags, **tmpDict},
+            persistData
         )
         tmpVm.create(vmName, vmNic, vmQ)
         print("VM Created")
 
-    def virtualMachine(self, vm, tags, subnet, vmQueue, vmLock):
+    def virtualMachine(
+                self, vm, tags, subnet, vmQueue, vmLock,
+                persistData=False
+            ):
         """Create a VM."""
         print("Creating VMs: {}".format(vm['name']))
         vmLock.acquire()
@@ -566,7 +632,10 @@ class Azure(object):
             vmName = ''.join(e for e in tmpStr if e.isalnum())
             p = Process(
                 target=self.vmWorker,
-                args=(opts, vm, vmName, tags, asInfo, subnet, vmQ, lock)
+                args=(
+                    opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                    persistData
+                )
             )
             vmProcList.append(p)
             p.start()

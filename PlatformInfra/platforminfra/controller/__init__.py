@@ -30,6 +30,20 @@ class Controller(object):
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
+    def checkUUID(self, uuid):
+        """Given a UUID validate if it is in use or not."""
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name']
+        )
+
+        uuids = provider.getResources()
+        if uuid in uuids:
+            return {'error': "UUID in use"}
+        else:
+            return {}
+
     def createNetworks(self, data, provider):
         """Create Networks."""
         # Must complete before everything else is built
@@ -52,7 +66,7 @@ class Controller(object):
 
         self.subnets.append(subnets)
 
-    def createVms(self, data, provider):
+    def createVms(self, data, provider, persistData=False):
         """Create VMs."""
         print("Creating Servers")
         vms = Queue()
@@ -71,7 +85,8 @@ class Controller(object):
                         self.tags,
                         vmSubnet,
                         vms,
-                        vmLock
+                        vmLock,
+                        persistData
                     )
                 )
                 vmDetails = {
@@ -147,18 +162,23 @@ class Controller(object):
                     }
                     raise Exception(e)
 
-    def createEnvironment(self, config):
+    def createEnvironment(self, data):
         """Create an Environment."""
         template = self.templates.loadTemplate(
-            config['infrastructureTemplateID']
+            data['infrastructureTemplateID']
         )
-        self.tags['uuid'] = config['id']
+        uuidCheck = self.checkUUID(data['id'])
+        if 'error' in uuidCheck:
+            rsp = Response(uuidCheck)
+            return rsp.httpResponse(404)
+
+        self.tags['uuid'] = data['id']
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name'],
             template,
-            config['id']
+            data['id']
         )
         if 'error' in provider.credentials:
             rsp = Response(provider.credentials)
@@ -193,22 +213,22 @@ class Controller(object):
             self.response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
-        jenkinsServerConn = "http://51.141.7.30:8080"
         jenkinsServer = Jenkins(
-            jenkinsServerConn,
-            user='admin',
-            password='Blue1Sky'
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
         )
         print("Running Jenkins Job")
         jenkinsServer.runBuildWithParams(
-            config["application"],
+            data["application"],
             params={
                 "UUID": self.tags['uuid']
             }
         )
         print("Connecting to Gitlab")
-        glServerConn = "https://gitlab.temenos.cloud"
-        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
+        # When we know if theres more than one or not move to config.yml
         glSourceProject = "customer-demo"
         glSourceTeam = "root"
         glServer = Gitlab(glServerConn, glServerToken)
@@ -232,7 +252,7 @@ class Controller(object):
     def listEnvironments(self):
         """Return a list of environments."""
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
@@ -242,25 +262,26 @@ class Controller(object):
         })
         return rsp.httpResponse(200)
 
-    def deleteEnvironment(self, config):
+    def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         provider = Azure(
-            self.config.credentials,
+            self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
             self.config.defaults['storage_account_name']
         )
-        deleteResources = {'Azure': provider.getResources(config['uuid'])}
-        glServerConn = "https://gitlab.temenos.cloud"
-        glServerToken = "FHcv_bHjHnAvd6uug7x_"
+        print("Deleting Resources")
+        deleteResources = {'Azure': provider.getResources(data['uuid'])}
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
         glServer = Gitlab(glServerConn, glServerToken)
-        user = glServer.getUser(config['uuid'])
+        user = glServer.getUser(data['uuid'])
         if user:
             deleteResources['Gitlab'] = user
 
         if "ids" in deleteResources["Azure"]:
             provider.deleteResourceById(deleteResources["Azure"]["ids"])
         if "vhds" in deleteResources["Azure"]:
-            provider.deleteStorageAccountContainer(config['uuid'])
+            provider.deleteStorageAccountContainer(data['uuid'])
         if "dns" in deleteResources["Azure"]:
             provider.deleteDNSRecord(deleteResources["Azure"]["dns"])
         if "Gitlab" in deleteResources:
@@ -269,4 +290,91 @@ class Controller(object):
         rsp = Response({
             "Resources": deleteResources
         })
+        return rsp.httpResponse(200)
+
+    def rebuildEnvironmentServer(self, data):
+        """Rebuild a portion of an environment."""
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
+            template,
+            data['uuid']
+        )
+        print("Rebuilding: {}".format(data['servers']))
+        vms = provider.getResources(id=data['uuid'], filter={
+            'key': 'type',
+            'value': data['servers']
+        })
+        count = 0
+        beDict = dict()
+        for server in template['services']['servers']:
+            if server['name'] == data['servers']:
+                count = server['count']
+        if 'ids' in vms:
+            count = len(vms['ids'])
+            # Check if server is part of a Load Balancer
+            vmResult = provider.getResourceById(
+                "Microsoft.Compute/virtualMachines",
+                vms['ids'][0],
+            )
+            nicResult = provider.getResourceById(
+                "Microsoft.Network/networkInterfaces",
+                vmResult.properties['networkProfile']
+                ['networkInterfaces'][0]['id'],
+            )
+            if 'loadBalancerBackendAddressPools' in \
+                    nicResult.properties['ipConfigurations'][0]['properties']:
+                    # Assignment over multiple lines didn't work
+                    ipConfig = nicResult.properties['ipConfigurations'][0]
+                    prop = ipConfig['properties']
+                    lb = prop['loadBalancerBackendAddressPools'][0]
+                    beDict['beId'] = lb['id']
+            # Delete Resources
+            provider.deleteResourceById(vms['ids'])
+
+        vm = {'name': data['servers'], 'count': count}
+        if 'beId' in beDict:
+            vm['beId'] = beDict['beId']
+
+        persisteData = False
+        if 'vhds' in vms:
+            if data["persist_data"]:
+                persisteData = data['persist_data']
+                # Delete OS Disks
+                delDisks = list()
+                for disk in vms['vhds']:
+                    if 'data' not in disk:
+                        delDisks.append(disk)
+                if delDisks:
+                    provider.deleteStorageAccountDisk(data['uuid'], delDisks)
+            else:
+                print("persist_data False")
+                # Delete All Disks
+                provider.deleteStorageAccountDisk(data['uuid'], vms['vhds'])
+        # There's only a single subnet per network
+        subnet = provider.getSubnetID(data['uuid'] + "0")
+        self.tags['uuid'] = data['uuid']
+        self.subnets.append({'subnets': {data['uuid']: subnet}})
+        vmList = [vm]
+        self.createVms(vmList, provider, persisteData)
+        for vmRsp in self.vms:
+            self.response.append(vmRsp)
+
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            data["application"],
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
+        rsp = Response({'Resources': self.response})
         return rsp.httpResponse(200)
