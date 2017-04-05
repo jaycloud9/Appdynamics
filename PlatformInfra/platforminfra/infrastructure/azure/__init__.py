@@ -625,11 +625,13 @@ class Azure(object):
         vmQ = Queue()
         lock = Lock()
         results = list()
-        i = 0
-        while i < vm['count']:
-            i = i + 1
+        i = 1
+        if 'existing' in vm:
+            i = len(vm['existing']) + 1
+        while i <= vm['count']:
             tmpStr = self.id + vm['name'] + str(i)
             vmName = ''.join(e for e in tmpStr if e.isalnum())
+            print("Creating {}".format(vmName))
             p = Process(
                 target=self.vmWorker,
                 args=(
@@ -639,6 +641,7 @@ class Azure(object):
             )
             vmProcList.append(p)
             p.start()
+            i = i + 1
         for proc in vmProcList:
             # Wait for all VM's to create
             proc.join()

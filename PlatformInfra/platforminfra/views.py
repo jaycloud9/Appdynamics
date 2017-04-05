@@ -58,10 +58,13 @@ def environmentsByIdAction(uuid, action):
         req = request.get_json()
         req['uuid'] = uuid
         return controller.rebuildEnvironmentServer(req)
+    elif request.method == 'PUT' and action == 'scale':
+        req = request.get_json()
+        req['uuid'] = uuid
+        return controller.scaleEnvironmentServer(req)
     elif request.method == 'PUT' and (
         action == 'start' or
-        action == 'stop' or
-        action == 'scale'
+        action == 'stop'
     ):
         req = request.get_json()
         req['uuid'] = uuid
