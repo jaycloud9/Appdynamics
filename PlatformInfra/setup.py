@@ -1,6 +1,9 @@
 """Set's up the platforminfra app."""
-
+import sys
 from setuptools import setup
+
+if sys.version_info < (3, 5):
+    sys.exit('Python < 3.5 is not supported')
 
 setup(
     name='platforminfra',
@@ -20,6 +23,10 @@ setup(
         'azure-mgmt-dns',
         'python-jenkins',
         'python-gitlab',
-        'PyYAML'
+        'pyyaml'
+
     ],
+    tests_require=[
+        'dnspython'
+    ]
 )
