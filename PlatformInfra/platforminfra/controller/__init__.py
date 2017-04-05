@@ -340,10 +340,10 @@ class Controller(object):
         if 'beId' in beDict:
             vm['beId'] = beDict['beId']
 
-        persisteData = False
+        persistData = False
         if 'vhds' in vms:
             if data["persist_data"]:
-                persisteData = data['persist_data']
+                persistData = data['persist_data']
                 # Delete OS Disks
                 delDisks = list()
                 for disk in vms['vhds']:
@@ -360,7 +360,7 @@ class Controller(object):
         self.tags['uuid'] = data['uuid']
         self.subnets.append({'subnets': {data['uuid']: subnet}})
         vmList = [vm]
-        self.createVms(vmList, provider, persisteData)
+        self.createVms(vmList, provider, persistData)
         for vmRsp in self.vms:
             self.response.append(vmRsp)
 
