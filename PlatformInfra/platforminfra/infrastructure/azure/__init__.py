@@ -290,6 +290,16 @@ class Azure(object):
                 pass
             return list(ids)
 
+    def checkResourceExistById(self, type, id):
+        """Check if a resource Exists by Id."""
+        result = False
+        try:
+            self.getResourceById(type, id)
+            result = True
+        except:
+            pass
+        return result
+
     def getResourceById(self, type, id):
         """Get a resource by ID."""
         resClient = ResourceManagementClient(
