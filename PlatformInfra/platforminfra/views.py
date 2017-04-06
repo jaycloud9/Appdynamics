@@ -45,15 +45,16 @@ def environmentsById(uuid):
 
 @app.route(
     base_path + 'environments/<string:uuid>/<string:action>',
-    methods=['GET', 'PUT']
+    methods=['PUT', 'POST']
 )
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
     rsp = Response()
     req = dict()
-    req['uuid'] = uuid
-    if request.method == 'GET' and action == 'status':
-        return FakeData.environmentsByIdActionGet(req, action)
+    if request.method == 'POST' and action == 'status':
+        req = request.get_json()
+        req['uuid'] = uuid
+        return controller.environmentStatus(req)
     elif request.method == 'PUT' and action == 'rebuild':
         req = request.get_json()
         req['uuid'] = uuid

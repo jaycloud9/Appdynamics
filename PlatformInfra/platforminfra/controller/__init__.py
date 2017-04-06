@@ -45,13 +45,24 @@ class Controller(object):
         else:
             return False
 
-    def getVMDetails(self, id, type):
+    def getResourceDetails(self, id):
+        """Get a VM object back from an ID."""
+        resource = dict()
+        resource['id'] = id
+        idSplit = re.split(r"/", id.strip())
+        resource['name'] = idSplit[-1]
+        resource['type'] = idSplit[6] + "/" + idSplit[7]
+
+        return resource
+
+    def getVMDetails(self, id, server):
         """Get a VM object back from an ID."""
         vm = dict()
         vm['id'] = id
         idSplit = re.split(r"/", id.strip())
         vm['name'] = idSplit[-1]
-        vm['type'] = type
+        vm['type'] = idSplit[6] + "/" + idSplit[7]
+        vm['server'] = server
         countSplit = re.split(r"{}".format(type), vm['name'].strip())
         vm['position'] = countSplit[-1]
 
@@ -88,7 +99,7 @@ class Controller(object):
         """Given an Existing list of VMs Add more."""
         if not count:
             for server in template['services']['servers']:
-                if server['name'] == vms[0]['type']:
+                if server['name'] == vms[0]['server']:
                     count = server['count']
         vm = dict()
         vm['count'] = count
@@ -96,7 +107,7 @@ class Controller(object):
         beId = self.getVMBEID(
             provider,
             template=template,
-            server=vms[0]['type'],
+            server=vms[0]['server'],
             uuid=uuid
         )
         if 'id' in vms[0]:
@@ -110,7 +121,7 @@ class Controller(object):
             vm['existing'] = existingIds
         if beId:
             vm['beId'] = beId
-        vm['name'] = vms[0]['type']
+        vm['name'] = vms[0]['server']
         vmList = [vm]
         # There's only a single subnet per network
         subnet = provider.getSubnetID(uuid + "0")
@@ -489,7 +500,7 @@ class Controller(object):
             for vm in resources['ids']:
                 vms.append(self.getVMDetails(vm, data['servers']))
         else:
-            vms.append({'type': data['servers']})
+            vms.append({'server': data['servers']})
         response.append(vms)
         print("Scalling: {} from {} to {}".format(
             data['servers'],
@@ -526,4 +537,69 @@ class Controller(object):
         for vmRsp in self.vms:
             response.append(vmRsp)
         rsp = Response({'Resources': response})
+        return rsp.httpResponse(200)
+
+    def environmentStatus(self, data):
+        """Get the status of an environment."""
+        if not self.checkUUIDInUse(data['uuid']):
+            rsp = Response({'error': 'Invalid UUID'})
+            return rsp.httpResponse(404)
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
+            template,
+            data['uuid']
+        )
+        resources = provider.getResources(id=data['uuid'])
+        statuses = list()
+        if 'ids' in resources:
+            for resource in resources['ids']:
+                details = self.getResourceDetails(resource)
+                item = provider.getResourceById(details['type'], details['id'])
+                if 'provisioningState' in item.properties:
+                    tmpItem = {
+                        'name': details['name'],
+                        'type': details['type'],
+                        'status': item.properties['provisioningState']
+                    }
+                    if details['type'] == 'Microsoft.Compute/virtualMachines':
+                        if 'vhds' in resources:
+                            tmpItem['vhds'] = list()
+                            for vhd in resources['vhds']:
+                                if details['name'] in vhd:
+                                    tmpItem['vhds'].append({
+                                        'name': vhd,
+                                        'status': "Succeeded"
+                                    })
+                            if len(tmpItem['vhds']) == 0:
+                                tmpItem['vhds'].append({
+                                    'status': "Failed"
+                                })
+                else:
+                    if details['type'] == 'Microsoft.Compute/availabilitySets':
+                        tmpItem = {
+                            'name': details['name'],
+                            'type': details['type'],
+                            'status': 'Succeeded'
+                        }
+                    else:
+                        tmpItem = {
+                            'name': details['name'],
+                            'type': details['type'],
+                            'status': 'Unknown'
+                        }
+                statuses.append(tmpItem)
+        if 'dns' in resources:
+            for entry in resources['dns']:
+                statuses.append({
+                    'name': entry,
+                    'type': 'Microsoft.Network/dnsZones',
+                    'status': 'Succeeded'
+                })
+
+        rsp = Response({'Resources': statuses})
         return rsp.httpResponse(200)
