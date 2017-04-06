@@ -192,14 +192,12 @@ class Controller(object):
     def compareResources(self, statusRes, deploymentRes, uuid):
         """Compare a status list with the Deployment resources."""
         deployNetworkCount = list()
-        print("Generating deployed item counts")
         for resource in deploymentRes['resources']:
             if 'networks' in resource:
                 for network in resource['networks']:
                     deployNetworkCount.append(network['name'])
         statusNetworkCount = list()
         statusVmCount = list()
-        print("Generating Actual resource counts")
         for i in statusRes:
             if "Environment resources" in i:
                 for resource in i["Environment resources"]:
@@ -645,6 +643,7 @@ class Controller(object):
             template,
             data['uuid']
         )
+        print("Getting Status")
         deploymentResources = provider.resources
         resources = provider.getResources(id=data['uuid'])
         if 'ids' in resources:
@@ -672,8 +671,6 @@ class Controller(object):
             statusResoures.append({
                 'Storage resources': vhdEntry
             })
-
-        print("Comapring resources")
         broken = self.compareResources(
             statusResoures,
             deploymentResources,

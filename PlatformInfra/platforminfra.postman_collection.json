@@ -90,8 +90,8 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/status",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/status",
-				"method": "GET",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/status",
+				"method": "POST",
 				"header": [
 					{
 						"key": "Content-Type",
@@ -101,7 +101,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": "{\"infrastructureTemplateID\": \"test\"}"
 				},
 				"description": "GET"
 			},
