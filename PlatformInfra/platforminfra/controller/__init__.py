@@ -7,6 +7,7 @@ from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
 
 from ..helpers import Jenkins, Gitlab, Helpers
+import re
 
 
 class Controller(object):
@@ -16,9 +17,9 @@ class Controller(object):
         """Initialise the controller."""
         self.templates = Template(templateDir='./templates/')
         self.tags = dict()
-        self.response = list()
         self.subnets = list()
         self.vms = list()
+        self.lbs = list()
         self.config = Config()
 
     def getTemplate(self, templateName):
@@ -30,7 +31,7 @@ class Controller(object):
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
-    def checkUUID(self, uuid):
+    def checkUUIDInUse(self, uuid):
         """Given a UUID validate if it is in use or not."""
         provider = Azure(
             self.config.credentials['azure'],
@@ -40,9 +41,95 @@ class Controller(object):
 
         uuids = provider.getResources()
         if uuid in uuids:
-            return {'error': "UUID in use"}
+            return True
         else:
-            return {}
+            return False
+
+    def getVMDetails(self, id, type):
+        """Get a VM object back from an ID."""
+        vm = dict()
+        vm['id'] = id
+        idSplit = re.split(r"/", id.strip())
+        vm['name'] = idSplit[-1]
+        vm['type'] = type
+        countSplit = re.split(r"{}".format(type), vm['name'].strip())
+        vm['position'] = countSplit[-1]
+
+        return vm
+
+    def getVMBEID(
+            self, provider, id=None, template=None,
+            server=None, uuid=None
+            ):
+        """For an ID get the BE ID."""
+        beId = None
+        if template and uuid and server:
+            if 'load_balancers' in template['services']:
+                for lb in template['services']['load_balancers']:
+                    if lb['be_servers'] == server:
+                        lbName = lb['name']
+                resources = provider.getResources(id=uuid)
+                for id in resources['ids']:
+                    idSplit = re.split(r"/", id.strip())
+                    resourceType = idSplit[6] + "/" + idSplit[7]
+                    resourceName = idSplit[-1]
+                    if resourceType == 'Microsoft.Network/loadBalancers' and \
+                            lbName in resourceName:
+                        print("Getting LB")
+                        # Found the Id of the Load balancer for the server
+                        lb = provider.getResourceById(resourceType, id)
+                        beId = lb.properties['backendAddressPools'][0]['id']
+        return beId
+
+    def addVM(
+            self, vms, provider, template, uuid, application,
+            count=None, persistData=False
+            ):
+        """Given an Existing list of VMs Add more."""
+        if not count:
+            for server in template['services']['servers']:
+                if server['name'] == vms[0]['type']:
+                    count = server['count']
+        vm = dict()
+        vm['count'] = count
+        print("Getting BE ID")
+        beId = self.getVMBEID(
+            provider,
+            template=template,
+            server=vms[0]['type'],
+            uuid=uuid
+        )
+        if 'id' in vms[0]:
+            existingIds = list()
+            for item in vms:
+                if provider.checkResourceExistById(
+                    'Microsoft.Compute/virtualMachines',
+                    item['id']
+                ):
+                    existingIds.append(item['id'])
+            vm['existing'] = existingIds
+        if beId:
+            vm['beId'] = beId
+        vm['name'] = vms[0]['type']
+        vmList = [vm]
+        # There's only a single subnet per network
+        subnet = provider.getSubnetID(uuid + "0")
+        self.tags['uuid'] = uuid
+        self.subnets.append({'subnets': {uuid: subnet}})
+        self.createVms(vmList, provider)
+
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            application,
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
 
     def createNetworks(self, data, provider):
         """Create Networks."""
@@ -153,7 +240,7 @@ class Controller(object):
                         lbData['publicIp'].ip_address,
                         record
                     )
-                    self.response.append({
+                    self.lbs.append({
                         details['load_balancer']['name']: result
                     })
                 else:
@@ -167,11 +254,11 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
-        uuidCheck = self.checkUUID(data['id'])
-        if 'error' in uuidCheck:
-            rsp = Response(uuidCheck)
-            return rsp.httpResponse(404)
 
+        if self.checkUUIDInUse(data['id']):
+            rsp = Response({'error': 'UUID in use'})
+            return rsp.httpResponse(404)
+        response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
             self.config.credentials['azure'],
@@ -210,7 +297,7 @@ class Controller(object):
             return rsp.httpResponse(404)
 
         for vmRsp in self.vms:
-            self.response.append(vmRsp)
+            response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
         jenkinsServer = Jenkins(
@@ -245,8 +332,9 @@ class Controller(object):
             user.username,
             glSourceProject.id
         )
-        self.response.append({'git_url': forked.web_url})
-        rsp = Response({'Resources': self.response})
+        response.append({'git_url': forked.web_url})
+        response = response + self.lbs
+        rsp = Response({'Resources': response})
         return rsp.httpResponse(200)
 
     def listEnvironments(self):
@@ -294,6 +382,10 @@ class Controller(object):
 
     def rebuildEnvironmentServer(self, data):
         """Rebuild a portion of an environment."""
+        if not self.checkUUIDInUse(data['uuid']):
+            rsp = Response({'error': 'Invalid UUID'})
+            return rsp.httpResponse(404)
+        response = list()
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
@@ -305,48 +397,28 @@ class Controller(object):
             data['uuid']
         )
         print("Rebuilding: {}".format(data['servers']))
-        vms = provider.getResources(id=data['uuid'], filter={
+        resources = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
         })
-        count = 0
-        beDict = dict()
-        for server in template['services']['servers']:
-            if server['name'] == data['servers']:
-                count = server['count']
-        if 'ids' in vms:
-            count = len(vms['ids'])
-            # Check if server is part of a Load Balancer
-            vmResult = provider.getResourceById(
-                "Microsoft.Compute/virtualMachines",
-                vms['ids'][0],
-            )
-            nicResult = provider.getResourceById(
-                "Microsoft.Network/networkInterfaces",
-                vmResult.properties['networkProfile']
-                ['networkInterfaces'][0]['id'],
-            )
-            if 'loadBalancerBackendAddressPools' in \
-                    nicResult.properties['ipConfigurations'][0]['properties']:
-                    # Assignment over multiple lines didn't work
-                    ipConfig = nicResult.properties['ipConfigurations'][0]
-                    prop = ipConfig['properties']
-                    lb = prop['loadBalancerBackendAddressPools'][0]
-                    beDict['beId'] = lb['id']
+
+        vmDetails = list()
+        if 'ids' in resources:
+            for vm in resources['ids']:
+                vmDetails.append(self.getVMDetails(vm, data['servers']))
+
             # Delete Resources
-            provider.deleteResourceById(vms['ids'])
+            provider.deleteResourceById(resources['ids'])
+        else:
+            vmDetails.append({'type': data['servers']})
 
-        vm = {'name': data['servers'], 'count': count}
-        if 'beId' in beDict:
-            vm['beId'] = beDict['beId']
-
-        persisteData = False
-        if 'vhds' in vms:
+        persistData = False
+        if 'vhds' in resources:
             if data["persist_data"]:
-                persisteData = data['persist_data']
+                persistData = data['persist_data']
                 # Delete OS Disks
                 delDisks = list()
-                for disk in vms['vhds']:
+                for disk in resources['vhds']:
                     if 'data' not in disk:
                         delDisks.append(disk)
                 if delDisks:
@@ -354,27 +426,104 @@ class Controller(object):
             else:
                 print("persist_data False")
                 # Delete All Disks
-                provider.deleteStorageAccountDisk(data['uuid'], vms['vhds'])
-        # There's only a single subnet per network
-        subnet = provider.getSubnetID(data['uuid'] + "0")
-        self.tags['uuid'] = data['uuid']
-        self.subnets.append({'subnets': {data['uuid']: subnet}})
-        vmList = [vm]
-        self.createVms(vmList, provider, persisteData)
-        for vmRsp in self.vms:
-            self.response.append(vmRsp)
+                provider.deleteStorageAccountDisk(
+                    data['uuid'],
+                    resources['vhds']
+                )
 
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
+        count = None
+        if 'ids' in resources:
+            count = len(resources['ids'])
+
+        # For some reason even if I created a template.copy()
+        # the copy (templateCopy) was still being modivied by the provider
+        # init. The copy() shoud break the reference...
+        templateCopy = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
         )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            data["application"],
-            params={
-                "UUID": self.tags['uuid']
-            }
+        self.addVM(
+            vmDetails,
+            provider,
+            templateCopy,
+            data['uuid'],
+            data['application'],
+            count=count,
+            persistData=persistData
         )
-        rsp = Response({'Resources': self.response})
+        for vmRsp in self.vms:
+            response.append(vmRsp)
+        rsp = Response({'Resources': response})
+        return rsp.httpResponse(200)
+
+    def scaleEnvironmentServer(self, data):
+        """Scale an Environments servers."""
+        if not self.checkUUIDInUse(data['uuid']):
+            rsp = Response({'error': 'Invalid UUID'})
+            return rsp.httpResponse(404)
+
+        response = list()
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
+            template,
+            data['uuid']
+        )
+        # For some reason even if I created a template.copy()
+        # the copy (templateCopy) was still being modivied by the provider
+        # init. The copy() shoud break the reference...
+        templateCopy = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        resources = provider.getResources(id=data['uuid'], filter={
+            'key': 'type',
+            'value': data['servers']
+        })
+        currentSize = 0
+        vms = list()
+        if 'ids' in resources:
+            currentSize = len(resources['ids'])
+            for vm in resources['ids']:
+                vms.append(self.getVMDetails(vm, data['servers']))
+        else:
+            vms.append({'type': data['servers']})
+        response.append(vms)
+        print("Scalling: {} from {} to {}".format(
+            data['servers'],
+            currentSize,
+            data['count']
+        ))
+
+        if currentSize < data['count']:
+            # Scale up
+            self.addVM(
+                vms,
+                provider,
+                templateCopy,
+                data['uuid'],
+                data['application'],
+                count=data['count']
+            )
+        elif currentSize > data['count']:
+            # Scale down
+            deleteIds = list()
+            deleteDisks = list()
+            while len(vms) > data['count']:
+                deleteIds.append(vms[-1]['id'])
+                for disk in resources['vhds']:
+                    if vms[-1]['name'] in disk:
+                        deleteDisks.append(disk)
+                vms.remove(vms[-1])
+            provider.deleteResourceById(deleteIds)
+            provider.deleteStorageAccountDisk(
+                data['uuid'],
+                deleteDisks
+            )
+
+        for vmRsp in self.vms:
+            response.append(vmRsp)
+        rsp = Response({'Resources': response})
         return rsp.httpResponse(200)
