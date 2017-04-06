@@ -142,6 +142,96 @@ class Controller(object):
             }
         )
 
+    def getStatusById(self, ids, provider):
+        """Get the status of a resource."""
+        statuses = list()
+        for id in ids:
+            details = self.getResourceDetails(id)
+            item = provider.getResourceById(details['type'], details['id'])
+            if 'provisioningState' in item.properties:
+                tmpItem = {
+                    'name': details['name'],
+                    'type': details['type'],
+                    'status': item.properties['provisioningState']
+                }
+            else:
+                if details['type'] == 'Microsoft.Compute/availabilitySets':
+                    tmpItem = {
+                        'name': details['name'],
+                        'type': details['type'],
+                        'status': 'Succeeded'
+                    }
+                else:
+                    tmpItem = {
+                        'name': details['name'],
+                        'type': details['type'],
+                        'status': 'Unknown'
+                    }
+            statuses.append(tmpItem)
+        return statuses
+
+    def checkVMResources(self, vmName, resources):
+        """Given a VM Name does it have the right resources."""
+        vm = dict()
+        vm['vm'] = False
+        vm['nic'] = False
+        vm['pip'] = False
+        vm['name'] = vmName
+        for resource in resources:
+            if resource['type'] == "Microsoft.Compute/virtualMachines"\
+                    and vmName in resource['name']:
+                    vm['vm'] = True
+            if resource['type'] == "Microsoft.Network/networkInterfaces"\
+                    and vmName in resource['name']:
+                    vm['nic'] = True
+            if resource['type'] == "Microsoft.Network/publicIPAddresses"\
+                    and vmName in resource['name']:
+                    vm['pip'] = True
+        return vm
+
+    def compareResources(self, statusRes, deploymentRes, uuid):
+        """Compare a status list with the Deployment resources."""
+        deployNetworkCount = list()
+        print("Generating deployed item counts")
+        for resource in deploymentRes['resources']:
+            if 'networks' in resource:
+                for network in resource['networks']:
+                    deployNetworkCount.append(network['name'])
+        statusNetworkCount = list()
+        statusVmCount = list()
+        print("Generating Actual resource counts")
+        for i in statusRes:
+            if "Environment resources" in i:
+                for resource in i["Environment resources"]:
+                    if resource['type'] == "Microsoft.Network/virtualNetworks":
+                        statusNetworkCount.append(resource['name'])
+                    if resource['type'] == "Microsoft.Compute/virtualMachines":
+                        statusVmCount.append(self.checkVMResources(
+                                resource['name'],
+                                i["Environment resources"]
+                            )
+                        )
+        brokenResources = list()
+        for vm in statusVmCount:
+            if not (vm['vm'] and vm['nic'] and vm['pip']):
+                print("VM {} is broken".format(vm['name']))
+                brokenResources.append({
+                    'name': vm['name'],
+                    'type': "Microsoft.Compute/virtualMachines",
+                    'status': "Failed"
+                })
+
+        for network in deployNetworkCount:
+            for statusNetwork in statusNetworkCount:
+                if network not in statusNetwork:
+                    brokenResources.append({
+                        'name': network,
+                        'type': "Microsoft.Network/virtualNetworks",
+                        'status': "Failed"
+                    })
+
+        return brokenResources
+
     def createNetworks(self, data, provider):
         """Create Networks."""
         # Must complete before everything else is built
@@ -149,7 +239,7 @@ class Controller(object):
         print("Creating network")
         netProcs = list()
         for idx, network in enumerate(data):
-            netId = str(self.tags['uuid'])+str(idx)
+            netId = str(self.tags['uuid'])+network['name']+str(idx)
             p = Process(
                 target=provider.network,
                 args=(network, netId, self.tags, subNets)
@@ -547,6 +637,7 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
+        statusResoures = list()
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -554,52 +645,49 @@ class Controller(object):
             template,
             data['uuid']
         )
+        deploymentResources = provider.resources
         resources = provider.getResources(id=data['uuid'])
-        statuses = list()
         if 'ids' in resources:
-            for resource in resources['ids']:
-                details = self.getResourceDetails(resource)
-                item = provider.getResourceById(details['type'], details['id'])
-                if 'provisioningState' in item.properties:
-                    tmpItem = {
-                        'name': details['name'],
-                        'type': details['type'],
-                        'status': item.properties['provisioningState']
-                    }
-                    if details['type'] == 'Microsoft.Compute/virtualMachines':
-                        if 'vhds' in resources:
-                            tmpItem['vhds'] = list()
-                            for vhd in resources['vhds']:
-                                if details['name'] in vhd:
-                                    tmpItem['vhds'].append({
-                                        'name': vhd,
-                                        'status': "Succeeded"
-                                    })
-                            if len(tmpItem['vhds']) == 0:
-                                tmpItem['vhds'].append({
-                                    'status': "Failed"
-                                })
-                else:
-                    if details['type'] == 'Microsoft.Compute/availabilitySets':
-                        tmpItem = {
-                            'name': details['name'],
-                            'type': details['type'],
-                            'status': 'Succeeded'
-                        }
-                    else:
-                        tmpItem = {
-                            'name': details['name'],
-                            'type': details['type'],
-                            'status': 'Unknown'
-                        }
-                statuses.append(tmpItem)
+            statusResoures.append({
+                'Environment resources':
+                self.getStatusById(resources['ids'], provider)
+            })
         if 'dns' in resources:
+            dnsEntry = list()
             for entry in resources['dns']:
-                statuses.append({
+                dnsEntry.append({
                     'name': entry,
                     'type': 'Microsoft.Network/dnsZones',
                     'status': 'Succeeded'
                 })
+            statusResoures.append({'Shared resources': dnsEntry})
+        if 'vhds' in resources:
+            vhdEntry = list()
+            for vhd in resources['vhds']:
+                vhdEntry.append({
+                    'name': vhd,
+                    'type': 'Microsoft.Stroage/blobStorage',
+                    'status': 'Succeeded'
+                })
+            statusResoures.append({
+                'Storage resources': vhdEntry
+            })
 
-        rsp = Response({'Resources': statuses})
+        print("Comapring resources")
+        broken = self.compareResources(
+            statusResoures,
+            deploymentResources,
+            data['uuid']
+        )
+        response = {
+            'Resources': statusResoures,
+            'status': "Succeeded"
+        }
+        if broken:
+            statusResoures.append({
+                'Broken resources': broken
+            })
+            response['status'] = "Failed"
+
+        rsp = Response(response)
         return rsp.httpResponse(200)
