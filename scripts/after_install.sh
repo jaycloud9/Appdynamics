@@ -7,4 +7,4 @@ cd /opt/PlatformInfra
 eval "$(pyenv virtualenv-init -)"
 pyenv install 3.5.1
 pyenv shell 3.5.1
-make setupp
+make setup
