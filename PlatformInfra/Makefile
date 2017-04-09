@@ -23,7 +23,7 @@ run:
 	flask run -h 0.0.0.0
 
 run-dev:
-	flask run
+	flask run --with-threads
 
 run-debug:
 	FLASK_DEBUG=1 flask run
