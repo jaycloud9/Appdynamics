@@ -91,17 +91,20 @@ class Controller(object):
                 for lb in template['services']['load_balancers']:
                     if lb['be_servers'] == server:
                         lbName = lb['name']
-                resources = provider.getResources(id=uuid)
-                for id in resources['ids']:
-                    idSplit = re.split(r"/", id.strip())
-                    resourceType = idSplit[6] + "/" + idSplit[7]
-                    resourceName = idSplit[-1]
-                    if resourceType == 'Microsoft.Network/loadBalancers' and \
-                            lbName in resourceName:
-                        print("Getting LB")
-                        # Found the Id of the Load balancer for the server
-                        lb = provider.getResourceById(resourceType, id)
-                        beId = lb.properties['backendAddressPools'][0]['id']
+                        resources = provider.getResources(id=uuid)
+                        for id in resources['ids']:
+                            idSplit = re.split(r"/", id.strip())
+                            resourceType = idSplit[6] + "/" + idSplit[7]
+                            resourceName = idSplit[-1]
+                            lbResName = 'Microsoft.Network/loadBalancers'
+                            if resourceType == lbResName and \
+                                    lbName in resourceName:
+                                print("Getting LB")
+                                # Found the Id of the Load balancer
+                                # for the server
+                                lb = provider.getResourceById(resourceType, id)
+                                be = lb.properties['backendAddressPools'][0]
+                                beId = be['id']
         return beId
 
     def addVM(
@@ -136,7 +139,8 @@ class Controller(object):
         vm['name'] = vms[0]['server']
         vmList = [vm]
         # There's only a single subnet per network
-        subnet = provider.getSubnetID(uuid + "0")
+        netName = template['services']['networks'][0]['name']
+        subnet = provider.getSubnetID(uuid + netName + "0")
         self.tags['uuid'] = uuid
         self.subnets.append({'subnets': {uuid: subnet}})
         self.createVms(vmList, provider)
@@ -297,12 +301,10 @@ class Controller(object):
 
     def stopVM(self, provider, vm):
         """Stop a running VM."""
-        print("Stop {}".format(vm))
         provider.stopVm(vm['name'], vm['resourceGroup'])
 
     def startVM(self, provider, vm):
         """Start a stopped VM."""
-        print("Start {}".format(vm))
         provider.startVm(vm['name'], vm['resourceGroup'])
 
     def createVms(self, data, provider, persistData=False):
