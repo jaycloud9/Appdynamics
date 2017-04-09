@@ -161,7 +161,6 @@ class Controller(object):
                         item.id,
                         details['group']
                     )
-                    print("VM DATA {}".format(vmData.instance_view))
                     for status in vmData.instance_view.statuses:
                         if status.code == 'PowerState/running':
                             tmpItem['status'] = status.display_status
@@ -195,11 +194,22 @@ class Controller(object):
         vm['vm'] = False
         vm['nic'] = False
         vm['pip'] = False
+        vm['disks'] = False
         vm['name'] = vmName
         for resource in resources:
             if resource['type'] == "Microsoft.Compute/virtualMachines"\
                     and vmName in resource['name']:
-                    vm['vm'] = True
+                    if resource['provisioningState'] == 'Succeeded':
+                        vm['vm'] = True
+                    disks = list()
+                    for disk in resource['disks']:
+                        if 'succeeded' in disk['provisioningState']:
+                            disks.append(True)
+                        else:
+                            disks.append(False)
+                    if all(disks):
+                        vm['disks'] = True
+
             if resource['type'] == "Microsoft.Network/networkInterfaces"\
                     and vmName in resource['name']:
                     vm['nic'] = True
@@ -230,7 +240,7 @@ class Controller(object):
                         )
         brokenResources = list()
         for vm in statusVmCount:
-            if not (vm['vm'] and vm['nic'] and vm['pip']):
+            if not (vm['vm'] and vm['nic'] and vm['pip'] and vm['disks']):
                 print("VM {} is broken".format(vm['name']))
                 brokenResources.append({
                     'name': vm['name'],
