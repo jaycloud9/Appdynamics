@@ -48,26 +48,6 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:5000/api/1.0/environments/<id>",
-			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12g6hddft263",
-				"method": "GET",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json",
-						"description": ""
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\"id\":\"w7hf6h\", \"application\": \"Retail_Suite\"}"
-				},
-				"description": "GET an Environment"
-			},
-			"response": []
-		},
-		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
 				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2",
@@ -103,7 +83,7 @@
 					"mode": "raw",
 					"raw": "{\"infrastructureTemplateID\": \"test\"}"
 				},
-				"description": "GET"
+				"description": "POST"
 			},
 			"response": []
 		},

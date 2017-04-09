@@ -28,16 +28,14 @@ def environments():
 
 @app.route(
     base_path + 'environments/<string:uuid>',
-    methods=['GET', 'PUT', 'DELETE']
+    methods=['DELETE']
 )
 def environmentsById(uuid):
-    """GET or DELETE a Specific env."""
+    """DELETE a Specific env."""
     rsp = Response()
     req = dict()
     req['uuid'] = uuid
-    if request.method == 'GET':
-        return FakeData.environmentsByIdGet(req)
-    elif request.method == 'DELETE':
+    if request.method == 'DELETE':
         return controller.deleteEnvironment(req)
     else:
         return rsp.httpResponse(404, 'Not Found')
