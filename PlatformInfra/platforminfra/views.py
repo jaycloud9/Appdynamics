@@ -67,6 +67,6 @@ def environmentsByIdAction(uuid, action):
     ):
         req = request.get_json()
         req['uuid'] = uuid
-        return FakeData.environmentsByIdActionPut(req, action)
+        return controller.environmentServerStopStart(req, action)
     else:
         return rsp.httpResponse(404, 'Not Found')

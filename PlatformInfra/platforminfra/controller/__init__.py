@@ -56,6 +56,17 @@ class Controller(object):
 
         return resource
 
+    def getVmList(self, provider, uuid, server):
+        """Return a list of VM's and their current running state."""
+        resources = provider.getResources(id=uuid, filter={
+            'key': 'type',
+            'value': server
+        })
+        # vmList = list()
+        statuses = self.getStatusById(resources['ids'], provider)
+
+        return statuses
+
     def getVMDetails(self, id, server):
         """Get a VM object back from an ID."""
         vm = dict()
@@ -153,6 +164,7 @@ class Controller(object):
                 tmpItem = {
                     'name': details['name'],
                     'type': details['type'],
+                    'resourceGroup': details['group'],
                     'provisioningState': item.properties['provisioningState']
                 }
                 if item.type == "Microsoft.Compute/virtualMachines":
@@ -162,7 +174,7 @@ class Controller(object):
                         details['group']
                     )
                     for status in vmData.instance_view.statuses:
-                        if status.code == 'PowerState/running':
+                        if 'PowerState' in status.code:
                             tmpItem['status'] = status.display_status
                     disks = list()
                     for disk in vmData.instance_view.disks:
@@ -177,12 +189,14 @@ class Controller(object):
                     tmpItem = {
                         'name': details['name'],
                         'type': details['type'],
+                        'resourceGroup': details['group'],
                         'provisioningState': 'Succeeded'
                     }
                 else:
                     tmpItem = {
                         'name': details['name'],
                         'type': details['type'],
+                        'resourceGroup': details['group'],
                         'provisioningState': 'Unknown'
                     }
             statuses.append(tmpItem)
@@ -280,6 +294,16 @@ class Controller(object):
             subnets['subnets'] = subNets.get()
 
         self.subnets.append(subnets)
+
+    def stopVM(self, provider, vm):
+        """Stop a running VM."""
+        print("Stop {}".format(vm))
+        provider.stopVm(vm['name'], vm['resourceGroup'])
+
+    def startVM(self, provider, vm):
+        """Start a stopped VM."""
+        print("Start {}".format(vm))
+        provider.startVm(vm['name'], vm['resourceGroup'])
 
     def createVms(self, data, provider, persistData=False):
         """Create VMs."""
@@ -716,4 +740,33 @@ class Controller(object):
             response['status'] = "Failed"
 
         rsp = Response(response)
+        return rsp.httpResponse(200)
+
+    def environmentServerStopStart(self, data, action):
+        """Stop or Start an environment."""
+        if not self.checkUUIDInUse(data['uuid']):
+            rsp = Response({'error': 'Invalid UUID'})
+            return rsp.httpResponse(404)
+        provider = Azure(
+            self.config.credentials['azure'],
+            self.config.defaults['resource_group_name'],
+            self.config.defaults['storage_account_name'],
+            id=data['uuid']
+        )
+        VMList = self.getVmList(provider, data['uuid'], data['servers'])
+
+        outcome = {
+            'stop': 'VM running',
+            'start': 'VM stopped'
+        }
+        actions = {
+            'stop': self.stopVM,
+            'start': self.startVM
+        }
+
+        for vm in VMList:
+            if vm['status'] == outcome[action]:
+                actions[action](provider, vm)
+        statuses = self.getVmList(provider, data['uuid'], data['servers'])
+        rsp = Response({'VMs': statuses})
         return rsp.httpResponse(200)

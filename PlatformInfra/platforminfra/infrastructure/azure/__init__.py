@@ -392,6 +392,22 @@ class Azure(object):
         result = cmpClient.virtual_machines.get(rg, vmName, "instanceView")
         return result
 
+    def stopVm(self, vmName, rg):
+        """Stop a VM."""
+        cmpClient = ComputeManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        result = cmpClient.virtual_machines.power_off(rg, vmName)
+        return result
+
+    def startVm(self, vmName, rg):
+        """Sart a VM."""
+        cmpClient = ComputeManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        result = cmpClient.virtual_machines.start(rg, vmName)
+        return result
+
     def getSubnetID(self, netName):
         """Get the Subnets for a network."""
         netClient = NetworkManagementClient(
