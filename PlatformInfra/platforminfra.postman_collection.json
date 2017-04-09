@@ -90,7 +90,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/stop",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/stop",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/stop",
 				"method": "PUT",
 				"header": [
 					{
@@ -101,7 +101,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\", \"servers\": \"t24\"}"
+					"raw": "{\"servers\": \"t24\"}"
 				},
 				"description": "PUT"
 			},
@@ -110,7 +110,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/start",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/12h3terhfy76/start",
+				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/start",
 				"method": "PUT",
 				"header": [
 					{
@@ -121,7 +121,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"application\": \"Retail_Suite\"}"
+					"raw": "{\"servers\": \"t24\"}"
 				},
 				"description": "PUT"
 			},
