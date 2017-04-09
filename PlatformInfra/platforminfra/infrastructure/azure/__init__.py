@@ -384,6 +384,14 @@ class Azure(object):
             )
             saAsyncOp.wait()
 
+    def getVmInfo(self, vmName, id, rg):
+        """Get Extended info about a VM."""
+        cmpClient = ComputeManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        result = cmpClient.virtual_machines.get(rg, vmName, "instanceView")
+        return result
+
     def getSubnetID(self, netName):
         """Get the Subnets for a network."""
         netClient = NetworkManagementClient(

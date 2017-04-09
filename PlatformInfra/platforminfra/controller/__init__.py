@@ -52,6 +52,7 @@ class Controller(object):
         idSplit = re.split(r"/", id.strip())
         resource['name'] = idSplit[-1]
         resource['type'] = idSplit[6] + "/" + idSplit[7]
+        resource['group'] = idSplit[4]
 
         return resource
 
@@ -152,20 +153,38 @@ class Controller(object):
                 tmpItem = {
                     'name': details['name'],
                     'type': details['type'],
-                    'status': item.properties['provisioningState']
+                    'provisioningState': item.properties['provisioningState']
                 }
+                if item.type == "Microsoft.Compute/virtualMachines":
+                    vmData = provider.getVmInfo(
+                        item.name,
+                        item.id,
+                        details['group']
+                    )
+                    print("VM DATA {}".format(vmData.instance_view))
+                    for status in vmData.instance_view.statuses:
+                        if status.code == 'PowerState/running':
+                            tmpItem['status'] = status.display_status
+                    disks = list()
+                    for disk in vmData.instance_view.disks:
+                        for status in disk.statuses:
+                            disks.append({
+                                "name": disk.name,
+                                "provisioningState": status.display_status
+                            })
+                    tmpItem['disks'] = disks
             else:
                 if details['type'] == 'Microsoft.Compute/availabilitySets':
                     tmpItem = {
                         'name': details['name'],
                         'type': details['type'],
-                        'status': 'Succeeded'
+                        'provisioningState': 'Succeeded'
                     }
                 else:
                     tmpItem = {
                         'name': details['name'],
                         'type': details['type'],
-                        'status': 'Unknown'
+                        'provisioningState': 'Unknown'
                     }
             statuses.append(tmpItem)
         return statuses
