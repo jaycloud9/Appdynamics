@@ -141,7 +141,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"application\": \"T24-Pipeline\",\n\t\"persist_data\": true,\n\t\"servers\": \"t24\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
+					"raw": "{\n\t\"application\": \"T24-Pipeline\",\n\t\"persistData\": true,\n\t\"servers\": \"t24\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},

@@ -568,8 +568,8 @@ class Controller(object):
 
         persistData = False
         if 'vhds' in resources:
-            if data["persist_data"]:
-                persistData = data['persist_data']
+            if data["persistData"]:
+                persistData = data['persistData']
                 # Delete OS Disks
                 delDisks = list()
                 for disk in resources['vhds']:
@@ -578,7 +578,7 @@ class Controller(object):
                 if delDisks:
                     provider.deleteStorageAccountDisk(data['uuid'], delDisks)
             else:
-                print("persist_data False")
+                print("persistData False")
                 # Delete All Disks
                 provider.deleteStorageAccountDisk(
                     data['uuid'],

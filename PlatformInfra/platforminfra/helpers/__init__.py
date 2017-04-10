@@ -212,18 +212,18 @@ class FakeData(object):
         elif action == 'stop':
             return rsp.httpResponse(200)
         elif action == 'rebuild':
-            if 'persist_data' in data:
-                if data['persist_data'] == 'True':
+            if 'persistData' in data:
+                if data['persistData'] == 'True':
                     rsp.payload = {
-                            'persist_data': 'True'
+                            'persistData': 'True'
                         }
                 else:
                     rsp.payload = {
-                            'persist_data': 'False'
+                            'persistData': 'False'
                         }
             else:
                 rsp.payload = {
-                        'persist_data': 'True'
+                        'persistData': 'True'
                     }
             return rsp.httpResponse(200)
         elif action == 'scale':
