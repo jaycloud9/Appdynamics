@@ -1,7 +1,7 @@
 """Views defines the routes for the platformInfra application."""
 
 from platforminfra import app
-from platforminfra.helpers import Response, FakeData
+from platforminfra.helpers import Response
 from platforminfra.controller import Controller
 from flask import request
 
