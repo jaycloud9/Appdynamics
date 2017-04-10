@@ -3,7 +3,7 @@
 export FLASK_APP = platforminfra
 
 setup:
-	pip install -e .
+	/root/.pyenv/shims/pip install -e .
 
 clean: clean-pyc clean-test
 
@@ -20,7 +20,7 @@ test:
 	python setup.py test
 
 run:
-	flask run -h 0.0.0.0
+	flask run -h 127.0.0.1
 
 run-dev:
 	flask run --with-threads
