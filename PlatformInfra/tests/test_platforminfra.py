@@ -10,6 +10,9 @@ TEST_UUIDS = ['abcdefghijk0']
 
 
 class PlatformInfraTestCase(unittest.TestCase):
+    """A class whose instances are single test cases to test the PlatformInfra
+    flask application.
+    """
 
     def setUp(self):
         # disable the error catching during request handling
