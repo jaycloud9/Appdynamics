@@ -26,6 +26,7 @@ setup(
         'pyyaml',
         'uwsgi'
     ],
+    test_suite='tests',
     tests_require=[
         'dnspython'
     ]
