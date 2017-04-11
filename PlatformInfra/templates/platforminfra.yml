@@ -23,5 +23,5 @@ services:
   servers:
     - name: platformInfra
       count: 1
-      dns: bob
+      dns: platformInfra
       service_port: 80
