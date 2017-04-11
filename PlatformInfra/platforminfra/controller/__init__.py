@@ -411,7 +411,7 @@ class Controller(object):
 
         if self.checkUUIDInUse(data['id']):
             rsp = Response({'error': 'UUID in use'})
-            return rsp.httpResponse(404)
+            return rsp.httpResponse(412)
         response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
@@ -423,7 +423,7 @@ class Controller(object):
         )
         if 'error' in provider.credentials:
             rsp = Response(provider.credentials)
-            return rsp.httpResponse(404)
+            return rsp.httpResponse(400)
 
         buildMap = {
             "servers": self.createVms,
@@ -448,7 +448,7 @@ class Controller(object):
         except Exception as e:
             print("Something failed :'(")
             rsp = Response(e)
-            return rsp.httpResponse(404)
+            return rsp.httpResponse(400)
 
         for vmRsp in self.vms:
             response.append(vmRsp)
@@ -489,7 +489,7 @@ class Controller(object):
         response.append({'git_url': forked.web_url})
         response = response + self.lbs
         rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return rsp.httpResponse(201)
 
     def listEnvironments(self):
         """Return a list of environments."""
@@ -506,6 +506,9 @@ class Controller(object):
 
     def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
+        if not self.checkUUIDInUse(data['uuid']):
+            rsp = Response({'error': 'Invalid UUID'})
+            return rsp.httpResponse(404)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -529,10 +532,8 @@ class Controller(object):
         if "Gitlab" in deleteResources:
             glServer.deleteUser(user)
 
-        rsp = Response({
-            "Resources": deleteResources
-        })
-        return rsp.httpResponse(200)
+        rsp = Response()
+        return rsp.httpResponse(204)
 
     def rebuildEnvironmentServer(self, data):
         """Rebuild a portion of an environment."""

@@ -1,5 +1,6 @@
 """Helpers package for platformInfra."""
 from flask import jsonify
+from flask import Response as Rsp
 import jenkins
 import gitlab
 import random
@@ -31,21 +32,29 @@ class Response(object):
         self.status_code = status_code
         if self.status_code is 200:
             self.response = {'response': 'Success'}
+        elif self.status_code is 204:
+            self.response = None
         else:
             self.response = {'response': 'Failure'}
 
+        response_message = None
         if msg is not None:
             response_message = {
                 **self.payload,
                 **self.response,
                 **{'message': msg}
             }
-        else:
+        elif self.response:
             response_message = {
                 **self.payload,
                 **self.response
             }
-        rsp = jsonify(response_message)
+
+        if response_message:
+            rsp = jsonify(response_message)
+        else:
+            rsp = Rsp()
+
         rsp.status_code = self.status_code
         return rsp
 
