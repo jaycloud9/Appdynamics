@@ -67,7 +67,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         1: Environment Creation
 
-          - Returns 200
+          - Returns 201
           - Correct keys found in JSON resonse data for response, servers,
           git_url, dns, and public ip address
           - Tests that the response is "Succcess"
@@ -87,7 +87,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         4: Destroy Environment
 
-          - Tests that the destroy command returns a 200 status
+          - Tests that the destroy command returns a 204 status
           - Tests that the destroy response is "Success"
 
         5:  Environments Listing
@@ -100,7 +100,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         # Create environment
         rv = self.create(uuid, "T24-Pipeline", "test")
-        self.assertEqual(rv.status_code, 200, "Environment creation")
+        self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.getResponseData(rv)
 
         # KeyErrors. i.e. does the response contain the fields we expect
@@ -145,13 +145,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         # Environment destuction
         rv = self.destroy(uuid)
-        self.assertEqual(rv.status_code, 200, "Destroy environment")
-        response_data = self.getResponseData(rv)
-        response = response_data["response"]
-        self.assertEqual(
-            response, "Success",
-            "Testing environment destruction"
-        )
+        self.assertEqual(rv.status_code, 204, "Destroy environment")
 
         # Tests that the environment no longer shows in environments listing
         rv = self.getEnvironments()
