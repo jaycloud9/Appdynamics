@@ -1,3 +1,5 @@
+"""PlatformInfra Tests Module."""
+
 import platforminfra
 import unittest
 from platforminfra.views import base_path
@@ -10,21 +12,25 @@ TEST_UUIDS = ['abcdefghijk0']
 
 
 class PlatformInfraTestCase(unittest.TestCase):
-    """A class whose instances are single test cases to test the PlatformInfra
+    """Platfrom Infra Test Cases.
+
+    A class whose instances are single test cases to test the PlatformInfra
     flask application.
     """
 
     def setUp(self):
+        """Set Up Flask."""
         # disable the error catching during request handling
         platforminfra.app.config['TESTING'] = True
         self.app = platforminfra.app.test_client()
 
     def tearDown(self):
+        """Tear Dwon Flask App."""
         for uuid in TEST_UUIDS:
             self.destroy(uuid)
 
     def create(self, uuid, application, infrastructureTemplateID):
-        """Creates an environment"""
+        """Create an environment."""
         print("Creating environment", uuid)
         url = urlp.urljoin(base_path, "environments")
         request_data = json.dumps(
@@ -41,27 +47,27 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
     def destroy(self, uuid):
-        """Destroy an environment"""
+        """Destroy an environment."""
         print("Destroying environment", uuid)
         url = urlp.urljoin(base_path, "environments/" + uuid)
         return self.app.delete(url)
 
     def getEnvironments(self):
-        """Returns response of environments GET request"""
+        """Return a response of environments GET request."""
         url = urlp.urljoin(base_path, "environments")
         return self.app.get(url)
 
     def getResponseData(self, rv):
-        """Returns JSON data from a flask response"""
+        """Return a JSON data from a flask response."""
         return json.loads(rv.get_data().decode("utf-8"))
 
     def test_root(self):
-        """Test that root page does not exist"""
+        """Test that root page does not exist."""
         rv = self.app.get(base_path)
         self.assertEqual(rv.status_code, 404, "Checking "+base_path)
 
     def test_create_and_destroy(self):
-        """Tests creation and destruction of one environment.
+        """Test the creation and destruction of one environment.
 
         Testing the following:
 
