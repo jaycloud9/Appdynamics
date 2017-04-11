@@ -93,6 +93,10 @@ class Vm(object):
             pubIpName)
         return pubIp.ip_address
 
+    def privateIp(self, nic):
+        """Get the Private ip address."""
+        return nic.ip_configurations[0].private_ip_address
+
     def create(self, vmName, vmNic, vmQueue):
         """Create a VM."""
         cmpClient = ComputeManagementClient(
@@ -108,7 +112,8 @@ class Vm(object):
             asyncVmCreation.wait()
             vmQueue.put({
                 'name': vmName,
-                'public_ip': self.publicIp(vmNic['public_ip_name'])
+                'public_ip': self.publicIp(vmNic['public_ip_name']),
+                'private_ip': self.privateIp(vmNic['nic'])
             })
         except CloudError as e:
             print(e)
