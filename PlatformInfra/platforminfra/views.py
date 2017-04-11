@@ -8,7 +8,6 @@ from flask import request
 root_path = 'api'
 api_version = '1.0'
 base_path = '/' + root_path + '/' + api_version + '/'
-controller = Controller()
 
 
 @app.route(
@@ -19,9 +18,11 @@ def environments():
     """Get a list of environments."""
     rsp = Response()
     if request.method == 'GET':
-        return controller.listEnvironments()
+        listGetController = Controller()
+        return listGetController.listEnvironments()
     elif request.method == 'POST':
-        return controller.createEnvironment(request.get_json())
+        createPostController = Controller()
+        return createPostController.createEnvironment(request.get_json())
     else:
         return rsp.httpResponse(404, 'Not Found')
 
@@ -36,7 +37,8 @@ def environmentsById(uuid):
     req = dict()
     req['uuid'] = uuid
     if request.method == 'DELETE':
-        return controller.deleteEnvironment(req)
+        deleteDeleteController = Controller()
+        return deleteDeleteController.deleteEnvironment(req)
     else:
         return rsp.httpResponse(404, 'Not Found')
 
@@ -52,21 +54,25 @@ def environmentsByIdAction(uuid, action):
     if request.method == 'POST' and action == 'status':
         req = request.get_json()
         req['uuid'] = uuid
-        return controller.environmentStatus(req)
+        statusPostController = Controller()
+        return statusPostController.environmentStatus(req)
     elif request.method == 'PUT' and action == 'rebuild':
         req = request.get_json()
         req['uuid'] = uuid
-        return controller.rebuildEnvironmentServer(req)
+        rebuildPutController = Controller()
+        return rebuildPutController.rebuildEnvironmentServer(req)
     elif request.method == 'PUT' and action == 'scale':
         req = request.get_json()
         req['uuid'] = uuid
-        return controller.scaleEnvironmentServer(req)
+        scalePutController = Controller()
+        return scalePutController.scaleEnvironmentServer(req)
     elif request.method == 'PUT' and (
         action == 'start' or
         action == 'stop'
     ):
         req = request.get_json()
         req['uuid'] = uuid
-        return controller.environmentServerStopStart(req, action)
+        stopStartPutController = Controller()
+        return stopStartPutController.environmentServerStopStart(req, action)
     else:
         return rsp.httpResponse(404, 'Not Found')
