@@ -32,6 +32,8 @@ class Response(object):
         self.status_code = status_code
         if self.status_code is 200:
             self.response = {'response': 'Success'}
+        elif self.status_code is 201:
+            self.response = {'response': 'Success'}
         elif self.status_code is 204:
             self.response = None
         else:
