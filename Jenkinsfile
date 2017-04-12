@@ -13,5 +13,9 @@ node {
  stage 'Deploy'
  sh 'chmod 400 ./keys/key.pem; export ANSIBLE_ROLES_PATH="../roles"'
  sh 'export ANSIBLE_CONFIG="ansible.cfg"'
- sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/ansible_hosts --vault-password-file ~/vault-password --limit Type_t24  -u mpadmin --private-key=./infra/keys/key.pem master.yml'
+ sh """cat <<EOF > ./new.ini
+[azure]
+tags=uuid:${env.UUID}
+EOF"""
+ sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/ansible_hosts --vault-password-file ~/vault-password --limit t24  -u mpadmin --private-key=./infra/keys/key.pem master.yml'
 }
