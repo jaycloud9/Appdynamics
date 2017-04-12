@@ -17,5 +17,5 @@ node {
 [azure]
 tags=uuid:${env.UUID}
 EOF"""
- sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i -i ./inventory/azure_rm.py --vault-password-file ~/vault-password -u mpadmin --private-key=./infra/keys/key.pem master.yml'
+ sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/azure_rm.py --vault-password-file ~/vault-password -u mpadmin --private-key=./infra/keys/key.pem master.yml'
 }
