@@ -10,7 +10,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments",
+				"url": "http://{{host}}/api/1.0/environments",
 				"method": "GET",
 				"header": [
 					{
@@ -30,7 +30,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments",
+				"url": "http://{{host}}/api/1.0/environments",
 				"method": "POST",
 				"header": [
 					{
@@ -50,7 +50,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -70,7 +70,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/status",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/status",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/status",
 				"method": "POST",
 				"header": [
 					{
@@ -90,7 +90,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/stop",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/stop",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/stop",
 				"method": "PUT",
 				"header": [
 					{
@@ -110,7 +110,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/start",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/start",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/start",
 				"method": "PUT",
 				"header": [
 					{
@@ -130,7 +130,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/rebuild",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/rebuild",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/rebuild",
 				"method": "PUT",
 				"header": [
 					{
@@ -150,7 +150,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/scale",
 			"request": {
-				"url": "http://localhost:5000/api/1.0/environments/w7hf6hsd34f2/scale",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/scale",
 				"method": "PUT",
 				"header": [
 					{
