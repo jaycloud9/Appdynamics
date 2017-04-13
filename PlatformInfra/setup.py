@@ -24,7 +24,8 @@ setup(
         'python-jenkins',
         'python-gitlab',
         'pyyaml',
-        'uwsgi'
+        'uwsgi',
+        'pdoc'
     ],
     test_suite='tests',
     tests_require=[

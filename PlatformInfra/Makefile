@@ -16,6 +16,11 @@ clean-pyc:
 clean-test:
 	@echo "Not implemented yet"
 
+documents:
+	echo "Removing old Docs and regenerating"
+	rm -rf ./docs/*
+	pdoc --html-dir ./docs --html --all-submodules platforminfra
+
 test:
 	python setup.py test
 
