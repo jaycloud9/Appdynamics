@@ -23,7 +23,6 @@ services:
   servers:
     - name: t24
       count: 1
-      dns: t24
       service_port: 8080
     - name: h2
       count: 1
