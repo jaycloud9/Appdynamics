@@ -8,7 +8,6 @@ additional actions such as Jenkins and gitlab.
 
 from platforminfra.templates import Template
 from platforminfra.config import Config
-from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
 from copy import deepcopy
@@ -37,7 +36,7 @@ class Controller(object):
         return self.templates.loadTemplate(templateName)
 
     def setTags(self, data):
-        """Return the tags element."""
+        """Create the tags property."""
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
@@ -350,19 +349,49 @@ class Controller(object):
         subNets = Queue()
         print("Creating network")
         netProcs = list()
-        for idx, network in enumerate(data):
-            netId = str(self.tags['uuid'])+network['name']+str(idx)
-            p = Process(
-                target=provider.network,
-                args=(network, netId, self.tags, subNets)
-            )
-            netProcs.append(p)
-            p.start()
+        try:
+            for idx, network in enumerate(data):
+                netId = str(self.tags['uuid'])+network['name']+str(idx)
+                p = Process(
+                    target=provider.network,
+                    args=(network, netId, self.tags, subNets)
+                )
+                netProcs.append(p)
+                p.start()
 
-        subnets = dict()
-        for proc in netProcs:
-            proc.join()
-            subnets['subnets'] = subNets.get()
+            subnets = dict()
+            for proc in netProcs:
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc.join(1)
+                    lives = lives - 1
+                    if not subNets.empty():
+                        subnets['subnets'] = subNets.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc.is_alive():
+                            print("Proc Alive")
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            print("Proc Dead already")
+                            # Process already dead
+                            break
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating networks: {}"
+                    .format(str(e))
+                })
 
         self.subnets.append(subnets)
 
@@ -406,7 +435,7 @@ class Controller(object):
                 )
                 vmDetails = {
                     'servers': server['name'],
-                    'thread': p
+                    'process': p
                 }
                 if 'dns' in server:
                     vmDetails['dns'] = server['dns']
@@ -414,8 +443,27 @@ class Controller(object):
                 p.start()
 
             for proc in serverProcs:
-                proc['thread'].join()
-                tmpData = vms.get()
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc['process'].join(1)
+                    lives = lives - 1
+                    if not vms.empty():
+                        tmpData = vms.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc.is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            # Process already dead
+                            break
                 if 'dns' in proc:
                     # Only apply to the first server
                     result = provider.addDNS(
@@ -425,7 +473,13 @@ class Controller(object):
                     tmpData['dns'] = result
                 self.vms.append(tmpData)
         except Exception as e:
-            raise Exception(e)
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating Vms: {}"
+                    .format(str(e))
+                })
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
@@ -484,8 +538,7 @@ class Controller(object):
         )
 
         if self.checkUUIDInUse(data['id']):
-            rsp = Response({'error': 'UUID in use'})
-            return rsp.httpResponse(412)
+            raise Exception({'error': 'UUID in use', 'code': 412})
         response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
@@ -496,8 +549,10 @@ class Controller(object):
             data['id']
         )
         if 'error' in provider.credentials:
-            rsp = Response(provider.credentials)
-            return rsp.httpResponse(400)
+            raise Exception({
+                'error': provider.credentials['error'],
+                'code': 400}
+            )
 
         buildMap = {
             "servers": self.createVms,
@@ -519,10 +574,8 @@ class Controller(object):
                         else:
                             buildMap[k](v, provider)
                         continue
-        except Exception as e:
-            print("Something failed :'(")
-            rsp = Response(e)
-            return rsp.httpResponse(400)
+        except:
+            raise
 
         for vmRsp in self.vms:
             response.append(vmRsp)
@@ -536,8 +589,7 @@ class Controller(object):
             response.append({'gitlab': glResponse})
         if self.lbs:
             response = response + self.lbs
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(201)
+        return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
         """Return a list of environments."""
@@ -547,16 +599,12 @@ class Controller(object):
             self.config.defaults['storage_account_name']
         )
 
-        rsp = Response({
-            "Environments": provider.getResources()
-        })
-        return rsp.httpResponse(200)
+        return {'msg': {"Environments": provider.getResources()}, 'code': 200}
 
     def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -580,8 +628,7 @@ class Controller(object):
         if "Gitlab" in deleteResources:
             glServer.deleteUser(user)
 
-        rsp = Response()
-        return rsp.httpResponse(204)
+        return {'code': 204, 'msg': None}
 
     def rebuildEnvironmentServer(self, data):
         """Rebuild a portion of an environment.
@@ -589,8 +636,7 @@ class Controller(object):
         Given a specified 'server' group delete and recreate those servers.
         """
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         if 'infrastructureTemplateID' in data:
             template = self.templates.loadTemplate(
                 data['infrastructureTemplateID']
@@ -598,8 +644,10 @@ class Controller(object):
             # Create an unrefferenced copy of the template for later use
             templateCopy = deepcopy(template)
         else:
-            rsp = Response({'error': 'infrastructureTemplateId required'})
-            return rsp.httpResponse(404)
+            raise Exception({
+                'error': 'infrastructureTemplateId required',
+                'code': 404}
+            )
         response = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -658,14 +706,12 @@ class Controller(object):
         )
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def scaleEnvironmentServer(self, data):
         """Scale an Environments servers."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
 
         response = list()
         template = self.templates.loadTemplate(
@@ -728,14 +774,12 @@ class Controller(object):
 
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentStatus(self, data):
         """Get the status of an environment."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
@@ -790,14 +834,12 @@ class Controller(object):
             })
             response['status'] = "Failed"
 
-        rsp = Response(response)
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -819,5 +861,4 @@ class Controller(object):
             if vm['status'] == outcome[action]:
                 actions[action](provider, vm)
         statuses = self.getVmList(provider, data['uuid'], data['servers'])
-        rsp = Response({'VMs': statuses})
-        return rsp.httpResponse(200)
+        return {'msg': {'VMs': statuses}, 'code': 200}

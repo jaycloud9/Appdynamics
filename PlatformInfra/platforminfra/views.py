@@ -1,13 +1,34 @@
-"""Views defines the routes for the platformInfra application."""
+"""Views defines the response to the end user.
+
+Views defines the routes, message format and how errors are handeled.
+"""
 
 from platforminfra import app
 from platforminfra.helpers import Response
 from platforminfra.controller import Controller
 from flask import request
+from werkzeug.exceptions import HTTPException
 
 root_path = 'api'
 api_version = '1.0'
 base_path = '/' + root_path + '/' + api_version + '/'
+
+
+@app.errorhandler(Exception)
+def handle_error(e):
+    """Handle all Errors."""
+    rsp = Response()
+    code = 500
+    if isinstance(e, HTTPException):
+        code = e.code
+        response = {'error':  str(e)}
+    elif type(e.args[0]) is dict:
+        if 'code' in e.args[0]:
+            code = e.args[0]['code']
+        response = {'error': e.args[0]['error']}
+    else:
+        response = {'error': str(e)}
+    return rsp.httpResponse(code, response)
 
 
 @app.route(
@@ -19,12 +40,13 @@ def environments():
     rsp = Response()
     if request.method == 'GET':
         listGetController = Controller()
-        return listGetController.listEnvironments()
+        response = listGetController.listEnvironments()
     elif request.method == 'POST':
         createPostController = Controller()
-        return createPostController.createEnvironment(request.get_json())
+        response = createPostController.createEnvironment(request.get_json())
     else:
-        return rsp.httpResponse(404, 'Not Found')
+        raise Exception({'error': 'Not Found', 'code': 404})
+    return rsp.httpResponse(response['code'], response['msg'])
 
 
 @app.route(
@@ -38,9 +60,10 @@ def environmentsById(uuid):
     req['uuid'] = uuid
     if request.method == 'DELETE':
         deleteDeleteController = Controller()
-        return deleteDeleteController.deleteEnvironment(req)
+        response = deleteDeleteController.deleteEnvironment(req)
     else:
-        return rsp.httpResponse(404, 'Not Found')
+        raise Exception({'error': 'Not Found', 'code': 404})
+    return rsp.httpResponse(response['code'], response['msg'])
 
 
 @app.route(
@@ -55,17 +78,17 @@ def environmentsByIdAction(uuid, action):
         req = request.get_json()
         req['uuid'] = uuid
         statusPostController = Controller()
-        return statusPostController.environmentStatus(req)
+        response = statusPostController.environmentStatus(req)
     elif request.method == 'PUT' and action == 'rebuild':
         req = request.get_json()
         req['uuid'] = uuid
         rebuildPutController = Controller()
-        return rebuildPutController.rebuildEnvironmentServer(req)
+        response = rebuildPutController.rebuildEnvironmentServer(req)
     elif request.method == 'PUT' and action == 'scale':
         req = request.get_json()
         req['uuid'] = uuid
         scalePutController = Controller()
-        return scalePutController.scaleEnvironmentServer(req)
+        response = scalePutController.scaleEnvironmentServer(req)
     elif request.method == 'PUT' and (
         action == 'start' or
         action == 'stop'
@@ -73,6 +96,10 @@ def environmentsByIdAction(uuid, action):
         req = request.get_json()
         req['uuid'] = uuid
         stopStartPutController = Controller()
-        return stopStartPutController.environmentServerStopStart(req, action)
+        response = stopStartPutController.environmentServerStopStart(
+            req,
+            action
+        )
     else:
-        return rsp.httpResponse(404, 'Not Found')
+        raise Exception({'error': 'Not Found', 'code': 404})
+    return rsp.httpResponse(response['code'], response['msg'])

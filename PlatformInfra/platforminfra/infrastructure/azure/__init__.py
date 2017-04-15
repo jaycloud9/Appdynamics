@@ -131,8 +131,7 @@ class Azure(object):
                     'A'
                 )
         except CloudError as e:
-            print("Error: {}".format(e))
-            raise e
+            raise Exception(e)
 
     def getStorageDisks(self, id, filter):
         """Get a list of Storage disks."""
