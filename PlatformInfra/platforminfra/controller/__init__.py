@@ -1,4 +1,10 @@
-"""PlatformInfra Controller."""
+"""PlatformInfra Controller.
+
+The controller orchestrates the main actions of the platform.
+This includes calling the underlying provider methods and the simpler
+additional actions such as Jenkins and gitlab.
+
+"""
 
 from platforminfra.templates import Template
 from platforminfra.config import Config
@@ -11,7 +17,10 @@ import re
 
 
 class Controller(object):
-    """Controls the platformInfra."""
+    """Controls the platformInfra.
+
+    The controller Object carries out all of the actions.
+    """
 
     def __init__(self):
         """Initialise the controller."""
@@ -242,7 +251,12 @@ class Controller(object):
         return vm
 
     def compareResources(self, statusRes, deploymentRes, uuid):
-        """Compare a status list with the Deployment resources."""
+        """Compare a status list with the Deployment resources.
+
+        Loop through the expected resources (deploymnetRes) and ensure at least
+        one of each is found in the statusRes so we inform the request if all
+        resources are 'okay' or not.
+        """
         deployNetworkCount = list()
         for resource in deploymentRes['resources']:
             if 'networks' in resource:
@@ -261,8 +275,11 @@ class Controller(object):
                                 i["Environment resources"]
                             )
                         )
+        # Create a list of all of the broken resources so they can be eaisly
+        # displayed within the status response.
         brokenResources = list()
         for vm in statusVmCount:
+            # If a VM Does not have these it is not 'good'
             if not (vm['vm'] and vm['nic'] and vm['pip'] and vm['disks']):
                 print("VM {} is broken".format(vm['name']))
                 brokenResources.append({
@@ -313,7 +330,11 @@ class Controller(object):
         provider.startVm(vm['name'], vm['resourceGroup'])
 
     def createVms(self, data, provider, persistData=False):
-        """Create VMs."""
+        """Create VMs.
+
+        For a given set of data, for each 'server' group create each server
+        with all of dependencies each VM needs.
+        """
         print("Creating Servers")
         vms = Queue()
         vmLock = Lock()
@@ -322,8 +343,11 @@ class Controller(object):
         try:
             for i in self.subnets:
                 if self.tags['uuid'] in i['subnets']:
+                    # Grab A subnet - needs reworking when multiple networks is
+                    # supported
                     vmSubnet = i['subnets'][self.tags['uuid']]
             for server in data:
+                # For each 'server' Spawn a process to create that vm
                 p = Process(
                     target=provider.virtualMachine,
                     args=(
