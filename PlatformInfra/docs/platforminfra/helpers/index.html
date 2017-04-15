@@ -979,6 +979,7 @@ table {
           
   <ul>
     <li class="mono"><a href="#platforminfra.helpers.Gitlab.__init__">__init__</a></li>
+    <li class="mono"><a href="#platforminfra.helpers.Gitlab.addSshKey">addSshKey</a></li>
     <li class="mono"><a href="#platforminfra.helpers.Gitlab.createUser">createUser</a></li>
     <li class="mono"><a href="#platforminfra.helpers.Gitlab.deleteUser">deleteUser</a></li>
     <li class="mono"><a href="#platforminfra.helpers.Gitlab.forkProject">forkProject</a></li>
@@ -1040,6 +1041,7 @@ from flask import jsonify
 from flask import Response as Rsp
 import jenkins
 import gitlab
+from gitlab.exceptions import GitlabCreateError
 import random
 import string
 
@@ -1127,28 +1129,53 @@ class Gitlab(object):
 
     def forkProject(self, user, projectId):
         """Fork a project."""
-        result = self.conn.project_forks.create(
-            {},
-            project_id=projectId,
-            sudo=user
-        )
+        try:
+            result = self.conn.project_forks.create(
+                {},
+                project_id=projectId,
+                sudo=user
+            )
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't access project with id {}".format(projectId),
+                'code': e.response_code
+            }
         return result
 
     def getProject(self, team, project):
         """Get a single project."""
         projectName = team + '/' + project
-        result = self.conn.projects.get(projectName)
+        try:
+            result = self.conn.projects.get(projectName)
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't find project {}".format(projectName),
+                'code': e.response_code
+            }
         return result
 
     def createUser(self, uname, name, password, email):
         """Create a new GitLab User."""
-        user = self.conn.users.create({
-            'email': email,
-            'password': password,
-            'username': uname,
-            'name': name
-        })
+        try:
+            user = self.conn.users.create({
+                'email': email,
+                'password': password,
+                'username': uname,
+                'name': name
+            })
+        except GitlabCreateError as e:
+            user = self.getUser(uname)
+
         return user
+
+    def addSshKey(self, user, key):
+        """Add a SSH Key to a User."""
+        try:
+            k = user.keys.create({'title': 'my_key', 'key': key})
+            user.save
+        except GitlabCreateError as e:
+            k = {'error': 'Invalid SSH Key', 'code': e.response_code}
+        return k
 
     def getUser(self, uname):
         """Get a User."""
@@ -1195,28 +1222,53 @@ class Gitlab(object):
 
     def forkProject(self, user, projectId):
         """Fork a project."""
-        result = self.conn.project_forks.create(
-            {},
-            project_id=projectId,
-            sudo=user
-        )
+        try:
+            result = self.conn.project_forks.create(
+                {},
+                project_id=projectId,
+                sudo=user
+            )
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't access project with id {}".format(projectId),
+                'code': e.response_code
+            }
         return result
 
     def getProject(self, team, project):
         """Get a single project."""
         projectName = team + '/' + project
-        result = self.conn.projects.get(projectName)
+        try:
+            result = self.conn.projects.get(projectName)
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't find project {}".format(projectName),
+                'code': e.response_code
+            }
         return result
 
     def createUser(self, uname, name, password, email):
         """Create a new GitLab User."""
-        user = self.conn.users.create({
-            'email': email,
-            'password': password,
-            'username': uname,
-            'name': name
-        })
+        try:
+            user = self.conn.users.create({
+                'email': email,
+                'password': password,
+                'username': uname,
+                'name': name
+            })
+        except GitlabCreateError as e:
+            user = self.getUser(uname)
+
         return user
+
+    def addSshKey(self, user, key):
+        """Add a SSH Key to a User."""
+        try:
+            k = user.keys.create({'title': 'my_key', 'key': key})
+            user.save
+        except GitlabCreateError as e:
+            k = {'error': 'Invalid SSH Key', 'code': e.response_code}
+        return k
 
     def getUser(self, uname):
         """Get a User."""
@@ -1272,6 +1324,33 @@ class Gitlab(object):
   
             
   <div class="item">
+    <div class="name def" id="platforminfra.helpers.Gitlab.addSshKey">
+    <p>def <span class="ident">addSshKey</span>(</p><p>self, user, key)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Add a SSH Key to a User.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.helpers.Gitlab.addSshKey', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.helpers.Gitlab.addSshKey" class="source">
+    <pre><code>def addSshKey(self, user, key):
+    """Add a SSH Key to a User."""
+    try:
+        k = user.keys.create({'title': 'my_key', 'key': key})
+        user.save
+    except GitlabCreateError as e:
+        k = {'error': 'Invalid SSH Key', 'code': e.response_code}
+    return k
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
     <div class="name def" id="platforminfra.helpers.Gitlab.createUser">
     <p>def <span class="ident">createUser</span>(</p><p>self, uname, name, password, email)</p>
     </div>
@@ -1285,12 +1364,15 @@ class Gitlab(object):
   <div id="source-platforminfra.helpers.Gitlab.createUser" class="source">
     <pre><code>def createUser(self, uname, name, password, email):
     """Create a new GitLab User."""
-    user = self.conn.users.create({
-        'email': email,
-        'password': password,
-        'username': uname,
-        'name': name
-    })
+    try:
+        user = self.conn.users.create({
+            'email': email,
+            'password': password,
+            'username': uname,
+            'name': name
+        })
+    except GitlabCreateError as e:
+        user = self.getUser(uname)
     return user
 </code></pre>
   </div>
@@ -1341,11 +1423,17 @@ class Gitlab(object):
   <div id="source-platforminfra.helpers.Gitlab.forkProject" class="source">
     <pre><code>def forkProject(self, user, projectId):
     """Fork a project."""
-    result = self.conn.project_forks.create(
-        {},
-        project_id=projectId,
-        sudo=user
-    )
+    try:
+        result = self.conn.project_forks.create(
+            {},
+            project_id=projectId,
+            sudo=user
+        )
+    except GitlabCreateError as e:
+        result = {
+            'error': "Can't access project with id {}".format(projectId),
+            'code': e.response_code
+        }
     return result
 </code></pre>
   </div>
@@ -1369,7 +1457,13 @@ class Gitlab(object):
     <pre><code>def getProject(self, team, project):
     """Get a single project."""
     projectName = team + '/' + project
-    result = self.conn.projects.get(projectName)
+    try:
+        result = self.conn.projects.get(projectName)
+    except GitlabCreateError as e:
+        result = {
+            'error': "Can't find project {}".format(projectName),
+            'code': e.response_code
+        }
     return result
 </code></pre>
   </div>

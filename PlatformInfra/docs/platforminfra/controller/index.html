@@ -4,7 +4,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
     <title>platforminfra.controller API documentation</title>
-    <meta name="description" content="PlatformInfra Controller." />
+    <meta name="description" content="PlatformInfra Controller.
+
+The controller orchestrates the main actions of the platform.
+This includ..." />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
   
@@ -998,6 +1001,8 @@ table {
     <li class="mono"><a href="#platforminfra.controller.Controller.getVmList">getVmList</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.listEnvironments">listEnvironments</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.rebuildEnvironmentServer">rebuildEnvironmentServer</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.runGitlabTasks">runGitlabTasks</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.runJenkinsPipeline">runJenkinsPipeline</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.scaleEnvironmentServer">scaleEnvironmentServer</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.setTags">setTags</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.startVM">startVM</a></li>
@@ -1021,23 +1026,36 @@ table {
   <header id="section-intro">
   <h1 class="title"><span class="name">platforminfra.controller</span> module</h1>
   <p>PlatformInfra Controller.</p>
+<p>The controller orchestrates the main actions of the platform.
+This includes calling the underlying provider methods and the simpler
+additional actions such as Jenkins and gitlab.</p>
   
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller" class="source">
-    <pre><code>"""PlatformInfra Controller."""
+    <pre><code>"""PlatformInfra Controller.
+
+The controller orchestrates the main actions of the platform.
+This includes calling the underlying provider methods and the simpler
+additional actions such as Jenkins and gitlab.
+
+"""
 
 from platforminfra.templates import Template
 from platforminfra.config import Config
 from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
+from copy import deepcopy
 
 from ..helpers import Jenkins, Gitlab, Helpers
 import re
 
 
 class Controller(object):
-    """Controls the platformInfra."""
+    """Controls the platformInfra.
+
+    The controller Object carries out all of the actions.
+    """
 
     def __init__(self):
         """Initialise the controller."""
@@ -1133,8 +1151,67 @@ class Controller(object):
                                 beId = be['id']
         return beId
 
+    def runJenkinsPipeline(self, pipeline):
+        """Run a specified Jenkins pipeline."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            pipeline,
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
+
+    def runGitlabTasks(self, gitlab):
+        """Run the required actrions for Gitlab creation."""
+        response = dict()
+        print("Connecting to Gitlab")
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
+        glSourceTeam = "root"
+        glServer = Gitlab(glServerConn, glServerToken)
+
+        print("Create user")
+        password = Helpers.randStr(10)
+        if 'password' in gitlab['user']:
+            password = gitlab['user']['password']
+        user = glServer.createUser(
+            self.tags['uuid'],
+            self.tags['uuid'],
+            password,
+            self.tags['uuid'] + '@example.net'
+        )
+
+        if 'sshKey' in gitlab['user']:
+            key = glServer.addSshKey(user, gitlab['user']['sshKey'])
+            if type(key) is dict:
+                if 'error' in key:
+                    raise Exception(key)
+        response['user'] = user.username
+        if 'cloneRepos' in gitlab:
+            response['repos'] = dict()
+            for repo in gitlab['cloneRepos']:
+                glSourceProject = glServer.getProject(glSourceTeam, repo)
+                if type(glSourceProject) is dict:
+                    if 'error' in glSourceProject:
+                        raise Exception(glSourceProject)
+                forked = glServer.forkProject(
+                    user.username,
+                    glSourceProject.id
+                )
+                if type(forked) is dict:
+                    if 'error' in forked:
+                        raise Exception(forked)
+                response['repos'][repo] = forked.web_url
+
+        return response
+
     def addVM(
-            self, vms, provider, template, uuid, application,
+            self, vms, provider, template, uuid, application=None,
             count=None, persistData=False
             ):
         """Given an Existing list of VMs Add more."""
@@ -1169,20 +1246,10 @@ class Controller(object):
         subnet = provider.getSubnetID(uuid + netName + "0")
         self.tags['uuid'] = uuid
         self.subnets.append({'subnets': {uuid: subnet}})
-        self.createVms(vmList, provider)
+        self.createVms(vmList, provider, persistData)
 
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            application,
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
+        if 'application':
+            self.runJenkinsPipeline(application)
 
     def getStatusById(self, ids, provider):
         """Get the status of a resource."""
@@ -1263,7 +1330,12 @@ class Controller(object):
         return vm
 
     def compareResources(self, statusRes, deploymentRes, uuid):
-        """Compare a status list with the Deployment resources."""
+        """Compare a status list with the Deployment resources.
+
+        Loop through the expected resources (deploymnetRes) and ensure at least
+        one of each is found in the statusRes so we inform the request if all
+        resources are 'okay' or not.
+        """
         deployNetworkCount = list()
         for resource in deploymentRes['resources']:
             if 'networks' in resource:
@@ -1282,8 +1354,11 @@ class Controller(object):
                                 i["Environment resources"]
                             )
                         )
+        # Create a list of all of the broken resources so they can be eaisly
+        # displayed within the status response.
         brokenResources = list()
         for vm in statusVmCount:
+            # If a VM Does not have these it is not 'good'
             if not (vm['vm'] and vm['nic'] and vm['pip'] and vm['disks']):
                 print("VM {} is broken".format(vm['name']))
                 brokenResources.append({
@@ -1334,7 +1409,11 @@ class Controller(object):
         provider.startVm(vm['name'], vm['resourceGroup'])
 
     def createVms(self, data, provider, persistData=False):
-        """Create VMs."""
+        """Create VMs.
+
+        For a given set of data, for each 'server' group create each server
+        with all of dependencies each VM needs.
+        """
         print("Creating Servers")
         vms = Queue()
         vmLock = Lock()
@@ -1343,8 +1422,11 @@ class Controller(object):
         try:
             for i in self.subnets:
                 if self.tags['uuid'] in i['subnets']:
+                    # Grab A subnet - needs reworking when multiple networks is
+                    # supported
                     vmSubnet = i['subnets'][self.tags['uuid']]
             for server in data:
+                # For each 'server' Spawn a process to create that vm
                 p = Process(
                     target=provider.virtualMachine,
                     args=(
@@ -1480,40 +1562,14 @@ class Controller(object):
             response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            data["application"],
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
-        print("Connecting to Gitlab")
-        glServerConn = self.config.credentials['gitlab']['url']
-        glServerToken = self.config.credentials['gitlab']['token']
-        # When we know if theres more than one or not move to config.yml
-        glSourceProject = "customer-demo"
-        glSourceTeam = "root"
-        glServer = Gitlab(glServerConn, glServerToken)
-        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
+        if 'application' in data:
+            self.runJenkinsPipeline(data['application'])
 
-        print("Create user")
-        user = glServer.createUser(
-            self.tags['uuid'],
-            self.tags['uuid'],
-            Helpers.randStr(10),
-            self.tags['uuid'] + '@example.net'
-        )
-        forked = glServer.forkProject(
-            user.username,
-            glSourceProject.id
-        )
-        response.append({'git_url': forked.web_url})
-        response = response + self.lbs
+        if 'gitlab' in data:
+            glResponse = self.runGitlabTasks(data['gitlab'])
+            response.append({'gitlab': glResponse})
+        if self.lbs:
+            response = response + self.lbs
         rsp = Response({'Resources': response})
         return rsp.httpResponse(201)
 
@@ -1562,14 +1618,23 @@ class Controller(object):
         return rsp.httpResponse(204)
 
     def rebuildEnvironmentServer(self, data):
-        """Rebuild a portion of an environment."""
+        """Rebuild a portion of an environment.
+
+        Given a specified 'server' group delete and recreate those servers.
+        """
         if not self.checkUUIDInUse(data['uuid']):
             rsp = Response({'error': 'Invalid UUID'})
             return rsp.httpResponse(404)
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            # Create an unrefferenced copy of the template for later use
+            templateCopy = deepcopy(template)
+        else:
+            rsp = Response({'error': 'infrastructureTemplateId required'})
+            return rsp.httpResponse(404)
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -1616,12 +1681,6 @@ class Controller(object):
         if 'ids' in resources:
             count = len(resources['ids'])
 
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         self.addVM(
             vmDetails,
             provider,
@@ -1646,6 +1705,8 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
+        # Create an unrefferenced copy of the template for later use
+        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -1653,12 +1714,7 @@ class Controller(object):
             template,
             data['uuid']
         )
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+
         resources = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
@@ -1813,12 +1869,16 @@ class Controller(object):
       <p id="platforminfra.controller.Controller" class="name">class <span class="ident">Controller</span></p>
       
   
-    <div class="desc"><p>Controls the platformInfra.</p></div>
+    <div class="desc"><p>Controls the platformInfra.</p>
+<p>The controller Object carries out all of the actions.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller" class="source">
     <pre><code>class Controller(object):
-    """Controls the platformInfra."""
+    """Controls the platformInfra.
+
+    The controller Object carries out all of the actions.
+    """
 
     def __init__(self):
         """Initialise the controller."""
@@ -1914,8 +1974,67 @@ class Controller(object):
                                 beId = be['id']
         return beId
 
+    def runJenkinsPipeline(self, pipeline):
+        """Run a specified Jenkins pipeline."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            pipeline,
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
+
+    def runGitlabTasks(self, gitlab):
+        """Run the required actrions for Gitlab creation."""
+        response = dict()
+        print("Connecting to Gitlab")
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
+        glSourceTeam = "root"
+        glServer = Gitlab(glServerConn, glServerToken)
+
+        print("Create user")
+        password = Helpers.randStr(10)
+        if 'password' in gitlab['user']:
+            password = gitlab['user']['password']
+        user = glServer.createUser(
+            self.tags['uuid'],
+            self.tags['uuid'],
+            password,
+            self.tags['uuid'] + '@example.net'
+        )
+
+        if 'sshKey' in gitlab['user']:
+            key = glServer.addSshKey(user, gitlab['user']['sshKey'])
+            if type(key) is dict:
+                if 'error' in key:
+                    raise Exception(key)
+        response['user'] = user.username
+        if 'cloneRepos' in gitlab:
+            response['repos'] = dict()
+            for repo in gitlab['cloneRepos']:
+                glSourceProject = glServer.getProject(glSourceTeam, repo)
+                if type(glSourceProject) is dict:
+                    if 'error' in glSourceProject:
+                        raise Exception(glSourceProject)
+                forked = glServer.forkProject(
+                    user.username,
+                    glSourceProject.id
+                )
+                if type(forked) is dict:
+                    if 'error' in forked:
+                        raise Exception(forked)
+                response['repos'][repo] = forked.web_url
+
+        return response
+
     def addVM(
-            self, vms, provider, template, uuid, application,
+            self, vms, provider, template, uuid, application=None,
             count=None, persistData=False
             ):
         """Given an Existing list of VMs Add more."""
@@ -1950,20 +2069,10 @@ class Controller(object):
         subnet = provider.getSubnetID(uuid + netName + "0")
         self.tags['uuid'] = uuid
         self.subnets.append({'subnets': {uuid: subnet}})
-        self.createVms(vmList, provider)
+        self.createVms(vmList, provider, persistData)
 
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            application,
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
+        if 'application':
+            self.runJenkinsPipeline(application)
 
     def getStatusById(self, ids, provider):
         """Get the status of a resource."""
@@ -2044,7 +2153,12 @@ class Controller(object):
         return vm
 
     def compareResources(self, statusRes, deploymentRes, uuid):
-        """Compare a status list with the Deployment resources."""
+        """Compare a status list with the Deployment resources.
+
+        Loop through the expected resources (deploymnetRes) and ensure at least
+        one of each is found in the statusRes so we inform the request if all
+        resources are 'okay' or not.
+        """
         deployNetworkCount = list()
         for resource in deploymentRes['resources']:
             if 'networks' in resource:
@@ -2063,8 +2177,11 @@ class Controller(object):
                                 i["Environment resources"]
                             )
                         )
+        # Create a list of all of the broken resources so they can be eaisly
+        # displayed within the status response.
         brokenResources = list()
         for vm in statusVmCount:
+            # If a VM Does not have these it is not 'good'
             if not (vm['vm'] and vm['nic'] and vm['pip'] and vm['disks']):
                 print("VM {} is broken".format(vm['name']))
                 brokenResources.append({
@@ -2115,7 +2232,11 @@ class Controller(object):
         provider.startVm(vm['name'], vm['resourceGroup'])
 
     def createVms(self, data, provider, persistData=False):
-        """Create VMs."""
+        """Create VMs.
+
+        For a given set of data, for each 'server' group create each server
+        with all of dependencies each VM needs.
+        """
         print("Creating Servers")
         vms = Queue()
         vmLock = Lock()
@@ -2124,8 +2245,11 @@ class Controller(object):
         try:
             for i in self.subnets:
                 if self.tags['uuid'] in i['subnets']:
+                    # Grab A subnet - needs reworking when multiple networks is
+                    # supported
                     vmSubnet = i['subnets'][self.tags['uuid']]
             for server in data:
+                # For each 'server' Spawn a process to create that vm
                 p = Process(
                     target=provider.virtualMachine,
                     args=(
@@ -2261,40 +2385,14 @@ class Controller(object):
             response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            data["application"],
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
-        print("Connecting to Gitlab")
-        glServerConn = self.config.credentials['gitlab']['url']
-        glServerToken = self.config.credentials['gitlab']['token']
-        # When we know if theres more than one or not move to config.yml
-        glSourceProject = "customer-demo"
-        glSourceTeam = "root"
-        glServer = Gitlab(glServerConn, glServerToken)
-        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
+        if 'application' in data:
+            self.runJenkinsPipeline(data['application'])
 
-        print("Create user")
-        user = glServer.createUser(
-            self.tags['uuid'],
-            self.tags['uuid'],
-            Helpers.randStr(10),
-            self.tags['uuid'] + '@example.net'
-        )
-        forked = glServer.forkProject(
-            user.username,
-            glSourceProject.id
-        )
-        response.append({'git_url': forked.web_url})
-        response = response + self.lbs
+        if 'gitlab' in data:
+            glResponse = self.runGitlabTasks(data['gitlab'])
+            response.append({'gitlab': glResponse})
+        if self.lbs:
+            response = response + self.lbs
         rsp = Response({'Resources': response})
         return rsp.httpResponse(201)
 
@@ -2343,14 +2441,23 @@ class Controller(object):
         return rsp.httpResponse(204)
 
     def rebuildEnvironmentServer(self, data):
-        """Rebuild a portion of an environment."""
+        """Rebuild a portion of an environment.
+
+        Given a specified 'server' group delete and recreate those servers.
+        """
         if not self.checkUUIDInUse(data['uuid']):
             rsp = Response({'error': 'Invalid UUID'})
             return rsp.httpResponse(404)
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            # Create an unrefferenced copy of the template for later use
+            templateCopy = deepcopy(template)
+        else:
+            rsp = Response({'error': 'infrastructureTemplateId required'})
+            return rsp.httpResponse(404)
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2397,12 +2504,6 @@ class Controller(object):
         if 'ids' in resources:
             count = len(resources['ids'])
 
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         self.addVM(
             vmDetails,
             provider,
@@ -2427,6 +2528,8 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
+        # Create an unrefferenced copy of the template for later use
+        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2434,12 +2537,7 @@ class Controller(object):
             template,
             data['uuid']
         )
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+
         resources = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
@@ -2622,7 +2720,7 @@ class Controller(object):
             
   <div class="item">
     <div class="name def" id="platforminfra.controller.Controller.addVM">
-    <p>def <span class="ident">addVM</span>(</p><p>self, vms, provider, template, uuid, application, count=None, persistData=False)</p>
+    <p>def <span class="ident">addVM</span>(</p><p>self, vms, provider, template, uuid, application=None, count=None, persistData=False)</p>
     </div>
     
 
@@ -2633,7 +2731,7 @@ class Controller(object):
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.addVM', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.addVM" class="source">
     <pre><code>def addVM(
-        self, vms, provider, template, uuid, application,
+        self, vms, provider, template, uuid, application=None,
         count=None, persistData=False
         ):
     """Given an Existing list of VMs Add more."""
@@ -2668,19 +2766,9 @@ class Controller(object):
     subnet = provider.getSubnetID(uuid + netName + "0")
     self.tags['uuid'] = uuid
     self.subnets.append({'subnets': {uuid: subnet}})
-    self.createVms(vmList, provider)
-    jenkinsServer = Jenkins(
-        self.config.credentials['jenkins']['url'],
-        user=self.config.credentials['jenkins']['user'],
-        password=self.config.credentials['jenkins']['password']
-    )
-    print("Running Jenkins Job")
-    jenkinsServer.runBuildWithParams(
-        application,
-        params={
-            "UUID": self.tags['uuid']
-        }
-    )
+    self.createVms(vmList, provider, persistData)
+    if 'application':
+        self.runJenkinsPipeline(application)
 </code></pre>
   </div>
 </div>
@@ -2774,12 +2862,19 @@ class Controller(object):
 
     
   
-    <div class="desc"><p>Compare a status list with the Deployment resources.</p></div>
+    <div class="desc"><p>Compare a status list with the Deployment resources.</p>
+<p>Loop through the expected resources (deploymnetRes) and ensure at least
+one of each is found in the statusRes so we inform the request if all
+resources are 'okay' or not.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.compareResources', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.compareResources" class="source">
     <pre><code>def compareResources(self, statusRes, deploymentRes, uuid):
-    """Compare a status list with the Deployment resources."""
+    """Compare a status list with the Deployment resources.
+    Loop through the expected resources (deploymnetRes) and ensure at least
+    one of each is found in the statusRes so we inform the request if all
+    resources are 'okay' or not.
+    """
     deployNetworkCount = list()
     for resource in deploymentRes['resources']:
         if 'networks' in resource:
@@ -2798,8 +2893,11 @@ class Controller(object):
                             i["Environment resources"]
                         )
                     )
+    # Create a list of all of the broken resources so they can be eaisly
+    # displayed within the status response.
     brokenResources = list()
     for vm in statusVmCount:
+        # If a VM Does not have these it is not 'good'
         if not (vm['vm'] and vm['nic'] and vm['pip'] and vm['disks']):
             print("VM {} is broken".format(vm['name']))
             brokenResources.append({
@@ -2882,39 +2980,13 @@ class Controller(object):
     for vmRsp in self.vms:
         response.append(vmRsp)
     # By this point an environment should be created so Execute Jenkins job
-    jenkinsServer = Jenkins(
-        self.config.credentials['jenkins']['url'],
-        user=self.config.credentials['jenkins']['user'],
-        password=self.config.credentials['jenkins']['password']
-    )
-    print("Running Jenkins Job")
-    jenkinsServer.runBuildWithParams(
-        data["application"],
-        params={
-            "UUID": self.tags['uuid']
-        }
-    )
-    print("Connecting to Gitlab")
-    glServerConn = self.config.credentials['gitlab']['url']
-    glServerToken = self.config.credentials['gitlab']['token']
-    # When we know if theres more than one or not move to config.yml
-    glSourceProject = "customer-demo"
-    glSourceTeam = "root"
-    glServer = Gitlab(glServerConn, glServerToken)
-    glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
-    print("Create user")
-    user = glServer.createUser(
-        self.tags['uuid'],
-        self.tags['uuid'],
-        Helpers.randStr(10),
-        self.tags['uuid'] + '@example.net'
-    )
-    forked = glServer.forkProject(
-        user.username,
-        glSourceProject.id
-    )
-    response.append({'git_url': forked.web_url})
-    response = response + self.lbs
+    if 'application' in data:
+        self.runJenkinsPipeline(data['application'])
+    if 'gitlab' in data:
+        glResponse = self.runGitlabTasks(data['gitlab'])
+        response.append({'gitlab': glResponse})
+    if self.lbs:
+        response = response + self.lbs
     rsp = Response({'Resources': response})
     return rsp.httpResponse(201)
 </code></pre>
@@ -3036,12 +3108,17 @@ class Controller(object):
 
     
   
-    <div class="desc"><p>Create VMs.</p></div>
+    <div class="desc"><p>Create VMs.</p>
+<p>For a given set of data, for each 'server' group create each server
+with all of dependencies each VM needs.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.createVms', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.createVms" class="source">
     <pre><code>def createVms(self, data, provider, persistData=False):
-    """Create VMs."""
+    """Create VMs.
+    For a given set of data, for each 'server' group create each server
+    with all of dependencies each VM needs.
+    """
     print("Creating Servers")
     vms = Queue()
     vmLock = Lock()
@@ -3050,8 +3127,11 @@ class Controller(object):
     try:
         for i in self.subnets:
             if self.tags['uuid'] in i['subnets']:
+                # Grab A subnet - needs reworking when multiple networks is
+                # supported
                 vmSubnet = i['subnets'][self.tags['uuid']]
         for server in data:
+            # For each 'server' Spawn a process to create that vm
             p = Process(
                 target=provider.virtualMachine,
                 args=(
@@ -3519,19 +3599,28 @@ class Controller(object):
 
     
   
-    <div class="desc"><p>Rebuild a portion of an environment.</p></div>
+    <div class="desc"><p>Rebuild a portion of an environment.</p>
+<p>Given a specified 'server' group delete and recreate those servers.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.rebuildEnvironmentServer', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.rebuildEnvironmentServer" class="source">
     <pre><code>def rebuildEnvironmentServer(self, data):
-    """Rebuild a portion of an environment."""
+    """Rebuild a portion of an environment.
+    Given a specified 'server' group delete and recreate those servers.
+    """
     if not self.checkUUIDInUse(data['uuid']):
         rsp = Response({'error': 'Invalid UUID'})
         return rsp.httpResponse(404)
+    if 'infrastructureTemplateID' in data:
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        # Create an unrefferenced copy of the template for later use
+        templateCopy = deepcopy(template)
+    else:
+        rsp = Response({'error': 'infrastructureTemplateId required'})
+        return rsp.httpResponse(404)
     response = list()
-    template = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
-    )
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
@@ -3573,12 +3662,6 @@ class Controller(object):
     count = None
     if 'ids' in resources:
         count = len(resources['ids'])
-    # For some reason even if I created a template.copy()
-    # the copy (templateCopy) was still being modivied by the provider
-    # init. The copy() shoud break the reference...
-    templateCopy = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
-    )
     self.addVM(
         vmDetails,
         provider,
@@ -3592,6 +3675,98 @@ class Controller(object):
         response.append(vmRsp)
     rsp = Response({'Resources': response})
     return rsp.httpResponse(200)
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.runGitlabTasks">
+    <p>def <span class="ident">runGitlabTasks</span>(</p><p>self, gitlab)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Run the required actrions for Gitlab creation.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.runGitlabTasks', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.runGitlabTasks" class="source">
+    <pre><code>def runGitlabTasks(self, gitlab):
+    """Run the required actrions for Gitlab creation."""
+    response = dict()
+    print("Connecting to Gitlab")
+    glServerConn = self.config.credentials['gitlab']['url']
+    glServerToken = self.config.credentials['gitlab']['token']
+    glSourceTeam = "root"
+    glServer = Gitlab(glServerConn, glServerToken)
+    print("Create user")
+    password = Helpers.randStr(10)
+    if 'password' in gitlab['user']:
+        password = gitlab['user']['password']
+    user = glServer.createUser(
+        self.tags['uuid'],
+        self.tags['uuid'],
+        password,
+        self.tags['uuid'] + '@example.net'
+    )
+    if 'sshKey' in gitlab['user']:
+        key = glServer.addSshKey(user, gitlab['user']['sshKey'])
+        if type(key) is dict:
+            if 'error' in key:
+                raise Exception(key)
+    response['user'] = user.username
+    if 'cloneRepos' in gitlab:
+        response['repos'] = dict()
+        for repo in gitlab['cloneRepos']:
+            glSourceProject = glServer.getProject(glSourceTeam, repo)
+            if type(glSourceProject) is dict:
+                if 'error' in glSourceProject:
+                    raise Exception(glSourceProject)
+            forked = glServer.forkProject(
+                user.username,
+                glSourceProject.id
+            )
+            if type(forked) is dict:
+                if 'error' in forked:
+                    raise Exception(forked)
+            response['repos'][repo] = forked.web_url
+    return response
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.runJenkinsPipeline">
+    <p>def <span class="ident">runJenkinsPipeline</span>(</p><p>self, pipeline)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Run a specified Jenkins pipeline.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.runJenkinsPipeline', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.runJenkinsPipeline" class="source">
+    <pre><code>def runJenkinsPipeline(self, pipeline):
+    """Run a specified Jenkins pipeline."""
+    jenkinsServer = Jenkins(
+        self.config.credentials['jenkins']['url'],
+        user=self.config.credentials['jenkins']['user'],
+        password=self.config.credentials['jenkins']['password']
+    )
+    print("Running Jenkins Job")
+    jenkinsServer.runBuildWithParams(
+        pipeline,
+        params={
+            "UUID": self.tags['uuid']
+        }
+    )
 </code></pre>
   </div>
 </div>
@@ -3620,18 +3795,14 @@ class Controller(object):
     template = self.templates.loadTemplate(
         data['infrastructureTemplateID']
     )
+    # Create an unrefferenced copy of the template for later use
+    templateCopy = deepcopy(template)
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
         self.config.defaults['storage_account_name'],
         template,
         data['uuid']
-    )
-    # For some reason even if I created a template.copy()
-    # the copy (templateCopy) was still being modivied by the provider
-    # init. The copy() shoud break the reference...
-    templateCopy = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
     )
     resources = provider.getResources(id=data['uuid'], filter={
         'key': 'type',
