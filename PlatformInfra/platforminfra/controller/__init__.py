@@ -107,8 +107,23 @@ class Controller(object):
                                 beId = be['id']
         return beId
 
+    def runJenkinsPipeline(self, pipeline):
+        """Run a specified Jenkins pipeline."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Running Jenkins Job")
+        jenkinsServer.runBuildWithParams(
+            pipeline,
+            params={
+                "UUID": self.tags['uuid']
+            }
+        )
+
     def addVM(
-            self, vms, provider, template, uuid, application,
+            self, vms, provider, template, uuid, application=None,
             count=None, persistData=False
             ):
         """Given an Existing list of VMs Add more."""
@@ -145,18 +160,8 @@ class Controller(object):
         self.subnets.append({'subnets': {uuid: subnet}})
         self.createVms(vmList, provider)
 
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            application,
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
+        if 'application':
+            self.runJenkinsPipeline(application)
 
     def getStatusById(self, ids, provider):
         """Get the status of a resource."""
@@ -454,18 +459,9 @@ class Controller(object):
             response.append(vmRsp)
 
         # By this point an environment should be created so Execute Jenkins job
-        jenkinsServer = Jenkins(
-            self.config.credentials['jenkins']['url'],
-            user=self.config.credentials['jenkins']['user'],
-            password=self.config.credentials['jenkins']['password']
-        )
-        print("Running Jenkins Job")
-        jenkinsServer.runBuildWithParams(
-            data["application"],
-            params={
-                "UUID": self.tags['uuid']
-            }
-        )
+        if 'application' in data:
+            self.runJenkinsPipeline(data['application'])
+
         print("Connecting to Gitlab")
         glServerConn = self.config.credentials['gitlab']['url']
         glServerToken = self.config.credentials['gitlab']['token']
