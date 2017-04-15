@@ -3,6 +3,7 @@ from flask import jsonify
 from flask import Response as Rsp
 import jenkins
 import gitlab
+from gitlab.exceptions import GitlabCreateError
 import random
 import string
 
@@ -90,33 +91,52 @@ class Gitlab(object):
 
     def forkProject(self, user, projectId):
         """Fork a project."""
-        result = self.conn.project_forks.create(
-            {},
-            project_id=projectId,
-            sudo=user
-        )
+        try:
+            result = self.conn.project_forks.create(
+                {},
+                project_id=projectId,
+                sudo=user
+            )
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't access project with id {}".format(projectId),
+                'code': e.response_code
+            }
         return result
 
     def getProject(self, team, project):
         """Get a single project."""
         projectName = team + '/' + project
-        result = self.conn.projects.get(projectName)
+        try:
+            result = self.conn.projects.get(projectName)
+        except GitlabCreateError as e:
+            result = {
+                'error': "Can't find project {}".format(projectName),
+                'code': e.response_code
+            }
         return result
 
     def createUser(self, uname, name, password, email):
         """Create a new GitLab User."""
-        user = self.conn.users.create({
-            'email': email,
-            'password': password,
-            'username': uname,
-            'name': name
-        })
+        try:
+            user = self.conn.users.create({
+                'email': email,
+                'password': password,
+                'username': uname,
+                'name': name
+            })
+        except GitlabCreateError as e:
+            user = self.getUser(uname)
+
         return user
 
     def addSshKey(self, user, key):
         """Add a SSH Key to a User."""
-        k = user.keys.create({'title': 'my_key', 'key': key})
-        user.save
+        try:
+            k = user.keys.create({'title': 'my_key', 'key': key})
+            user.save
+        except GitlabCreateError as e:
+            k = {'error': 'Invalid SSH Key', 'code': e.response_code}
         return k
 
     def getUser(self, uname):

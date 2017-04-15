@@ -152,16 +152,25 @@ class Controller(object):
         )
 
         if 'sshKey' in gitlab['user']:
-            glServer.addSshKey(user, gitlab['user']['sshKey'])
-        response['user'] = user
+            key = glServer.addSshKey(user, gitlab['user']['sshKey'])
+            if type(key) is dict:
+                if 'error' in key:
+                    raise Exception(key)
+        response['user'] = user.username
         if 'cloneRepos' in gitlab:
             response['repos'] = dict()
             for repo in gitlab['cloneRepos']:
                 glSourceProject = glServer.getProject(glSourceTeam, repo)
+                if type(glSourceProject) is dict:
+                    if 'error' in glSourceProject:
+                        raise Exception(glSourceProject)
                 forked = glServer.forkProject(
                     user.username,
                     glSourceProject.id
                 )
+                if type(forked) is dict:
+                    if 'error' in forked:
+                        raise Exception(forked)
                 response['repos'][repo] = forked.web_url
 
         return response
