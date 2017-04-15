@@ -113,6 +113,12 @@ class Gitlab(object):
         })
         return user
 
+    def addSshKey(self, user, key):
+        """Add a SSH Key to a User."""
+        k = user.keys.create({'title': 'my_key', 'key': key})
+        user.save
+        return k
+
     def getUser(self, uname):
         """Get a User."""
         try:

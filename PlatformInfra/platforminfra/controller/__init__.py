@@ -137,23 +137,27 @@ class Controller(object):
         print("Connecting to Gitlab")
         glServerConn = self.config.credentials['gitlab']['url']
         glServerToken = self.config.credentials['gitlab']['token']
-        # When we know if theres more than one or not move to config.yml
-        glSourceProject = "customer-demo"
         glSourceTeam = "root"
         glServer = Gitlab(glServerConn, glServerToken)
-        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
 
         print("Create user")
+        password = Helpers.randStr(10)
+        if 'password' in gitlab['user']:
+            password = gitlab['user']['password']
         user = glServer.createUser(
             self.tags['uuid'],
             self.tags['uuid'],
-            Helpers.randStr(10),
+            password,
             self.tags['uuid'] + '@example.net'
         )
+
+        if 'sshKey' in gitlab['user']:
+            glServer.addSshKey(user, gitlab['user']['sshKey'])
         response['user'] = user
         if 'cloneRepos' in gitlab:
             response['repos'] = dict()
             for repo in gitlab['cloneRepos']:
+                glSourceProject = glServer.getProject(glSourceTeam, repo)
                 forked = glServer.forkProject(
                     user.username,
                     glSourceProject.id
