@@ -17,22 +17,22 @@ base_path = '/' + root_path + '/' + api_version + '/'
 @app.errorhandler(Exception)
 def handle_error(e):
     """Handle all Errors."""
-    rsp = Response()
     code = 500
     if isinstance(e, HTTPException):
         code = e.code
-        response = {'error':  str(e)}
-    elif type(e.args[0]) is dict:
+        rsp = Response({'error':  str(e)})
+    elif (e.args and type(e.args[0]) is dict):
         if 'code' in e.args[0]:
             code = e.args[0]['code']
-        response = {'error': e.args[0]['error']}
+        rsp = Response({'error': e.args[0]['error']})
     else:
-        response = {'error': str(e)}
-    return rsp.httpResponse(code, response)
+        rsp = Response({'error': str(e)})
+    return rsp.httpResponse(code)
 
 
 @app.route(
     base_path + 'environments',
+    strict_slashes=False,
     methods=['GET', 'POST']
 )
 def environments():
@@ -51,6 +51,7 @@ def environments():
 
 @app.route(
     base_path + 'environments/<string:uuid>',
+    strict_slashes=False,
     methods=['DELETE']
 )
 def environmentsById(uuid):
@@ -68,6 +69,7 @@ def environmentsById(uuid):
 
 @app.route(
     base_path + 'environments/<string:uuid>/<string:action>',
+    strict_slashes=False,
     methods=['PUT', 'POST']
 )
 def environmentsByIdAction(uuid, action):

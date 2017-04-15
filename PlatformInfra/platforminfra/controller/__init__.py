@@ -71,10 +71,17 @@ class Controller(object):
             'key': 'type',
             'value': server
         })
-        # vmList = list()
-        statuses = self.getStatusById(resources['ids'], provider)
-
-        return statuses
+        if 'ids' in resources:
+            statuses = self.getStatusById(resources['ids'], provider)
+            return statuses
+        else:
+            raise Exception({
+                'error': "No VM Resources found for {} in {}".format(
+                    server,
+                    uuid
+                ),
+                'code': 404
+            })
 
     def getVMDetails(self, id, server):
         """Get a VM object back from an ID."""
@@ -372,7 +379,6 @@ class Controller(object):
                         break
                     elif lives <= 0:
                         if proc.is_alive():
-                            print("Proc Alive")
                             # If it's been 600 seconds and we're trapped in the
                             # while loop. Kill the process.
                             proc.terminate()
@@ -453,7 +459,7 @@ class Controller(object):
                         # break the while true
                         break
                     elif lives <= 0:
-                        if proc.is_alive():
+                        if proc['process'].is_alive():
                             # If it's been 600 seconds and we're trapped in the
                             # while loop. Kill the process.
                             proc.terminate()

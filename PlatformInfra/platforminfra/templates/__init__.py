@@ -11,6 +11,11 @@ class Template(object):
         """Constructor for Template class."""
         if os.path.exists(templateDir):
             self.templateDir = templateDir
+        else:
+            raise Exception({
+                'error': "Can not find Template DIR {}".format(templateDir),
+                'code': 500
+            })
 
     def loadTemplate(self, templateName):
         """Load a Template from a file."""
@@ -19,4 +24,7 @@ class Template(object):
             stream = open(fp, 'r')
             return yaml.load(stream)
         else:
-            raise IOError
+            raise Exception({
+                'error': "Can not find Template file {}".format(templateName),
+                'code': 404
+            })
