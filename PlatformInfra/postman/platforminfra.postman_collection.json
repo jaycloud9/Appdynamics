@@ -101,7 +101,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"t24\"}"
+					"raw": "{\"servers\": \"test\"}"
 				},
 				"description": "PUT"
 			},
@@ -121,7 +121,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"t24\"}"
+					"raw": "{\"servers\": \"test\"}"
 				},
 				"description": "PUT"
 			},
@@ -161,7 +161,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\t\n\t\"application\": \"T24-Pipeline\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"t24\"\n}"
+					"raw": "{\t\n\t\"application\": \"T24-Pipeline\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},
