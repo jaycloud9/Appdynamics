@@ -131,6 +131,37 @@ class Controller(object):
             }
         )
 
+    def runGitlabTasks(self, gitlab):
+        """Run the required actrions for Gitlab creation."""
+        response = dict()
+        print("Connecting to Gitlab")
+        glServerConn = self.config.credentials['gitlab']['url']
+        glServerToken = self.config.credentials['gitlab']['token']
+        # When we know if theres more than one or not move to config.yml
+        glSourceProject = "customer-demo"
+        glSourceTeam = "root"
+        glServer = Gitlab(glServerConn, glServerToken)
+        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
+
+        print("Create user")
+        user = glServer.createUser(
+            self.tags['uuid'],
+            self.tags['uuid'],
+            Helpers.randStr(10),
+            self.tags['uuid'] + '@example.net'
+        )
+        response['user'] = user
+        if 'cloneRepos' in gitlab:
+            response['repos'] = dict()
+            for repo in gitlab['cloneRepos']:
+                forked = glServer.forkProject(
+                    user.username,
+                    glSourceProject.id
+                )
+                response['repos'][repo] = forked.web_url
+
+        return response
+
     def addVM(
             self, vms, provider, template, uuid, application=None,
             count=None, persistData=False
@@ -486,28 +517,11 @@ class Controller(object):
         if 'application' in data:
             self.runJenkinsPipeline(data['application'])
 
-        print("Connecting to Gitlab")
-        glServerConn = self.config.credentials['gitlab']['url']
-        glServerToken = self.config.credentials['gitlab']['token']
-        # When we know if theres more than one or not move to config.yml
-        glSourceProject = "customer-demo"
-        glSourceTeam = "root"
-        glServer = Gitlab(glServerConn, glServerToken)
-        glSourceProject = glServer.getProject(glSourceTeam, glSourceProject)
-
-        print("Create user")
-        user = glServer.createUser(
-            self.tags['uuid'],
-            self.tags['uuid'],
-            Helpers.randStr(10),
-            self.tags['uuid'] + '@example.net'
-        )
-        forked = glServer.forkProject(
-            user.username,
-            glSourceProject.id
-        )
-        response.append({'git_url': forked.web_url})
-        response = response + self.lbs
+        if 'gitlab' in data:
+            glResponse = self.runGitlabTasks(data['gitlab'])
+            response.append({'gitlab': glResponse})
+        if self.lbs:
+            response = response + self.lbs
         rsp = Response({'Resources': response})
         return rsp.httpResponse(201)
 
@@ -556,14 +570,23 @@ class Controller(object):
         return rsp.httpResponse(204)
 
     def rebuildEnvironmentServer(self, data):
-        """Rebuild a portion of an environment."""
+        """Rebuild a portion of an environment.
+
+        Given a specified 'server' group delete and recreate those servers.
+        """
         if not self.checkUUIDInUse(data['uuid']):
             rsp = Response({'error': 'Invalid UUID'})
             return rsp.httpResponse(404)
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            # Create an unrefferenced copy of the template for later use
+            templateCopy = template.deepcopy()
+        else:
+            rsp = Response({'error': 'infrastructureTemplateId required'})
+            return rsp.httpResponse(404)
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -610,12 +633,6 @@ class Controller(object):
         if 'ids' in resources:
             count = len(resources['ids'])
 
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
         self.addVM(
             vmDetails,
             provider,
@@ -640,6 +657,8 @@ class Controller(object):
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
+        # Create an unrefferenced copy of the template for later use
+        templateCopy = template.deepcopy()
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -647,12 +666,7 @@ class Controller(object):
             template,
             data['uuid']
         )
-        # For some reason even if I created a template.copy()
-        # the copy (templateCopy) was still being modivied by the provider
-        # init. The copy() shoud break the reference...
-        templateCopy = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+
         resources = provider.getResources(id=data['uuid'], filter={
             'key': 'type',
             'value': data['servers']
