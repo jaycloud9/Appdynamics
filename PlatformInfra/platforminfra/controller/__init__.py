@@ -11,6 +11,7 @@ from platforminfra.config import Config
 from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
+from copy import deepcopy
 
 from ..helpers import Jenkins, Gitlab, Helpers
 import re
@@ -211,7 +212,7 @@ class Controller(object):
         subnet = provider.getSubnetID(uuid + netName + "0")
         self.tags['uuid'] = uuid
         self.subnets.append({'subnets': {uuid: subnet}})
-        self.createVms(vmList, provider)
+        self.createVms(vmList, provider, persistData)
 
         if 'application':
             self.runJenkinsPipeline(application)
@@ -595,7 +596,7 @@ class Controller(object):
                 data['infrastructureTemplateID']
             )
             # Create an unrefferenced copy of the template for later use
-            templateCopy = template.deepcopy()
+            templateCopy = deepcopy(template)
         else:
             rsp = Response({'error': 'infrastructureTemplateId required'})
             return rsp.httpResponse(404)
@@ -671,7 +672,7 @@ class Controller(object):
             data['infrastructureTemplateID']
         )
         # Create an unrefferenced copy of the template for later use
-        templateCopy = template.deepcopy()
+        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
