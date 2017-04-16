@@ -517,26 +517,18 @@ class Controller(object):
         """Create One loadbalancer and it's dependent Servers."""
         # Create LB here
         print("Creating LB: {}".format(lbName))
-        lbData = provider.loadBalancer(
-            lbDetails['load_balancer'],
-            self.tags
-        )
+        lbData = provider.loadBalancer(lbDetails['load_balancer'], self.tags)
         # Create Vm's Here
         lbDetails['servers']['beId'] = lbData['lbInfo'] \
             .backend_address_pools[0].id
         serverList = list()
         serverList.append(lbDetails['servers'])
-        self.createVms(
-            serverList,
-            provider
-        )
+        self.createVms(serverList, provider)
         record = self.tags['uuid']
         if 'domain' in lbDetails['load_balancer']:
-            record = lbDetails['load_balancer']['domain'] + '-' + \
-                record
+            record = lbDetails['load_balancer']['domain'] + '-' + record
         else:
-            record = lbDetails['load_balancer']['name'] + '-' + \
-                record
+            record = lbDetails['load_balancer']['name'] + '-' + record
 
         result = provider.addDNS(
             lbData['publicIp'].ip_address,
