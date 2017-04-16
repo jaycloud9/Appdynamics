@@ -933,6 +933,12 @@ class Controller(object):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
             raise Exception({'error': 'Invalid UUID', 'code': 404})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
