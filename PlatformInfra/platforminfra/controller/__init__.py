@@ -513,6 +513,39 @@ class Controller(object):
                     .format(str(e))
                 })
 
+    def createLoadBalancer(self, lbName, lbDetails, provider):
+        """Create One loadbalancer and it's dependent Servers."""
+        # Create LB here
+        print("Creating LB: {}".format(lbName))
+        lbData = provider.loadBalancer(
+            lbDetails['load_balancer'],
+            self.tags
+        )
+        # Create Vm's Here
+        lbDetails['servers']['beId'] = lbData['lbInfo'] \
+            .backend_address_pools[0].id
+        serverList = list()
+        serverList.append(lbDetails['servers'])
+        self.createVms(
+            serverList,
+            provider
+        )
+        record = self.tags['uuid']
+        if 'domain' in lbDetails['load_balancer']:
+            record = lbDetails['load_balancer']['domain'] + '-' + \
+                record
+        else:
+            record = lbDetails['load_balancer']['name'] + '-' + \
+                record
+
+        result = provider.addDNS(
+            lbData['publicIp'].ip_address,
+            record
+        )
+        self.lbs.append({
+            lbDetails['load_balancer']['name']: result
+        })
+
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
         print("Creating Load Balancers")
@@ -526,37 +559,8 @@ class Controller(object):
                                 'error': "Must specify health_path with Http"
                             }
                             raise Exception(e)
+                        self.createLoadBalancer(lbName, details, provider)
 
-                    # Create LB here
-                    print("Creating LB: {}".format(lbName))
-                    lbData = provider.loadBalancer(
-                        details['load_balancer'],
-                        self.tags
-                    )
-                    # Create Vm's Here
-                    details['servers']['beId'] = lbData['lbInfo'] \
-                        .backend_address_pools[0].id
-                    serverList = list()
-                    serverList.append(details['servers'])
-                    self.createVms(
-                        serverList,
-                        provider
-                    )
-                    record = self.tags['uuid']
-                    if 'domain' in details['load_balancer']:
-                        record = details['load_balancer']['domain'] + '-' + \
-                            record
-                    else:
-                        record = details['load_balancer']['name'] + '-' + \
-                            record
-
-                    result = provider.addDNS(
-                        lbData['publicIp'].ip_address,
-                        record
-                    )
-                    self.lbs.append({
-                        details['load_balancer']['name']: result
-                    })
                 else:
                     e = {
                         'error': "back_end_protocol must be 'Http' or 'Tcp'"
