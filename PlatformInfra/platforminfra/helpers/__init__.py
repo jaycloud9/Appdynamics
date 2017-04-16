@@ -81,6 +81,33 @@ class Jenkins(object):
         buildInfo = self.server.get_build_info(build, lastBuildNumber)
         return buildInfo
 
+    def getBuildStatus(self, buildName, uuid):
+        """Get all of the running jobs back.
+
+        If one of those jobs has a param of uuid return running.
+        Else return the last status of the last run job with that param uuid.
+        """
+        jobs = self.server.get_job_info(buildName, fetch_all_builds=True)
+        response = list()
+        for job in jobs['builds']:
+            jobInfo = self.server.get_build_info(buildName, job['number'])
+            jobState = 'RUNNING'
+            for action in jobInfo['actions']:
+                if 'parameters' in action:
+                    for param in action['parameters']:
+                        if (
+                            param['name'] == "uuid" and
+                            param['value'] == uuid
+                        ):
+                            if jobInfo['result']:
+                                jobState = jobInfo['result']
+                            response.append({
+                                'buildName': buildName,
+                                'build': job['number'],
+                                'status': jobState
+                            })
+        return response
+
 
 class Gitlab(object):
     """Class to manage Gitlab interactions."""

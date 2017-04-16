@@ -138,6 +138,30 @@ class Controller(object):
             }
         )
 
+    def getJenkinsBuildStatus(self, pipeline, uuid):
+        """Get a pipeline status for a given uuid."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Getting Job Status")
+        status = jenkinsServer.getBuildStatus(
+            pipeline,
+            uuid
+        )
+        return status
+
+    def checkJenkinsRunning(self, pipeline, uuid):
+        """Check a list of responses and return boolean."""
+        statuses = self.getJenkinsBuildStatus(pipeline, uuid)
+        running = False
+        print("Statuses: {}".format(statuses))
+        for status in statuses:
+            if status['status'] == 'RUNNING':
+                running = True
+        return running
+
     def runGitlabTasks(self, gitlab):
         """Run the required actrions for Gitlab creation."""
         response = dict()
@@ -539,12 +563,27 @@ class Controller(object):
 
     def createEnvironment(self, data):
         """Create an Environment."""
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'id' in data:
+            if self.checkUUIDInUse(data['id']):
+                raise Exception({'error': 'UUID in use', 'code': 412})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
 
-        if self.checkUUIDInUse(data['id']):
-            raise Exception({'error': 'UUID in use', 'code': 412})
         response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
@@ -641,19 +680,28 @@ class Controller(object):
 
         Given a specified 'server' group delete and recreate those servers.
         """
-        if not self.checkUUIDInUse(data['uuid']):
-            raise Exception({'error': 'Invalid UUID', 'code': 404})
         if 'infrastructureTemplateID' in data:
             template = self.templates.loadTemplate(
                 data['infrastructureTemplateID']
             )
-            # Create an unrefferenced copy of the template for later use
             templateCopy = deepcopy(template)
         else:
             raise Exception({
-                'error': 'infrastructureTemplateId required',
-                'code': 404}
-            )
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
+
         response = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -716,15 +764,29 @@ class Controller(object):
 
     def scaleEnvironmentServer(self, data):
         """Scale an Environments servers."""
-        if not self.checkUUIDInUse(data['uuid']):
-            raise Exception({'error': 'Invalid UUID', 'code': 404})
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            templateCopy = deepcopy(template)
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
 
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
-        # Create an unrefferenced copy of the template for later use
-        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -784,11 +846,21 @@ class Controller(object):
 
     def environmentStatus(self, data):
         """Get the status of an environment."""
-        if not self.checkUUIDInUse(data['uuid']):
-            raise Exception({'error': 'Invalid UUID', 'code': 404})
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+
         statusResoures = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -825,6 +897,15 @@ class Controller(object):
             statusResoures.append({
                 'Storage resources': vhdEntry
             })
+        if 'application' in data:
+            jenkinsStatus = self.getJenkinsBuildStatus(
+                data['application'],
+                data['uuid']
+            )
+            statusResoures.append({
+                'Build resources': jenkinsStatus
+            })
+
         broken = self.compareResources(
             statusResoures,
             deploymentResources,
