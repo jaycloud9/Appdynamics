@@ -101,7 +101,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"test\"}"
+					"raw": "{\"servers\": \"test\", \"application\": \"testBuild\"}"
 				},
 				"description": "PUT"
 			},
@@ -121,7 +121,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"test\"}"
+					"raw": "{\"servers\": \"test\", \"application\": \"testBuild\"}"
 				},
 				"description": "PUT"
 			},
