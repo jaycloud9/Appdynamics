@@ -41,7 +41,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"id\":\"w7hf6hsd34f2\",\n\t\"application\": \"T24-Pipeline\",\n\t\"infrastructureTemplateID\": \"test\",\n\t\"gitlab\": {\n\t\t\"user\": {\n\t\t\t\"sshKey\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR\",\n\t\t\t\"password\": \"S0mePa55w0rd\"\n\t\t},\n\t\t\"cloneRepos\": [\n\t\t\t\t\"customer-demo\"\n\t\t\t]\n\t}\n}"
+					"raw": "{\n\t\"id\":\"w7hf6hsd34f2\",\n\t\"application\": \"testBuild\",\n\t\"infrastructureTemplateID\": \"test\",\n\t\"gitlab\": {\n\t\t\"user\": {\n\t\t\t\"sshKey\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR\",\n\t\t\t\"password\": \"S0mePa55w0rd\"\n\t\t},\n\t\t\"cloneRepos\": [\n\t\t\t\t\"customer-demo\"\n\t\t\t]\n\t}\n}"
 				},
 				"description": "POST"
 			},
@@ -81,7 +81,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"infrastructureTemplateID\": \"test\"}"
+					"raw": "{\"infrastructureTemplateID\": \"test\", \"application\": \"testBuild\"}"
 				},
 				"description": "POST"
 			},
@@ -141,7 +141,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"application\": \"T24-Pipeline\",\n\t\"persistData\": true,\n\t\"servers\": \"test\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
+					"raw": "{\n\t\"application\": \"testBuild\",\n\t\"persistData\": true,\n\t\"servers\": \"test\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},
@@ -161,7 +161,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\t\n\t\"application\": \"T24-Pipeline\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"test\"\n}"
+					"raw": "{\t\n\t\"application\": \"testBuild\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},
