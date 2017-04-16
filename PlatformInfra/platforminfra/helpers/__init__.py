@@ -1,4 +1,14 @@
-"""Helpers package for platformInfra."""
+"""Helpers package for platformInfra.
+
+This Module contains helper classes for small operations, such as:
+
+- Response Objects
+- Gitlab
+- Jenkins
+
+And the Helper class containes small routines (single method) such as:
+- randStr
+"""
 from flask import jsonify
 from flask import Response as Rsp
 import jenkins

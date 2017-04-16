@@ -1051,14 +1051,26 @@ additional actions such as Jenkins and gitlab.</p></div>
       <p class="name"><a href="helpers/index.html">platforminfra.helpers</a></p>
       
   
-    <div class="desc"><p>Helpers package for platformInfra.</p></div>
+    <div class="desc"><p>Helpers package for platformInfra.</p>
+<p>This Module contains helper classes for small operations, such as:</p>
+<ul>
+<li>Response Objects</li>
+<li>Gitlab</li>
+<li>Jenkins</li>
+</ul>
+<p>And the Helper class containes small routines (single method) such as:
+- randStr</p></div>
 
       </div>
       <div class="item">
       <p class="name"><a href="infrastructure/index.html">platforminfra.infrastructure</a></p>
       
   
-    <div class="desc"><p>Infrastructire wrapping Module.</p></div>
+    <div class="desc"><p>Infrastructire wrapping Module.</p>
+<p>Currently this is unused but it is intended as the location where deciding
+which provider to use and how to create the VMs (for example) should be done.
+This and the structure of the providers will need revisiting so this was left
+out until a better understanding was...</p></div>
 
       </div>
       <div class="item">
@@ -1072,7 +1084,8 @@ additional actions such as Jenkins and gitlab.</p></div>
       <p class="name"><a href="views.m.html">platforminfra.views</a></p>
       
   
-    <div class="desc"><p>Views defines the routes for the platformInfra application.</p></div>
+    <div class="desc"><p>Views defines the response to the end user.</p>
+<p>Views defines the routes, message format and how errors are handeled.</p></div>
 
       </div>
   </section>

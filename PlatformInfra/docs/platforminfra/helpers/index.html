@@ -4,7 +4,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
     <title>platforminfra.helpers API documentation</title>
-    <meta name="description" content="Helpers package for platformInfra." />
+    <meta name="description" content="Helpers package for platformInfra.
+
+This Module contains helper classes for small operations, such a..." />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
   
@@ -1003,6 +1005,7 @@ table {
           
   <ul>
     <li class="mono"><a href="#platforminfra.helpers.Jenkins.__init__">__init__</a></li>
+    <li class="mono"><a href="#platforminfra.helpers.Jenkins.getBuildStatus">getBuildStatus</a></li>
     <li class="mono"><a href="#platforminfra.helpers.Jenkins.runBuildWithParams">runBuildWithParams</a></li>
   </ul>
 
@@ -1033,10 +1036,28 @@ table {
   <header id="section-intro">
   <h1 class="title"><span class="name">platforminfra.helpers</span> module</h1>
   <p>Helpers package for platformInfra.</p>
+<p>This Module contains helper classes for small operations, such as:</p>
+<ul>
+<li>Response Objects</li>
+<li>Gitlab</li>
+<li>Jenkins</li>
+</ul>
+<p>And the Helper class containes small routines (single method) such as:
+- randStr</p>
   
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.helpers', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.helpers" class="source">
-    <pre><code>"""Helpers package for platformInfra."""
+    <pre><code>"""Helpers package for platformInfra.
+
+This Module contains helper classes for small operations, such as:
+
+- Response Objects
+- Gitlab
+- Jenkins
+
+And the Helper class containes small routines (single method) such as:
+- randStr
+"""
 from flask import jsonify
 from flask import Response as Rsp
 import jenkins
@@ -1118,6 +1139,33 @@ class Jenkins(object):
             build)['lastCompletedBuild']['number']
         buildInfo = self.server.get_build_info(build, lastBuildNumber)
         return buildInfo
+
+    def getBuildStatus(self, buildName, uuid):
+        """Get all of the running jobs back.
+
+        If one of those jobs has a param of uuid return running.
+        Else return the last status of the last run job with that param uuid.
+        """
+        jobs = self.server.get_job_info(buildName, fetch_all_builds=True)
+        response = list()
+        for job in jobs['builds']:
+            jobInfo = self.server.get_build_info(buildName, job['number'])
+            jobState = 'RUNNING'
+            for action in jobInfo['actions']:
+                if 'parameters' in action:
+                    for param in action['parameters']:
+                        if (
+                            param['name'] == "uuid" and
+                            param['value'] == uuid
+                        ):
+                            if jobInfo['result']:
+                                jobState = jobInfo['result']
+                            response.append({
+                                'buildName': buildName,
+                                'build': job['number'],
+                                'status': jobState
+                            })
+        return response
 
 
 class Gitlab(object):
@@ -1593,6 +1641,33 @@ class Gitlab(object):
             build)['lastCompletedBuild']['number']
         buildInfo = self.server.get_build_info(build, lastBuildNumber)
         return buildInfo
+
+    def getBuildStatus(self, buildName, uuid):
+        """Get all of the running jobs back.
+
+        If one of those jobs has a param of uuid return running.
+        Else return the last status of the last run job with that param uuid.
+        """
+        jobs = self.server.get_job_info(buildName, fetch_all_builds=True)
+        response = list()
+        for job in jobs['builds']:
+            jobInfo = self.server.get_build_info(buildName, job['number'])
+            jobState = 'RUNNING'
+            for action in jobInfo['actions']:
+                if 'parameters' in action:
+                    for param in action['parameters']:
+                        if (
+                            param['name'] == "uuid" and
+                            param['value'] == uuid
+                        ):
+                            if jobInfo['result']:
+                                jobState = jobInfo['result']
+                            response.append({
+                                'buildName': buildName,
+                                'build': job['number'],
+                                'status': jobState
+                            })
+        return response
 </code></pre>
   </div>
 </div>
@@ -1625,6 +1700,52 @@ class Gitlab(object):
         username=user,
         password=password
     )
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.helpers.Jenkins.getBuildStatus">
+    <p>def <span class="ident">getBuildStatus</span>(</p><p>self, buildName, uuid)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Get all of the running jobs back.</p>
+<p>If one of those jobs has a param of uuid return running.
+Else return the last status of the last run job with that param uuid.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.helpers.Jenkins.getBuildStatus', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.helpers.Jenkins.getBuildStatus" class="source">
+    <pre><code>def getBuildStatus(self, buildName, uuid):
+    """Get all of the running jobs back.
+    If one of those jobs has a param of uuid return running.
+    Else return the last status of the last run job with that param uuid.
+    """
+    jobs = self.server.get_job_info(buildName, fetch_all_builds=True)
+    response = list()
+    for job in jobs['builds']:
+        jobInfo = self.server.get_build_info(buildName, job['number'])
+        jobState = 'RUNNING'
+        for action in jobInfo['actions']:
+            if 'parameters' in action:
+                for param in action['parameters']:
+                    if (
+                        param['name'] == "uuid" and
+                        param['value'] == uuid
+                    ):
+                        if jobInfo['result']:
+                            jobState = jobInfo['result']
+                        response.append({
+                            'buildName': buildName,
+                            'build': job['number'],
+                            'status': jobState
+                        })
+    return response
 </code></pre>
   </div>
 </div>

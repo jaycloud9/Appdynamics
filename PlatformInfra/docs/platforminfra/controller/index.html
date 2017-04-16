@@ -983,6 +983,7 @@ table {
   <ul>
     <li class="mono"><a href="#platforminfra.controller.Controller.__init__">__init__</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.addVM">addVM</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.checkJenkinsRunning">checkJenkinsRunning</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.checkUUIDInUse">checkUUIDInUse</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.checkVMResources">checkVMResources</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.compareResources">compareResources</a></li>
@@ -993,6 +994,7 @@ table {
     <li class="mono"><a href="#platforminfra.controller.Controller.deleteEnvironment">deleteEnvironment</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.environmentServerStopStart">environmentServerStopStart</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.environmentStatus">environmentStatus</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.getJenkinsBuildStatus">getJenkinsBuildStatus</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.getResourceDetails">getResourceDetails</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.getStatusById">getStatusById</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.getTemplate">getTemplate</a></li>
@@ -1042,7 +1044,6 @@ additional actions such as Jenkins and gitlab.
 
 from platforminfra.templates import Template
 from platforminfra.config import Config
-from platforminfra.helpers import Response
 from platforminfra.infrastructure.azure import Azure
 from multiprocessing import Process, Queue, Lock
 from copy import deepcopy
@@ -1055,6 +1056,10 @@ class Controller(object):
     """Controls the platformInfra.
 
     The controller Object carries out all of the actions.
+    As this expands it will be neccessary to move the control of the
+    infrastructure into its own module. For now the boundaries between Control
+    and provider are blurred. The provider works on the resource and sometimes
+    *with* the resource whereas the controller only works *with* the resource.
     """
 
     def __init__(self):
@@ -1071,7 +1076,7 @@ class Controller(object):
         return self.templates.loadTemplate(templateName)
 
     def setTags(self, data):
-        """Return the tags element."""
+        """Create the tags property."""
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
@@ -1106,10 +1111,17 @@ class Controller(object):
             'key': 'type',
             'value': server
         })
-        # vmList = list()
-        statuses = self.getStatusById(resources['ids'], provider)
-
-        return statuses
+        if 'ids' in resources:
+            statuses = self.getStatusById(resources['ids'], provider)
+            return statuses
+        else:
+            raise Exception({
+                'error': "No VM Resources found for {} in {}".format(
+                    server,
+                    uuid
+                ),
+                'code': 404
+            })
 
     def getVMDetails(self, id, server):
         """Get a VM object back from an ID."""
@@ -1165,6 +1177,30 @@ class Controller(object):
                 "UUID": self.tags['uuid']
             }
         )
+
+    def getJenkinsBuildStatus(self, pipeline, uuid):
+        """Get a pipeline status for a given uuid."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Getting Job Status")
+        status = jenkinsServer.getBuildStatus(
+            pipeline,
+            uuid
+        )
+        return status
+
+    def checkJenkinsRunning(self, pipeline, uuid):
+        """Check a list of responses and return boolean."""
+        statuses = self.getJenkinsBuildStatus(pipeline, uuid)
+        running = False
+        print("Statuses: {}".format(statuses))
+        for status in statuses:
+            if status['status'] == 'RUNNING':
+                running = True
+        return running
 
     def runGitlabTasks(self, gitlab):
         """Run the required actrions for Gitlab creation."""
@@ -1384,19 +1420,48 @@ class Controller(object):
         subNets = Queue()
         print("Creating network")
         netProcs = list()
-        for idx, network in enumerate(data):
-            netId = str(self.tags['uuid'])+network['name']+str(idx)
-            p = Process(
-                target=provider.network,
-                args=(network, netId, self.tags, subNets)
-            )
-            netProcs.append(p)
-            p.start()
+        try:
+            for idx, network in enumerate(data):
+                netId = str(self.tags['uuid'])+network['name']+str(idx)
+                p = Process(
+                    target=provider.network,
+                    args=(network, netId, self.tags, subNets)
+                )
+                netProcs.append(p)
+                p.start()
 
-        subnets = dict()
-        for proc in netProcs:
-            proc.join()
-            subnets['subnets'] = subNets.get()
+            subnets = dict()
+            for proc in netProcs:
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc.join(1)
+                    lives = lives - 1
+                    if not subNets.empty():
+                        subnets['subnets'] = subNets.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc.is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            print("Proc Dead already")
+                            # Process already dead
+                            break
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating networks: {}"
+                    .format(str(e))
+                })
 
         self.subnets.append(subnets)
 
@@ -1440,7 +1505,7 @@ class Controller(object):
                 )
                 vmDetails = {
                     'servers': server['name'],
-                    'thread': p
+                    'process': p
                 }
                 if 'dns' in server:
                     vmDetails['dns'] = server['dns']
@@ -1448,8 +1513,27 @@ class Controller(object):
                 p.start()
 
             for proc in serverProcs:
-                proc['thread'].join()
-                tmpData = vms.get()
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc['process'].join(1)
+                    lives = lives - 1
+                    if not vms.empty():
+                        tmpData = vms.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc['process'].is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            # Process already dead
+                            break
                 if 'dns' in proc:
                     # Only apply to the first server
                     result = provider.addDNS(
@@ -1459,7 +1543,13 @@ class Controller(object):
                     tmpData['dns'] = result
                 self.vms.append(tmpData)
         except Exception as e:
-            raise Exception(e)
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating Vms: {}"
+                    .format(str(e))
+                })
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
@@ -1512,14 +1602,31 @@ class Controller(object):
                     raise Exception(e)
 
     def createEnvironment(self, data):
-        """Create an Environment."""
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        """Create an Environment.
 
-        if self.checkUUIDInUse(data['id']):
-            rsp = Response({'error': 'UUID in use'})
-            return rsp.httpResponse(412)
+        From a Infrastructure template create an environment.
+        """
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'id' in data:
+            if self.checkUUIDInUse(data['id']):
+                raise Exception({'error': 'UUID in use', 'code': 412})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
+
         response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
@@ -1530,8 +1637,10 @@ class Controller(object):
             data['id']
         )
         if 'error' in provider.credentials:
-            rsp = Response(provider.credentials)
-            return rsp.httpResponse(400)
+            raise Exception({
+                'error': provider.credentials['error'],
+                'code': 400}
+            )
 
         buildMap = {
             "servers": self.createVms,
@@ -1553,10 +1662,8 @@ class Controller(object):
                         else:
                             buildMap[k](v, provider)
                         continue
-        except Exception as e:
-            print("Something failed :'(")
-            rsp = Response(e)
-            return rsp.httpResponse(400)
+        except:
+            raise
 
         for vmRsp in self.vms:
             response.append(vmRsp)
@@ -1570,8 +1677,7 @@ class Controller(object):
             response.append({'gitlab': glResponse})
         if self.lbs:
             response = response + self.lbs
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(201)
+        return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
         """Return a list of environments."""
@@ -1581,16 +1687,12 @@ class Controller(object):
             self.config.defaults['storage_account_name']
         )
 
-        rsp = Response({
-            "Environments": provider.getResources()
-        })
-        return rsp.httpResponse(200)
+        return {'msg': {"Environments": provider.getResources()}, 'code': 200}
 
     def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -1614,26 +1716,35 @@ class Controller(object):
         if "Gitlab" in deleteResources:
             glServer.deleteUser(user)
 
-        rsp = Response()
-        return rsp.httpResponse(204)
+        return {'code': 204, 'msg': None}
 
     def rebuildEnvironmentServer(self, data):
         """Rebuild a portion of an environment.
 
         Given a specified 'server' group delete and recreate those servers.
         """
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
         if 'infrastructureTemplateID' in data:
             template = self.templates.loadTemplate(
                 data['infrastructureTemplateID']
             )
-            # Create an unrefferenced copy of the template for later use
             templateCopy = deepcopy(template)
         else:
-            rsp = Response({'error': 'infrastructureTemplateId required'})
-            return rsp.httpResponse(404)
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
+
         response = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -1692,21 +1803,33 @@ class Controller(object):
         )
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def scaleEnvironmentServer(self, data):
         """Scale an Environments servers."""
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            templateCopy = deepcopy(template)
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
 
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
-        # Create an unrefferenced copy of the template for later use
-        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -1762,17 +1885,25 @@ class Controller(object):
 
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentStatus(self, data):
         """Get the status of an environment."""
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+
         statusResoures = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -1809,6 +1940,15 @@ class Controller(object):
             statusResoures.append({
                 'Storage resources': vhdEntry
             })
+        if 'application' in data:
+            jenkinsStatus = self.getJenkinsBuildStatus(
+                data['application'],
+                data['uuid']
+            )
+            statusResoures.append({
+                'Build resources': jenkinsStatus
+            })
+
         broken = self.compareResources(
             statusResoures,
             deploymentResources,
@@ -1824,14 +1964,12 @@ class Controller(object):
             })
             response['status'] = "Failed"
 
-        rsp = Response(response)
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -1853,8 +1991,7 @@ class Controller(object):
             if vm['status'] == outcome[action]:
                 actions[action](provider, vm)
         statuses = self.getVmList(provider, data['uuid'], data['servers'])
-        rsp = Response({'VMs': statuses})
-        return rsp.httpResponse(200)
+        return {'msg': {'VMs': statuses}, 'code': 200}
 </code></pre>
   </div>
 
@@ -1870,7 +2007,11 @@ class Controller(object):
       
   
     <div class="desc"><p>Controls the platformInfra.</p>
-<p>The controller Object carries out all of the actions.</p></div>
+<p>The controller Object carries out all of the actions.
+As this expands it will be neccessary to move the control of the
+infrastructure into its own module. For now the boundaries between Control
+and provider are blurred. The provider works on the resource and sometimes
+<em>with</em> the resource whereas the controller only works <em>with</em> the resource.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller" class="source">
@@ -1878,6 +2019,10 @@ class Controller(object):
     """Controls the platformInfra.
 
     The controller Object carries out all of the actions.
+    As this expands it will be neccessary to move the control of the
+    infrastructure into its own module. For now the boundaries between Control
+    and provider are blurred. The provider works on the resource and sometimes
+    *with* the resource whereas the controller only works *with* the resource.
     """
 
     def __init__(self):
@@ -1894,7 +2039,7 @@ class Controller(object):
         return self.templates.loadTemplate(templateName)
 
     def setTags(self, data):
-        """Return the tags element."""
+        """Create the tags property."""
         print("Creating Tags")
         self.tags = {**self.tags, **data}
 
@@ -1929,10 +2074,17 @@ class Controller(object):
             'key': 'type',
             'value': server
         })
-        # vmList = list()
-        statuses = self.getStatusById(resources['ids'], provider)
-
-        return statuses
+        if 'ids' in resources:
+            statuses = self.getStatusById(resources['ids'], provider)
+            return statuses
+        else:
+            raise Exception({
+                'error': "No VM Resources found for {} in {}".format(
+                    server,
+                    uuid
+                ),
+                'code': 404
+            })
 
     def getVMDetails(self, id, server):
         """Get a VM object back from an ID."""
@@ -1988,6 +2140,30 @@ class Controller(object):
                 "UUID": self.tags['uuid']
             }
         )
+
+    def getJenkinsBuildStatus(self, pipeline, uuid):
+        """Get a pipeline status for a given uuid."""
+        jenkinsServer = Jenkins(
+            self.config.credentials['jenkins']['url'],
+            user=self.config.credentials['jenkins']['user'],
+            password=self.config.credentials['jenkins']['password']
+        )
+        print("Getting Job Status")
+        status = jenkinsServer.getBuildStatus(
+            pipeline,
+            uuid
+        )
+        return status
+
+    def checkJenkinsRunning(self, pipeline, uuid):
+        """Check a list of responses and return boolean."""
+        statuses = self.getJenkinsBuildStatus(pipeline, uuid)
+        running = False
+        print("Statuses: {}".format(statuses))
+        for status in statuses:
+            if status['status'] == 'RUNNING':
+                running = True
+        return running
 
     def runGitlabTasks(self, gitlab):
         """Run the required actrions for Gitlab creation."""
@@ -2207,19 +2383,48 @@ class Controller(object):
         subNets = Queue()
         print("Creating network")
         netProcs = list()
-        for idx, network in enumerate(data):
-            netId = str(self.tags['uuid'])+network['name']+str(idx)
-            p = Process(
-                target=provider.network,
-                args=(network, netId, self.tags, subNets)
-            )
-            netProcs.append(p)
-            p.start()
+        try:
+            for idx, network in enumerate(data):
+                netId = str(self.tags['uuid'])+network['name']+str(idx)
+                p = Process(
+                    target=provider.network,
+                    args=(network, netId, self.tags, subNets)
+                )
+                netProcs.append(p)
+                p.start()
 
-        subnets = dict()
-        for proc in netProcs:
-            proc.join()
-            subnets['subnets'] = subNets.get()
+            subnets = dict()
+            for proc in netProcs:
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc.join(1)
+                    lives = lives - 1
+                    if not subNets.empty():
+                        subnets['subnets'] = subNets.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc.is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            print("Proc Dead already")
+                            # Process already dead
+                            break
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating networks: {}"
+                    .format(str(e))
+                })
 
         self.subnets.append(subnets)
 
@@ -2263,7 +2468,7 @@ class Controller(object):
                 )
                 vmDetails = {
                     'servers': server['name'],
-                    'thread': p
+                    'process': p
                 }
                 if 'dns' in server:
                     vmDetails['dns'] = server['dns']
@@ -2271,8 +2476,27 @@ class Controller(object):
                 p.start()
 
             for proc in serverProcs:
-                proc['thread'].join()
-                tmpData = vms.get()
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc['process'].join(1)
+                    lives = lives - 1
+                    if not vms.empty():
+                        tmpData = vms.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc['process'].is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            # Process already dead
+                            break
                 if 'dns' in proc:
                     # Only apply to the first server
                     result = provider.addDNS(
@@ -2282,7 +2506,13 @@ class Controller(object):
                     tmpData['dns'] = result
                 self.vms.append(tmpData)
         except Exception as e:
-            raise Exception(e)
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating Vms: {}"
+                    .format(str(e))
+                })
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
@@ -2335,14 +2565,31 @@ class Controller(object):
                     raise Exception(e)
 
     def createEnvironment(self, data):
-        """Create an Environment."""
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        """Create an Environment.
 
-        if self.checkUUIDInUse(data['id']):
-            rsp = Response({'error': 'UUID in use'})
-            return rsp.httpResponse(412)
+        From a Infrastructure template create an environment.
+        """
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'id' in data:
+            if self.checkUUIDInUse(data['id']):
+                raise Exception({'error': 'UUID in use', 'code': 412})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
+
         response = list()
         self.tags['uuid'] = data['id']
         provider = Azure(
@@ -2353,8 +2600,10 @@ class Controller(object):
             data['id']
         )
         if 'error' in provider.credentials:
-            rsp = Response(provider.credentials)
-            return rsp.httpResponse(400)
+            raise Exception({
+                'error': provider.credentials['error'],
+                'code': 400}
+            )
 
         buildMap = {
             "servers": self.createVms,
@@ -2376,10 +2625,8 @@ class Controller(object):
                         else:
                             buildMap[k](v, provider)
                         continue
-        except Exception as e:
-            print("Something failed :'(")
-            rsp = Response(e)
-            return rsp.httpResponse(400)
+        except:
+            raise
 
         for vmRsp in self.vms:
             response.append(vmRsp)
@@ -2393,8 +2640,7 @@ class Controller(object):
             response.append({'gitlab': glResponse})
         if self.lbs:
             response = response + self.lbs
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(201)
+        return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
         """Return a list of environments."""
@@ -2404,16 +2650,12 @@ class Controller(object):
             self.config.defaults['storage_account_name']
         )
 
-        rsp = Response({
-            "Environments": provider.getResources()
-        })
-        return rsp.httpResponse(200)
+        return {'msg': {"Environments": provider.getResources()}, 'code': 200}
 
     def deleteEnvironment(self, data):
         """Delete a specific Environments Resources."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2437,26 +2679,35 @@ class Controller(object):
         if "Gitlab" in deleteResources:
             glServer.deleteUser(user)
 
-        rsp = Response()
-        return rsp.httpResponse(204)
+        return {'code': 204, 'msg': None}
 
     def rebuildEnvironmentServer(self, data):
         """Rebuild a portion of an environment.
 
         Given a specified 'server' group delete and recreate those servers.
         """
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
         if 'infrastructureTemplateID' in data:
             template = self.templates.loadTemplate(
                 data['infrastructureTemplateID']
             )
-            # Create an unrefferenced copy of the template for later use
             templateCopy = deepcopy(template)
         else:
-            rsp = Response({'error': 'infrastructureTemplateId required'})
-            return rsp.httpResponse(404)
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
+
         response = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -2515,21 +2766,33 @@ class Controller(object):
         )
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def scaleEnvironmentServer(self, data):
         """Scale an Environments servers."""
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+            templateCopy = deepcopy(template)
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['id']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
 
         response = list()
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
-        # Create an unrefferenced copy of the template for later use
-        templateCopy = deepcopy(template)
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2585,17 +2848,25 @@ class Controller(object):
 
         for vmRsp in self.vms:
             response.append(vmRsp)
-        rsp = Response({'Resources': response})
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentStatus(self, data):
         """Get the status of an environment."""
-        if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
-        template = self.templates.loadTemplate(
-            data['infrastructureTemplateID']
-        )
+        if 'infrastructureTemplateID' in data:
+            template = self.templates.loadTemplate(
+                data['infrastructureTemplateID']
+            )
+        else:
+            raise Exception({
+                'error': 'infrastructureTemplateID must be provided',
+                'code': 400
+            })
+        if 'uuid' in data:
+            if not self.checkUUIDInUse(data['uuid']):
+                raise Exception({'error': 'Invalid UUID', 'code': 404})
+        else:
+            raise Exception({'error': 'ID must be provided', 'code': 400})
+
         statusResoures = list()
         provider = Azure(
             self.config.credentials['azure'],
@@ -2632,6 +2903,15 @@ class Controller(object):
             statusResoures.append({
                 'Storage resources': vhdEntry
             })
+        if 'application' in data:
+            jenkinsStatus = self.getJenkinsBuildStatus(
+                data['application'],
+                data['uuid']
+            )
+            statusResoures.append({
+                'Build resources': jenkinsStatus
+            })
+
         broken = self.compareResources(
             statusResoures,
             deploymentResources,
@@ -2647,14 +2927,12 @@ class Controller(object):
             })
             response['status'] = "Failed"
 
-        rsp = Response(response)
-        return rsp.httpResponse(200)
+        return {'msg': {'Resources': response}, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
-            rsp = Response({'error': 'Invalid UUID'})
-            return rsp.httpResponse(404)
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2676,8 +2954,7 @@ class Controller(object):
             if vm['status'] == outcome[action]:
                 actions[action](provider, vm)
         statuses = self.getVmList(provider, data['uuid'], data['servers'])
-        rsp = Response({'VMs': statuses})
-        return rsp.httpResponse(200)
+        return {'msg': {'VMs': statuses}, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -2769,6 +3046,34 @@ class Controller(object):
     self.createVms(vmList, provider, persistData)
     if 'application':
         self.runJenkinsPipeline(application)
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.checkJenkinsRunning">
+    <p>def <span class="ident">checkJenkinsRunning</span>(</p><p>self, pipeline, uuid)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Check a list of responses and return boolean.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.checkJenkinsRunning', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.checkJenkinsRunning" class="source">
+    <pre><code>def checkJenkinsRunning(self, pipeline, uuid):
+    """Check a list of responses and return boolean."""
+    statuses = self.getJenkinsBuildStatus(pipeline, uuid)
+    running = False
+    print("Statuses: {}".format(statuses))
+    for status in statuses:
+        if status['status'] == 'RUNNING':
+            running = True
+    return running
 </code></pre>
   </div>
 </div>
@@ -2929,18 +3234,35 @@ resources are 'okay' or not.</p></div>
 
     
   
-    <div class="desc"><p>Create an Environment.</p></div>
+    <div class="desc"><p>Create an Environment.</p>
+<p>From a Infrastructure template create an environment.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.createEnvironment', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.createEnvironment" class="source">
     <pre><code>def createEnvironment(self, data):
-    """Create an Environment."""
-    template = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
-    )
-    if self.checkUUIDInUse(data['id']):
-        rsp = Response({'error': 'UUID in use'})
-        return rsp.httpResponse(412)
+    """Create an Environment.
+    From a Infrastructure template create an environment.
+    """
+    if 'infrastructureTemplateID' in data:
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+    else:
+        raise Exception({
+            'error': 'infrastructureTemplateID must be provided',
+            'code': 400
+        })
+    if 'id' in data:
+        if self.checkUUIDInUse(data['id']):
+            raise Exception({'error': 'UUID in use', 'code': 412})
+    else:
+        raise Exception({'error': 'ID must be provided', 'code': 400})
+    if 'application' in data:
+        if self.checkJenkinsRunning(data['application'], data['id']):
+            raise Exception({
+                'error': 'Jenkins build running already',
+                'code': 409
+            })
     response = list()
     self.tags['uuid'] = data['id']
     provider = Azure(
@@ -2951,8 +3273,10 @@ resources are 'okay' or not.</p></div>
         data['id']
     )
     if 'error' in provider.credentials:
-        rsp = Response(provider.credentials)
-        return rsp.httpResponse(400)
+        raise Exception({
+            'error': provider.credentials['error'],
+            'code': 400}
+        )
     buildMap = {
         "servers": self.createVms,
         "networks": self.createNetworks,
@@ -2973,10 +3297,8 @@ resources are 'okay' or not.</p></div>
                     else:
                         buildMap[k](v, provider)
                     continue
-    except Exception as e:
-        print("Something failed :'(")
-        rsp = Response(e)
-        return rsp.httpResponse(400)
+    except:
+        raise
     for vmRsp in self.vms:
         response.append(vmRsp)
     # By this point an environment should be created so Execute Jenkins job
@@ -2987,8 +3309,7 @@ resources are 'okay' or not.</p></div>
         response.append({'gitlab': glResponse})
     if self.lbs:
         response = response + self.lbs
-    rsp = Response({'Resources': response})
-    return rsp.httpResponse(201)
+    return {'msg': {'Resources': response}, 'code': 201}
 </code></pre>
   </div>
 </div>
@@ -3080,18 +3401,47 @@ resources are 'okay' or not.</p></div>
     subNets = Queue()
     print("Creating network")
     netProcs = list()
-    for idx, network in enumerate(data):
-        netId = str(self.tags['uuid'])+network['name']+str(idx)
-        p = Process(
-            target=provider.network,
-            args=(network, netId, self.tags, subNets)
-        )
-        netProcs.append(p)
-        p.start()
-    subnets = dict()
-    for proc in netProcs:
-        proc.join()
-        subnets['subnets'] = subNets.get()
+    try:
+        for idx, network in enumerate(data):
+            netId = str(self.tags['uuid'])+network['name']+str(idx)
+            p = Process(
+                target=provider.network,
+                args=(network, netId, self.tags, subNets)
+            )
+            netProcs.append(p)
+            p.start()
+        subnets = dict()
+        for proc in netProcs:
+            lives = 600
+            while True:
+                # Wait for 1 seconds then take a life
+                proc.join(1)
+                lives = lives - 1
+                if not subNets.empty():
+                    subnets['subnets'] = subNets.get()
+                    # break the while true
+                    break
+                elif lives <= 0:
+                    if proc.is_alive():
+                        # If it's been 600 seconds and we're trapped in the
+                        # while loop. Kill the process.
+                        proc.terminate()
+                        raise Exception({
+                            'error': "Took too long",
+                            'code': 500
+                        })
+                    else:
+                        print("Proc Dead already")
+                        # Process already dead
+                        break
+    except Exception as e:
+        if e.args[0] is dict:
+            raise
+        else:
+            raise Exception({
+                'error': "Unknown error while creating networks: {}"
+                .format(str(e))
+            })
     self.subnets.append(subnets)
 </code></pre>
   </div>
@@ -3145,15 +3495,34 @@ with all of dependencies each VM needs.</p></div>
             )
             vmDetails = {
                 'servers': server['name'],
-                'thread': p
+                'process': p
             }
             if 'dns' in server:
                 vmDetails['dns'] = server['dns']
             serverProcs.append(vmDetails)
             p.start()
         for proc in serverProcs:
-            proc['thread'].join()
-            tmpData = vms.get()
+            lives = 600
+            while True:
+                # Wait for 1 seconds then take a life
+                proc['process'].join(1)
+                lives = lives - 1
+                if not vms.empty():
+                    tmpData = vms.get()
+                    # break the while true
+                    break
+                elif lives <= 0:
+                    if proc['process'].is_alive():
+                        # If it's been 600 seconds and we're trapped in the
+                        # while loop. Kill the process.
+                        proc.terminate()
+                        raise Exception({
+                            'error': "Took too long",
+                            'code': 500
+                        })
+                    else:
+                        # Process already dead
+                        break
             if 'dns' in proc:
                 # Only apply to the first server
                 result = provider.addDNS(
@@ -3163,7 +3532,13 @@ with all of dependencies each VM needs.</p></div>
                 tmpData['dns'] = result
             self.vms.append(tmpData)
     except Exception as e:
-        raise Exception(e)
+        if e.args[0] is dict:
+            raise
+        else:
+            raise Exception({
+                'error': "Unknown error while creating Vms: {}"
+                .format(str(e))
+            })
 </code></pre>
   </div>
 </div>
@@ -3186,8 +3561,7 @@ with all of dependencies each VM needs.</p></div>
     <pre><code>def deleteEnvironment(self, data):
     """Delete a specific Environments Resources."""
     if not self.checkUUIDInUse(data['uuid']):
-        rsp = Response({'error': 'Invalid UUID'})
-        return rsp.httpResponse(404)
+        raise Exception({'error': 'Invalid UUID', 'code': 404})
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
@@ -3209,8 +3583,7 @@ with all of dependencies each VM needs.</p></div>
         provider.deleteDNSRecord(deleteResources["Azure"]["dns"])
     if "Gitlab" in deleteResources:
         glServer.deleteUser(user)
-    rsp = Response()
-    return rsp.httpResponse(204)
+    return {'code': 204, 'msg': None}
 </code></pre>
   </div>
 </div>
@@ -3233,8 +3606,7 @@ with all of dependencies each VM needs.</p></div>
     <pre><code>def environmentServerStopStart(self, data, action):
     """Stop or Start an environment."""
     if not self.checkUUIDInUse(data['uuid']):
-        rsp = Response({'error': 'Invalid UUID'})
-        return rsp.httpResponse(404)
+        raise Exception({'error': 'Invalid UUID', 'code': 404})
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
@@ -3254,8 +3626,7 @@ with all of dependencies each VM needs.</p></div>
         if vm['status'] == outcome[action]:
             actions[action](provider, vm)
     statuses = self.getVmList(provider, data['uuid'], data['servers'])
-    rsp = Response({'VMs': statuses})
-    return rsp.httpResponse(200)
+    return {'msg': {'VMs': statuses}, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -3277,12 +3648,20 @@ with all of dependencies each VM needs.</p></div>
   <div id="source-platforminfra.controller.Controller.environmentStatus" class="source">
     <pre><code>def environmentStatus(self, data):
     """Get the status of an environment."""
-    if not self.checkUUIDInUse(data['uuid']):
-        rsp = Response({'error': 'Invalid UUID'})
-        return rsp.httpResponse(404)
-    template = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
-    )
+    if 'infrastructureTemplateID' in data:
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+    else:
+        raise Exception({
+            'error': 'infrastructureTemplateID must be provided',
+            'code': 400
+        })
+    if 'uuid' in data:
+        if not self.checkUUIDInUse(data['uuid']):
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
+    else:
+        raise Exception({'error': 'ID must be provided', 'code': 400})
     statusResoures = list()
     provider = Azure(
         self.config.credentials['azure'],
@@ -3319,6 +3698,14 @@ with all of dependencies each VM needs.</p></div>
         statusResoures.append({
             'Storage resources': vhdEntry
         })
+    if 'application' in data:
+        jenkinsStatus = self.getJenkinsBuildStatus(
+            data['application'],
+            data['uuid']
+        )
+        statusResoures.append({
+            'Build resources': jenkinsStatus
+        })
     broken = self.compareResources(
         statusResoures,
         deploymentResources,
@@ -3333,8 +3720,39 @@ with all of dependencies each VM needs.</p></div>
             'Broken resources': broken
         })
         response['status'] = "Failed"
-    rsp = Response(response)
-    return rsp.httpResponse(200)
+    return {'msg': {'Resources': response}, 'code': 200}
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.getJenkinsBuildStatus">
+    <p>def <span class="ident">getJenkinsBuildStatus</span>(</p><p>self, pipeline, uuid)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Get a pipeline status for a given uuid.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.getJenkinsBuildStatus', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.getJenkinsBuildStatus" class="source">
+    <pre><code>def getJenkinsBuildStatus(self, pipeline, uuid):
+    """Get a pipeline status for a given uuid."""
+    jenkinsServer = Jenkins(
+        self.config.credentials['jenkins']['url'],
+        user=self.config.credentials['jenkins']['user'],
+        password=self.config.credentials['jenkins']['password']
+    )
+    print("Getting Job Status")
+    status = jenkinsServer.getBuildStatus(
+        pipeline,
+        uuid
+    )
+    return status
 </code></pre>
   </div>
 </div>
@@ -3551,9 +3969,17 @@ with all of dependencies each VM needs.</p></div>
         'key': 'type',
         'value': server
     })
-    # vmList = list()
-    statuses = self.getStatusById(resources['ids'], provider)
-    return statuses
+    if 'ids' in resources:
+        statuses = self.getStatusById(resources['ids'], provider)
+        return statuses
+    else:
+        raise Exception({
+            'error': "No VM Resources found for {} in {}".format(
+                server,
+                uuid
+            ),
+            'code': 404
+        })
 </code></pre>
   </div>
 </div>
@@ -3580,10 +4006,7 @@ with all of dependencies each VM needs.</p></div>
         self.config.defaults['resource_group_name'],
         self.config.defaults['storage_account_name']
     )
-    rsp = Response({
-        "Environments": provider.getResources()
-    })
-    return rsp.httpResponse(200)
+    return {'msg': {"Environments": provider.getResources()}, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -3608,18 +4031,27 @@ with all of dependencies each VM needs.</p></div>
     """Rebuild a portion of an environment.
     Given a specified 'server' group delete and recreate those servers.
     """
-    if not self.checkUUIDInUse(data['uuid']):
-        rsp = Response({'error': 'Invalid UUID'})
-        return rsp.httpResponse(404)
     if 'infrastructureTemplateID' in data:
         template = self.templates.loadTemplate(
             data['infrastructureTemplateID']
         )
-        # Create an unrefferenced copy of the template for later use
         templateCopy = deepcopy(template)
     else:
-        rsp = Response({'error': 'infrastructureTemplateId required'})
-        return rsp.httpResponse(404)
+        raise Exception({
+            'error': 'infrastructureTemplateID must be provided',
+            'code': 400
+        })
+    if 'uuid' in data:
+        if not self.checkUUIDInUse(data['uuid']):
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
+    else:
+        raise Exception({'error': 'ID must be provided', 'code': 400})
+    if 'application' in data:
+        if self.checkJenkinsRunning(data['application'], data['id']):
+            raise Exception({
+                'error': 'Jenkins build running already',
+                'code': 409
+            })
     response = list()
     provider = Azure(
         self.config.credentials['azure'],
@@ -3673,8 +4105,7 @@ with all of dependencies each VM needs.</p></div>
     )
     for vmRsp in self.vms:
         response.append(vmRsp)
-    rsp = Response({'Resources': response})
-    return rsp.httpResponse(200)
+    return {'msg': {'Resources': response}, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -3788,15 +4219,28 @@ with all of dependencies each VM needs.</p></div>
   <div id="source-platforminfra.controller.Controller.scaleEnvironmentServer" class="source">
     <pre><code>def scaleEnvironmentServer(self, data):
     """Scale an Environments servers."""
-    if not self.checkUUIDInUse(data['uuid']):
-        rsp = Response({'error': 'Invalid UUID'})
-        return rsp.httpResponse(404)
+    if 'infrastructureTemplateID' in data:
+        template = self.templates.loadTemplate(
+            data['infrastructureTemplateID']
+        )
+        templateCopy = deepcopy(template)
+    else:
+        raise Exception({
+            'error': 'infrastructureTemplateID must be provided',
+            'code': 400
+        })
+    if 'uuid' in data:
+        if not self.checkUUIDInUse(data['uuid']):
+            raise Exception({'error': 'Invalid UUID', 'code': 404})
+    else:
+        raise Exception({'error': 'ID must be provided', 'code': 400})
+    if 'application' in data:
+        if self.checkJenkinsRunning(data['application'], data['id']):
+            raise Exception({
+                'error': 'Jenkins build running already',
+                'code': 409
+            })
     response = list()
-    template = self.templates.loadTemplate(
-        data['infrastructureTemplateID']
-    )
-    # Create an unrefferenced copy of the template for later use
-    templateCopy = deepcopy(template)
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
@@ -3849,8 +4293,7 @@ with all of dependencies each VM needs.</p></div>
         )
     for vmRsp in self.vms:
         response.append(vmRsp)
-    rsp = Response({'Resources': response})
-    return rsp.httpResponse(200)
+    return {'msg': {'Resources': response}, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -3866,12 +4309,12 @@ with all of dependencies each VM needs.</p></div>
 
     
   
-    <div class="desc"><p>Return the tags element.</p></div>
+    <div class="desc"><p>Create the tags property.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.setTags', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.setTags" class="source">
     <pre><code>def setTags(self, data):
-    """Return the tags element."""
+    """Create the tags property."""
     print("Creating Tags")
     self.tags = {**self.tags, **data}
 </code></pre>

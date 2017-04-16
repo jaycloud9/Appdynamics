@@ -20,6 +20,10 @@ class Controller(object):
     """Controls the platformInfra.
 
     The controller Object carries out all of the actions.
+    As this expands it will be neccessary to move the control of the
+    infrastructure into its own module. For now the boundaries between Control
+    and provider are blurred. The provider works on the resource and sometimes
+    *with* the resource whereas the controller only works *with* the resource.
     """
 
     def __init__(self):
@@ -562,7 +566,10 @@ class Controller(object):
                     raise Exception(e)
 
     def createEnvironment(self, data):
-        """Create an Environment."""
+        """Create an Environment.
+
+        From a Infrastructure template create an environment.
+        """
         if 'infrastructureTemplateID' in data:
             template = self.templates.loadTemplate(
                 data['infrastructureTemplateID']
