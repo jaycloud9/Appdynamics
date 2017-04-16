@@ -149,7 +149,6 @@ class Controller(object):
             user=self.config.credentials['jenkins']['user'],
             password=self.config.credentials['jenkins']['password']
         )
-        print("Getting Job Status")
         status = jenkinsServer.getBuildStatus(
             pipeline,
             uuid
@@ -160,7 +159,6 @@ class Controller(object):
         """Check a list of responses and return boolean."""
         statuses = self.getJenkinsBuildStatus(pipeline, uuid)
         running = False
-        print("Statuses: {}".format(statuses))
         for status in statuses:
             if status['status'] == 'RUNNING':
                 running = True
@@ -585,6 +583,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
+            # This should never happen as the check for UUID should throw first
             if self.checkJenkinsRunning(data['application'], data['id']):
                 raise Exception({
                     'error': 'Jenkins build running already',
@@ -703,7 +702,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -787,7 +786,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -928,7 +927,7 @@ class Controller(object):
             })
             response['status'] = "Failed"
 
-        return {'msg': {'Resources': response}, 'code': 200}
+        return {'msg': response, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""

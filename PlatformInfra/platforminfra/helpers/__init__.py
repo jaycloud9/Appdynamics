@@ -106,7 +106,7 @@ class Jenkins(object):
                 if 'parameters' in action:
                     for param in action['parameters']:
                         if (
-                            param['name'] == "uuid" and
+                            param['name'] == "UUID" and
                             param['value'] == uuid
                         ):
                             if jobInfo['result']:

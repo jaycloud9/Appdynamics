@@ -115,6 +115,5 @@ class Vm(object):
                 'public_ip': self.publicIp(vmNic['public_ip_name']),
                 'private_ip': self.privateIp(vmNic['nic'])
             })
-        except CloudError as e:
-            print(e)
-            pass
+        except CloudError:
+            raise

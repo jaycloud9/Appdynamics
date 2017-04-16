@@ -187,7 +187,7 @@ class Azure(object):
                         disk
                     )
             except Exception as e:
-                print(e)
+                raise Exception(e)
 
     def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
@@ -270,6 +270,7 @@ class Azure(object):
                     resources["vhds"] = disks
 
             except CloudError as e:
+                # TODO: Decide to raiseor not, not frequently happening.
                 print("Error: {}".format(e))
                 pass
             return resources
@@ -285,6 +286,7 @@ class Azure(object):
                     resource = self.getResourceById(page.type, page.id)
                     ids.add(resource.tags['uuid'])
             except CloudError as e:
+                # TODO: Decide to raise or not, Not frequently happening
                 print("Error: {}".format(e))
                 pass
             return list(ids)

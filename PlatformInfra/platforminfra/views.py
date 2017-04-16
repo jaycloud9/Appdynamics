@@ -37,7 +37,6 @@ def handle_error(e):
 )
 def environments():
     """Get a list of environments."""
-    rsp = Response()
     if request.method == 'GET':
         listGetController = Controller()
         response = listGetController.listEnvironments()
@@ -46,7 +45,8 @@ def environments():
         response = createPostController.createEnvironment(request.get_json())
     else:
         raise Exception({'error': 'Not Found', 'code': 404})
-    return rsp.httpResponse(response['code'], response['msg'])
+    rsp = Response(response['msg'])
+    return rsp.httpResponse(response['code'])
 
 
 @app.route(
@@ -56,7 +56,6 @@ def environments():
 )
 def environmentsById(uuid):
     """DELETE a Specific env."""
-    rsp = Response()
     req = dict()
     req['uuid'] = uuid
     if request.method == 'DELETE':
@@ -64,7 +63,8 @@ def environmentsById(uuid):
         response = deleteDeleteController.deleteEnvironment(req)
     else:
         raise Exception({'error': 'Not Found', 'code': 404})
-    return rsp.httpResponse(response['code'], response['msg'])
+    rsp = Response(response['msg'])
+    return rsp.httpResponse(response['code'])
 
 
 @app.route(
@@ -74,7 +74,6 @@ def environmentsById(uuid):
 )
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
-    rsp = Response()
     req = dict()
     if request.method == 'POST' and action == 'status':
         req = request.get_json()
@@ -104,4 +103,5 @@ def environmentsByIdAction(uuid, action):
         )
     else:
         raise Exception({'error': 'Not Found', 'code': 404})
-    return rsp.httpResponse(response['code'], response['msg'])
+    rsp = Response(response['msg'])
+    return rsp.httpResponse(response['code'])
