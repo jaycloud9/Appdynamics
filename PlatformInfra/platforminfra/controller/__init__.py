@@ -394,28 +394,15 @@ class Controller(object):
 
             subnets = dict()
             for proc in netProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc.join(1)
-                    lives = lives - 1
-                    if not subNets.empty():
-                        subnets['subnets'] = subNets.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc.is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            print("Proc Dead already")
-                            # Process already dead
-                            break
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if subNets.empty():
+                    raise {'error': "Time out creating network", 'code': 500}
+                while not subNets.empty():
+                    subnets['subnets'] = subNets.get()
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -475,27 +462,15 @@ class Controller(object):
                 p.start()
 
             for proc in serverProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc['process'].join(1)
-                    lives = lives - 1
-                    if not vms.empty():
-                        tmpData = vms.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc['process'].is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            # Process already dead
-                            break
+                try:
+                    proc['process'].join(600)
+                except:
+                    proc['process'].terminate()
+                    raise
+                if vms.empty():
+                    raise {'error': "Time out creating VMs", 'code': 500}
+                while not vms.empty():
+                    tmpData = vms.get()
                 if 'dns' in proc:
                     # Only apply to the first server
                     result = provider.addDNS(
@@ -534,10 +509,12 @@ class Controller(object):
             lbData['publicIp'].ip_address,
             record
         )
-        lbQueue.put({
-            lbDetails['load_balancer']['name']: result,
-            'vms': self.vms
-        })
+        for vm in self.vms:
+            if vm['servers'] == lbDetails['load_balancer']['be_servers']:
+                lbQueue.put({
+                    lbDetails['load_balancer']['name']: result,
+                    'vms': vm
+                })
 
     def validateLoadBalancer(self, lb):
         """Validate a LB's config."""
@@ -557,7 +534,6 @@ class Controller(object):
             }
             raise Exception(e)
 
-        print("LB Validated as {}".format(validate))
         return validate
 
     def createLoadBalancers(self, data, provider):
@@ -577,31 +553,15 @@ class Controller(object):
                         lbProcList.append(p)
                         p.start()
             for proc in lbProcList:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc.join(1)
-                    lives = lives - 1
-                    if not lbQueue.empty():
-                        tmpData = lbQueue.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc.is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            # Process already dead, but no data came back
-                            raise Exception({
-                                'error': "Unknown error while creating LB: {}"
-                                .format(lbName)
-                            })
-
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if lbQueue.empty():
+                    raise {'error': "Time out creating LB", 'code': 500}
+            while not lbQueue.empty():
+                tmpData = lbQueue.get()
                 self.lbs.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
