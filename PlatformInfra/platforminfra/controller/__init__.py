@@ -380,6 +380,7 @@ class Controller(object):
         """Create Networks."""
         # Must complete before everything else is built
         subNets = Queue()
+        errors = Queue()
         print("Creating network")
         netProcs = list()
         try:
@@ -387,7 +388,7 @@ class Controller(object):
                 netId = str(self.tags['uuid'])+network['name']+str(idx)
                 p = Process(
                     target=provider.network,
-                    args=(network, netId, self.tags, subNets)
+                    args=(network, netId, self.tags, subNets, errors)
                 )
                 netProcs.append(p)
                 p.start()
@@ -399,6 +400,13 @@ class Controller(object):
                 except:
                     proc.terminate()
                     raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for networking: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
                 if subNets.empty():
                     raise {'error': "Time out creating network", 'code': 500}
                 while not subNets.empty():
@@ -430,6 +438,7 @@ class Controller(object):
         """
         print("Creating Servers")
         vms = Queue()
+        errors = Queue()
         vmLock = Lock()
         # Processes that can be run in parrallel
         serverProcs = list()
@@ -449,6 +458,7 @@ class Controller(object):
                         vmSubnet,
                         vms,
                         vmLock,
+                        errors,
                         persistData
                     )
                 )
@@ -467,6 +477,13 @@ class Controller(object):
                 except:
                     proc['process'].terminate()
                     raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for VM: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
                 if vms.empty():
                     raise {'error': "Time out creating VMs", 'code': 500}
                 while not vms.empty():
@@ -488,33 +505,39 @@ class Controller(object):
                     .format(str(e))
                 })
 
-    def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue):
+    def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue, errors):
         """Create One loadbalancer and it's dependent Servers."""
         # Create LB here
-        print("Creating LB: {}".format(lbName))
-        lbData = provider.loadBalancer(lbDetails['load_balancer'], self.tags)
-        lbDetails['servers']['beId'] = lbData['lbInfo'] \
-            .backend_address_pools[0].id
-        # Create a single item list so we can re-use createVms
-        serverList = list()
-        serverList.append(lbDetails['servers'])
-        self.createVms(serverList, provider)
-        record = self.tags['uuid']
-        if 'domain' in lbDetails['load_balancer']:
-            record = lbDetails['load_balancer']['domain'] + '-' + record
-        else:
-            record = lbDetails['load_balancer']['name'] + '-' + record
+        try:
+            print("Creating LB: {}".format(lbName))
+            lbData = provider.loadBalancer(
+                lbDetails['load_balancer'],
+                self.tags
+            )
+            lbDetails['servers']['beId'] = lbData['lbInfo'] \
+                .backend_address_pools[0].id
+            # Create a single item list so we can re-use createVms
+            serverList = list()
+            serverList.append(lbDetails['servers'])
+            self.createVms(serverList, provider)
+            record = self.tags['uuid']
+            if 'domain' in lbDetails['load_balancer']:
+                record = lbDetails['load_balancer']['domain'] + '-' + record
+            else:
+                record = lbDetails['load_balancer']['name'] + '-' + record
 
-        result = provider.addDNS(
-            lbData['publicIp'].ip_address,
-            record
-        )
-        for vm in self.vms:
-            if vm['servers'] == lbDetails['load_balancer']['be_servers']:
-                lbQueue.put({
-                    lbDetails['load_balancer']['name']: result,
-                    'vms': vm
-                })
+            result = provider.addDNS(
+                lbData['publicIp'].ip_address,
+                record
+            )
+            for vm in self.vms:
+                if vm['servers'] == lbDetails['load_balancer']['be_servers']:
+                    lbQueue.put({
+                        lbDetails['load_balancer']['name']: result,
+                        'vms': vm
+                    })
+        except Exception as e:
+            errors.put(Exception(e))
 
     def validateLoadBalancer(self, lb):
         """Validate a LB's config."""
@@ -540,6 +563,7 @@ class Controller(object):
         """Create Load balancers."""
         print("Creating Load Balancers")
         lbQueue = Queue()
+        errors = Queue()
         lbProcList = list()
         try:
             for item in data:
@@ -548,7 +572,7 @@ class Controller(object):
                     if self.validateLoadBalancer(details['load_balancer']):
                         p = Process(
                             target=self.createLoadBalancer,
-                            args=(lbName, details, provider, lbQueue)
+                            args=(lbName, details, provider, lbQueue, errors)
                         )
                         lbProcList.append(p)
                         p.start()
@@ -558,6 +582,13 @@ class Controller(object):
                 except:
                     proc.terminate()
                     raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for LB: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
                 if lbQueue.empty():
                     raise {'error': "Time out creating LB", 'code': 500}
             while not lbQueue.empty():
