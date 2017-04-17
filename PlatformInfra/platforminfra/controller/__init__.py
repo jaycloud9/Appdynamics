@@ -513,14 +513,14 @@ class Controller(object):
                     .format(str(e))
                 })
 
-    def createLoadBalancer(self, lbName, lbDetails, provider):
+    def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue):
         """Create One loadbalancer and it's dependent Servers."""
         # Create LB here
         print("Creating LB: {}".format(lbName))
         lbData = provider.loadBalancer(lbDetails['load_balancer'], self.tags)
-        # Create Vm's Here
         lbDetails['servers']['beId'] = lbData['lbInfo'] \
             .backend_address_pools[0].id
+        # Create a single item list so we can re-use createVms
         serverList = list()
         serverList.append(lbDetails['servers'])
         self.createVms(serverList, provider)
@@ -534,30 +534,82 @@ class Controller(object):
             lbData['publicIp'].ip_address,
             record
         )
-        self.lbs.append({
+        lbQueue.put({
             lbDetails['load_balancer']['name']: result
         })
+
+    def validateLoadBalancer(self, lb):
+        """Validate a LB's config."""
+        validate = False
+        if lb['health_protocol'] == 'Tcp' or \
+                lb['health_protocol'] == 'Http':
+            if lb['health_protocol'] == 'Http':
+                if 'health_path' not in lb:
+                    e = {
+                        'error': "Must specify health_path with Http"
+                    }
+                    raise Exception(e)
+            validate = True
+        else:
+            e = {
+                'error': "health_protocol must be 'Http' or 'Tcp'"
+            }
+            raise Exception(e)
+
+        print("LB Validated as {}".format(validate))
+        return validate
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
         print("Creating Load Balancers")
-        for item in data:
-            for lbName, details in item.items():
-                if details['load_balancer']['health_protocol'] == 'Tcp' or \
-                        details['load_balancer']['health_protocol'] == 'Http':
-                    if details['load_balancer']['health_protocol'] == 'Http':
-                        if 'health_path' not in details['load_balancer']:
-                            e = {
-                                'error': "Must specify health_path with Http"
-                            }
-                            raise Exception(e)
-                        self.createLoadBalancer(lbName, details, provider)
+        lbQueue = Queue()
+        lbProcList = list()
+        try:
+            for item in data:
+                for lbName, details in item.items():
+                    # For each LB Spawn a child process
+                    if self.validateLoadBalancer(details['load_balancer']):
+                        p = Process(
+                            target=self.createLoadBalancer,
+                            args=(lbName, details, provider, lbQueue)
+                        )
+                        lbProcList.append(p)
+                        p.start()
+            for proc in lbProcList:
+                lives = 600
+                while True:
+                    # Wait for 1 seconds then take a life
+                    proc['process'].join(1)
+                    lives = lives - 1
+                    if not lbQueue.empty():
+                        tmpData = lbQueue.get()
+                        # break the while true
+                        break
+                    elif lives <= 0:
+                        if proc['process'].is_alive():
+                            # If it's been 600 seconds and we're trapped in the
+                            # while loop. Kill the process.
+                            proc.terminate()
+                            raise Exception({
+                                'error': "Took too long",
+                                'code': 500
+                            })
+                        else:
+                            # Process already dead, but no data came back
+                            raise Exception({
+                                'error': "Unknown error while creating LB: {}"
+                                .format(lbName)
+                            })
 
-                else:
-                    e = {
-                        'error': "back_end_protocol must be 'Http' or 'Tcp'"
-                    }
-                    raise Exception(e)
+                self.lbs.append(tmpData)
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating LBs: {}"
+                    .format(str(e))
+                })
 
     def createEnvironment(self, data):
         """Create an Environment.
