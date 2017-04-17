@@ -535,7 +535,8 @@ class Controller(object):
             record
         )
         lbQueue.put({
-            lbDetails['load_balancer']['name']: result
+            lbDetails['load_balancer']['name']: result,
+            'vms': self.vms
         })
 
     def validateLoadBalancer(self, lb):
@@ -579,14 +580,14 @@ class Controller(object):
                 lives = 600
                 while True:
                     # Wait for 1 seconds then take a life
-                    proc['process'].join(1)
+                    proc.join(1)
                     lives = lives - 1
                     if not lbQueue.empty():
                         tmpData = lbQueue.get()
                         # break the while true
                         break
                     elif lives <= 0:
-                        if proc['process'].is_alive():
+                        if proc.is_alive():
                             # If it's been 600 seconds and we're trapped in the
                             # while loop. Kill the process.
                             proc.terminate()
@@ -687,7 +688,7 @@ class Controller(object):
             glResponse = self.runGitlabTasks(data['gitlab'])
             response.append({'gitlab': glResponse})
         if self.lbs:
-            response = response + self.lbs
+            response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
