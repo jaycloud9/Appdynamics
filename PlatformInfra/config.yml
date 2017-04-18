@@ -14,3 +14,23 @@ credentials:
 defaults:
   resource_group_name: "mpdevtestrg"
   storage_account_name: "mpdevtestsa"
+test:
+  environment_ids:
+    - "abcdefghijk0"
+    - "abcdefghijk1"
+    - "abcdefghijk2"
+    - "abcdefghijk3"
+    - "abcdefghijk4"
+    - "abcdefghijk5"
+    - "abcdefghijk6"
+    - "abcdefghijk7"
+    - "abcdefghijk8"
+    - "abcdefghijk9"
+  scale_to: 1
+  concurrent_deployments: 3
+  api_host: "127.0.0.1"
+  api_port: 5000
+  # website_url: "http://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
+  website_url: "https://github.com/"
+  flask_testing: false
+  flask_debug: false
