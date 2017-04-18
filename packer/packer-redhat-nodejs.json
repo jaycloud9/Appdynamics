@@ -1,4 +1,9 @@
 {
+	"variables": {
+    "type": "",
+    "os": "",
+    "build": ""
+  },
 	"builders": [{
 		"type": "azure-arm",
 			"client_id": "585b08ee-20fd-4824-97aa-16a65f631916",
@@ -7,8 +12,8 @@
 			"tenant_id": "d5d2540f-f60a-45ad-86a9-e2e792ee6669",
 			"resource_group_name": "mpdevtestrg",
 			"storage_account": "mpdevtestsa",
-			"capture_container_name": "packer",
-			"capture_name_prefix": "packer",
+			"capture_container_name": "{{os}}",
+      "capture_name_prefix": "{{type}}-{{build}}",
 			"ssh_username": "mpadmin",
 			"ssh_password": "mARKETpLACE99",
 			"image_publisher": "redhat",
