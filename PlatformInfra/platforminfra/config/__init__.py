@@ -23,6 +23,8 @@ class Config(object):
                 self.credentials = self.properties['credentials']
             if 'defaults' in self.properties:
                 self.defaults = self.properties['defaults']
+            if 'test' in self.properties:
+                self.test = self.properties['test']
             else:
                 raise Exception("No Credentials provided")
         else:
