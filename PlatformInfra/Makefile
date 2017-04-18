@@ -20,6 +20,7 @@ documents:
 	echo "Removing old Docs and regenerating"
 	rm -rf ./docs/*
 	pdoc --html-dir ./docs --html --all-submodules platforminfra
+	pdoc --html-dir ./docs --html --all-submodules tests
 
 test:
 	python setup.py test
