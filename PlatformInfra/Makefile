@@ -23,7 +23,7 @@ documents:
 	pdoc --html-dir ./docs --html --all-submodules tests
 
 test:
-	python setup.py test
+	python -W ignore setup.py test
 
 run:
 	flask run -h 127.0.0.1
