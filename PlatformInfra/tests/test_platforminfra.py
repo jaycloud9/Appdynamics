@@ -23,6 +23,7 @@ class PlatformInfraTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """Setup Unittest."""
         global TEST_ENVIDS
         global SCALE_TO
         config = Config()
@@ -41,7 +42,7 @@ class PlatformInfraTestCase(unittest.TestCase):
                 interactions.destroy(self.app, envid)
 
     def checkSuccess(self, response_data, message):
-        """Checks that "response" is "Success" in response data"""
+        """Check that "response" is "Success" in response data."""
         response = response_data["response"]
         self.assertEqual(
             response, "Success", message
@@ -53,6 +54,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         self.assertEqual(rv.status_code, 404, "Checking "+base_path)
 
     def test_config_gitlab_url(self):
+        """Test the gitlab URL is correct."""
         url = interactions.getConfigGitlabUrl()
         url_components = urlp.urlparse(url)
         print("Gitlab url from configuration:", url)
@@ -60,7 +62,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         self.assertTrue(len(url_components.netloc) > 0)
 
     def test_scale(self):
-        """Test the creation and scaling of one environment
+        """Test the creation and scaling of one environment.
 
         1: Environmnet creation
 
