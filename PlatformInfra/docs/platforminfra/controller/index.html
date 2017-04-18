@@ -988,6 +988,7 @@ table {
     <li class="mono"><a href="#platforminfra.controller.Controller.checkVMResources">checkVMResources</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.compareResources">compareResources</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.createEnvironment">createEnvironment</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.createLoadBalancer">createLoadBalancer</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.createLoadBalancers">createLoadBalancers</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.createNetworks">createNetworks</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.createVms">createVms</a></li>
@@ -1009,6 +1010,7 @@ table {
     <li class="mono"><a href="#platforminfra.controller.Controller.setTags">setTags</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.startVM">startVM</a></li>
     <li class="mono"><a href="#platforminfra.controller.Controller.stopVM">stopVM</a></li>
+    <li class="mono"><a href="#platforminfra.controller.Controller.validateLoadBalancer">validateLoadBalancer</a></li>
   </ul>
 
         </li>
@@ -1185,7 +1187,6 @@ class Controller(object):
             user=self.config.credentials['jenkins']['user'],
             password=self.config.credentials['jenkins']['password']
         )
-        print("Getting Job Status")
         status = jenkinsServer.getBuildStatus(
             pipeline,
             uuid
@@ -1196,7 +1197,6 @@ class Controller(object):
         """Check a list of responses and return boolean."""
         statuses = self.getJenkinsBuildStatus(pipeline, uuid)
         running = False
-        print("Statuses: {}".format(statuses))
         for status in statuses:
             if status['status'] == 'RUNNING':
                 running = True
@@ -1418,6 +1418,7 @@ class Controller(object):
         """Create Networks."""
         # Must complete before everything else is built
         subNets = Queue()
+        errors = Queue()
         print("Creating network")
         netProcs = list()
         try:
@@ -1425,35 +1426,29 @@ class Controller(object):
                 netId = str(self.tags['uuid'])+network['name']+str(idx)
                 p = Process(
                     target=provider.network,
-                    args=(network, netId, self.tags, subNets)
+                    args=(network, netId, self.tags, subNets, errors)
                 )
                 netProcs.append(p)
                 p.start()
 
             subnets = dict()
             for proc in netProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc.join(1)
-                    lives = lives - 1
-                    if not subNets.empty():
-                        subnets['subnets'] = subNets.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc.is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            print("Proc Dead already")
-                            # Process already dead
-                            break
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for networking: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
+                if subNets.empty():
+                    raise {'error': "Time out creating network", 'code': 500}
+                else:
+                    subnets['subnets'] = subNets.get()
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -1481,6 +1476,7 @@ class Controller(object):
         """
         print("Creating Servers")
         vms = Queue()
+        errors = Queue()
         vmLock = Lock()
         # Processes that can be run in parrallel
         serverProcs = list()
@@ -1500,6 +1496,7 @@ class Controller(object):
                         vmSubnet,
                         vms,
                         vmLock,
+                        errors,
                         persistData
                     )
                 )
@@ -1513,35 +1510,35 @@ class Controller(object):
                 p.start()
 
             for proc in serverProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc['process'].join(1)
-                    lives = lives - 1
-                    if not vms.empty():
-                        tmpData = vms.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc['process'].is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            # Process already dead
-                            break
-                if 'dns' in proc:
-                    # Only apply to the first server
-                    result = provider.addDNS(
-                        tmpData['vms'][0]['public_ip'],
-                        proc['dns'] + '-' + self.tags['uuid']
-                    )
-                    tmpData['dns'] = result
-                self.vms.append(tmpData)
+                try:
+                    proc['process'].join(600)
+                except:
+                    proc['process'].terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    print("Errors not empty")
+                    raise {
+                        'error': "Error in child process for VM: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
+                if vms.empty():
+                    print("vms empty")
+                    raise Exception({
+                        'error': "Time out creating VMs",
+                        'code': 500
+                    })
+                else:
+                    tmpData = vms.get()
+                    if 'dns' in proc:
+                        # Only apply to the first server
+                        result = provider.addDNS(
+                            tmpData['vms'][0]['public_ip'],
+                            proc['dns'] + '-' + self.tags['uuid']
+                        )
+                        tmpData['dns'] = result
+                    self.vms.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -1550,56 +1547,106 @@ class Controller(object):
                     'error': "Unknown error while creating Vms: {}"
                     .format(str(e))
                 })
+                # raise Exception(e)
+
+    def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue, errors):
+        """Create One loadbalancer and it's dependent Servers."""
+        # Create LB here
+        try:
+            print("Creating LB: {}".format(lbName))
+            lbData = provider.loadBalancer(
+                lbDetails['load_balancer'],
+                self.tags
+            )
+            lbDetails['servers']['beId'] = lbData['lbInfo'] \
+                .backend_address_pools[0].id
+            # Create a single item list so we can re-use createVms
+            serverList = list()
+            serverList.append(lbDetails['servers'])
+            self.createVms(serverList, provider)
+            record = self.tags['uuid']
+            if 'domain' in lbDetails['load_balancer']:
+                record = lbDetails['load_balancer']['domain'] + '-' + record
+            else:
+                record = lbDetails['load_balancer']['name'] + '-' + record
+
+            result = provider.addDNS(
+                lbData['publicIp'].ip_address,
+                record
+            )
+            for vm in self.vms:
+                if vm['servers'] == lbDetails['load_balancer']['be_servers']:
+                    lbQueue.put({
+                        lbDetails['load_balancer']['name']: result,
+                        'vms': vm
+                    })
+        except Exception as e:
+            print("Error creating LB {}".format(str(e)))
+            errors.put(Exception(e))
+
+    def validateLoadBalancer(self, lb):
+        """Validate a LB's config."""
+        validate = False
+        if lb['health_protocol'] == 'Tcp' or \
+                lb['health_protocol'] == 'Http':
+            if lb['health_protocol'] == 'Http':
+                if 'health_path' not in lb:
+                    e = {
+                        'error': "Must specify health_path with Http"
+                    }
+                    raise Exception(e)
+            validate = True
+        else:
+            e = {
+                'error': "health_protocol must be 'Http' or 'Tcp'"
+            }
+            raise Exception(e)
+
+        return validate
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
         print("Creating Load Balancers")
-        for item in data:
-            for lbName, details in item.items():
-                if details['load_balancer']['health_protocol'] == 'Tcp' or \
-                        details['load_balancer']['health_protocol'] == 'Http':
-                    if details['load_balancer']['health_protocol'] == 'Http':
-                        if 'health_path' not in details['load_balancer']:
-                            e = {
-                                'error': "Must specify health_path with Http"
-                            }
-                            raise Exception(e)
-
-                    # Create LB here
-                    print("Creating LB: {}".format(lbName))
-                    lbData = provider.loadBalancer(
-                        details['load_balancer'],
-                        self.tags
-                    )
-                    # Create Vm's Here
-                    details['servers']['beId'] = lbData['lbInfo'] \
-                        .backend_address_pools[0].id
-                    serverList = list()
-                    serverList.append(details['servers'])
-                    self.createVms(
-                        serverList,
-                        provider
-                    )
-                    record = self.tags['uuid']
-                    if 'domain' in details['load_balancer']:
-                        record = details['load_balancer']['domain'] + '-' + \
-                            record
-                    else:
-                        record = details['load_balancer']['name'] + '-' + \
-                            record
-
-                    result = provider.addDNS(
-                        lbData['publicIp'].ip_address,
-                        record
-                    )
-                    self.lbs.append({
-                        details['load_balancer']['name']: result
-                    })
-                else:
-                    e = {
-                        'error': "back_end_protocol must be 'Http' or 'Tcp'"
+        lbQueue = Queue()
+        errors = Queue()
+        lbProcList = list()
+        try:
+            for item in data:
+                for lbName, details in item.items():
+                    # For each LB Spawn a child process
+                    if self.validateLoadBalancer(details['load_balancer']):
+                        p = Process(
+                            target=self.createLoadBalancer,
+                            args=(lbName, details, provider, lbQueue, errors)
+                        )
+                        lbProcList.append(p)
+                        p.start()
+            for proc in lbProcList:
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for LB: {}"
+                        .format(errors.get()),
+                        'code': 500
                     }
-                    raise Exception(e)
+                if lbQueue.empty():
+                    raise {'error': "Time out creating LB", 'code': 500}
+                else:
+                    tmpData = lbQueue.get()
+                    self.lbs.append(tmpData)
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating LBs: {}"
+                    .format(str(e))
+                })
 
     def createEnvironment(self, data):
         """Create an Environment.
@@ -1621,6 +1668,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
+            # This should never happen as the check for UUID should throw first
             if self.checkJenkinsRunning(data['application'], data['id']):
                 raise Exception({
                     'error': 'Jenkins build running already',
@@ -1676,7 +1724,7 @@ class Controller(object):
             glResponse = self.runGitlabTasks(data['gitlab'])
             response.append({'gitlab': glResponse})
         if self.lbs:
-            response = response + self.lbs
+            response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
@@ -1739,7 +1787,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -1823,7 +1871,7 @@ class Controller(object):
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -1964,12 +2012,18 @@ class Controller(object):
             })
             response['status'] = "Failed"
 
-        return {'msg': {'Resources': response}, 'code': 200}
+        return {'msg': response, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
             raise Exception({'error': 'Invalid UUID', 'code': 404})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -2148,7 +2202,6 @@ and provider are blurred. The provider works on the resource and sometimes
             user=self.config.credentials['jenkins']['user'],
             password=self.config.credentials['jenkins']['password']
         )
-        print("Getting Job Status")
         status = jenkinsServer.getBuildStatus(
             pipeline,
             uuid
@@ -2159,7 +2212,6 @@ and provider are blurred. The provider works on the resource and sometimes
         """Check a list of responses and return boolean."""
         statuses = self.getJenkinsBuildStatus(pipeline, uuid)
         running = False
-        print("Statuses: {}".format(statuses))
         for status in statuses:
             if status['status'] == 'RUNNING':
                 running = True
@@ -2381,6 +2433,7 @@ and provider are blurred. The provider works on the resource and sometimes
         """Create Networks."""
         # Must complete before everything else is built
         subNets = Queue()
+        errors = Queue()
         print("Creating network")
         netProcs = list()
         try:
@@ -2388,35 +2441,29 @@ and provider are blurred. The provider works on the resource and sometimes
                 netId = str(self.tags['uuid'])+network['name']+str(idx)
                 p = Process(
                     target=provider.network,
-                    args=(network, netId, self.tags, subNets)
+                    args=(network, netId, self.tags, subNets, errors)
                 )
                 netProcs.append(p)
                 p.start()
 
             subnets = dict()
             for proc in netProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc.join(1)
-                    lives = lives - 1
-                    if not subNets.empty():
-                        subnets['subnets'] = subNets.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc.is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            print("Proc Dead already")
-                            # Process already dead
-                            break
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for networking: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
+                if subNets.empty():
+                    raise {'error': "Time out creating network", 'code': 500}
+                else:
+                    subnets['subnets'] = subNets.get()
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -2444,6 +2491,7 @@ and provider are blurred. The provider works on the resource and sometimes
         """
         print("Creating Servers")
         vms = Queue()
+        errors = Queue()
         vmLock = Lock()
         # Processes that can be run in parrallel
         serverProcs = list()
@@ -2463,6 +2511,7 @@ and provider are blurred. The provider works on the resource and sometimes
                         vmSubnet,
                         vms,
                         vmLock,
+                        errors,
                         persistData
                     )
                 )
@@ -2476,35 +2525,35 @@ and provider are blurred. The provider works on the resource and sometimes
                 p.start()
 
             for proc in serverProcs:
-                lives = 600
-                while True:
-                    # Wait for 1 seconds then take a life
-                    proc['process'].join(1)
-                    lives = lives - 1
-                    if not vms.empty():
-                        tmpData = vms.get()
-                        # break the while true
-                        break
-                    elif lives <= 0:
-                        if proc['process'].is_alive():
-                            # If it's been 600 seconds and we're trapped in the
-                            # while loop. Kill the process.
-                            proc.terminate()
-                            raise Exception({
-                                'error': "Took too long",
-                                'code': 500
-                            })
-                        else:
-                            # Process already dead
-                            break
-                if 'dns' in proc:
-                    # Only apply to the first server
-                    result = provider.addDNS(
-                        tmpData['vms'][0]['public_ip'],
-                        proc['dns'] + '-' + self.tags['uuid']
-                    )
-                    tmpData['dns'] = result
-                self.vms.append(tmpData)
+                try:
+                    proc['process'].join(600)
+                except:
+                    proc['process'].terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    print("Errors not empty")
+                    raise {
+                        'error': "Error in child process for VM: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    }
+                if vms.empty():
+                    print("vms empty")
+                    raise Exception({
+                        'error': "Time out creating VMs",
+                        'code': 500
+                    })
+                else:
+                    tmpData = vms.get()
+                    if 'dns' in proc:
+                        # Only apply to the first server
+                        result = provider.addDNS(
+                            tmpData['vms'][0]['public_ip'],
+                            proc['dns'] + '-' + self.tags['uuid']
+                        )
+                        tmpData['dns'] = result
+                    self.vms.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -2513,56 +2562,106 @@ and provider are blurred. The provider works on the resource and sometimes
                     'error': "Unknown error while creating Vms: {}"
                     .format(str(e))
                 })
+                # raise Exception(e)
+
+    def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue, errors):
+        """Create One loadbalancer and it's dependent Servers."""
+        # Create LB here
+        try:
+            print("Creating LB: {}".format(lbName))
+            lbData = provider.loadBalancer(
+                lbDetails['load_balancer'],
+                self.tags
+            )
+            lbDetails['servers']['beId'] = lbData['lbInfo'] \
+                .backend_address_pools[0].id
+            # Create a single item list so we can re-use createVms
+            serverList = list()
+            serverList.append(lbDetails['servers'])
+            self.createVms(serverList, provider)
+            record = self.tags['uuid']
+            if 'domain' in lbDetails['load_balancer']:
+                record = lbDetails['load_balancer']['domain'] + '-' + record
+            else:
+                record = lbDetails['load_balancer']['name'] + '-' + record
+
+            result = provider.addDNS(
+                lbData['publicIp'].ip_address,
+                record
+            )
+            for vm in self.vms:
+                if vm['servers'] == lbDetails['load_balancer']['be_servers']:
+                    lbQueue.put({
+                        lbDetails['load_balancer']['name']: result,
+                        'vms': vm
+                    })
+        except Exception as e:
+            print("Error creating LB {}".format(str(e)))
+            errors.put(Exception(e))
+
+    def validateLoadBalancer(self, lb):
+        """Validate a LB's config."""
+        validate = False
+        if lb['health_protocol'] == 'Tcp' or \
+                lb['health_protocol'] == 'Http':
+            if lb['health_protocol'] == 'Http':
+                if 'health_path' not in lb:
+                    e = {
+                        'error': "Must specify health_path with Http"
+                    }
+                    raise Exception(e)
+            validate = True
+        else:
+            e = {
+                'error': "health_protocol must be 'Http' or 'Tcp'"
+            }
+            raise Exception(e)
+
+        return validate
 
     def createLoadBalancers(self, data, provider):
         """Create Load balancers."""
         print("Creating Load Balancers")
-        for item in data:
-            for lbName, details in item.items():
-                if details['load_balancer']['health_protocol'] == 'Tcp' or \
-                        details['load_balancer']['health_protocol'] == 'Http':
-                    if details['load_balancer']['health_protocol'] == 'Http':
-                        if 'health_path' not in details['load_balancer']:
-                            e = {
-                                'error': "Must specify health_path with Http"
-                            }
-                            raise Exception(e)
-
-                    # Create LB here
-                    print("Creating LB: {}".format(lbName))
-                    lbData = provider.loadBalancer(
-                        details['load_balancer'],
-                        self.tags
-                    )
-                    # Create Vm's Here
-                    details['servers']['beId'] = lbData['lbInfo'] \
-                        .backend_address_pools[0].id
-                    serverList = list()
-                    serverList.append(details['servers'])
-                    self.createVms(
-                        serverList,
-                        provider
-                    )
-                    record = self.tags['uuid']
-                    if 'domain' in details['load_balancer']:
-                        record = details['load_balancer']['domain'] + '-' + \
-                            record
-                    else:
-                        record = details['load_balancer']['name'] + '-' + \
-                            record
-
-                    result = provider.addDNS(
-                        lbData['publicIp'].ip_address,
-                        record
-                    )
-                    self.lbs.append({
-                        details['load_balancer']['name']: result
-                    })
-                else:
-                    e = {
-                        'error': "back_end_protocol must be 'Http' or 'Tcp'"
+        lbQueue = Queue()
+        errors = Queue()
+        lbProcList = list()
+        try:
+            for item in data:
+                for lbName, details in item.items():
+                    # For each LB Spawn a child process
+                    if self.validateLoadBalancer(details['load_balancer']):
+                        p = Process(
+                            target=self.createLoadBalancer,
+                            args=(lbName, details, provider, lbQueue, errors)
+                        )
+                        lbProcList.append(p)
+                        p.start()
+            for proc in lbProcList:
+                try:
+                    proc.join(600)
+                except:
+                    proc.terminate()
+                    raise
+                if not errors.empty():
+                    # If it's not empty there's an error
+                    raise {
+                        'error': "Error in child process for LB: {}"
+                        .format(errors.get()),
+                        'code': 500
                     }
-                    raise Exception(e)
+                if lbQueue.empty():
+                    raise {'error': "Time out creating LB", 'code': 500}
+                else:
+                    tmpData = lbQueue.get()
+                    self.lbs.append(tmpData)
+        except Exception as e:
+            if e.args[0] is dict:
+                raise
+            else:
+                raise Exception({
+                    'error': "Unknown error while creating LBs: {}"
+                    .format(str(e))
+                })
 
     def createEnvironment(self, data):
         """Create an Environment.
@@ -2584,6 +2683,7 @@ and provider are blurred. The provider works on the resource and sometimes
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
+            # This should never happen as the check for UUID should throw first
             if self.checkJenkinsRunning(data['application'], data['id']):
                 raise Exception({
                     'error': 'Jenkins build running already',
@@ -2639,7 +2739,7 @@ and provider are blurred. The provider works on the resource and sometimes
             glResponse = self.runGitlabTasks(data['gitlab'])
             response.append({'gitlab': glResponse})
         if self.lbs:
-            response = response + self.lbs
+            response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}
 
     def listEnvironments(self):
@@ -2702,7 +2802,7 @@ and provider are blurred. The provider works on the resource and sometimes
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -2786,7 +2886,7 @@ and provider are blurred. The provider works on the resource and sometimes
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
-            if self.checkJenkinsRunning(data['application'], data['id']):
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
                 raise Exception({
                     'error': 'Jenkins build running already',
                     'code': 409
@@ -2927,12 +3027,18 @@ and provider are blurred. The provider works on the resource and sometimes
             })
             response['status'] = "Failed"
 
-        return {'msg': {'Resources': response}, 'code': 200}
+        return {'msg': response, 'code': 200}
 
     def environmentServerStopStart(self, data, action):
         """Stop or Start an environment."""
         if not self.checkUUIDInUse(data['uuid']):
             raise Exception({'error': 'Invalid UUID', 'code': 404})
+        if 'application' in data:
+            if self.checkJenkinsRunning(data['application'], data['uuid']):
+                raise Exception({
+                    'error': 'Jenkins build running already',
+                    'code': 409
+                })
         provider = Azure(
             self.config.credentials['azure'],
             self.config.defaults['resource_group_name'],
@@ -3069,7 +3175,6 @@ and provider are blurred. The provider works on the resource and sometimes
     """Check a list of responses and return boolean."""
     statuses = self.getJenkinsBuildStatus(pipeline, uuid)
     running = False
-    print("Statuses: {}".format(statuses))
     for status in statuses:
         if status['status'] == 'RUNNING':
             running = True
@@ -3258,6 +3363,7 @@ resources are 'okay' or not.</p></div>
     else:
         raise Exception({'error': 'ID must be provided', 'code': 400})
     if 'application' in data:
+        # This should never happen as the check for UUID should throw first
         if self.checkJenkinsRunning(data['application'], data['id']):
             raise Exception({
                 'error': 'Jenkins build running already',
@@ -3308,8 +3414,60 @@ resources are 'okay' or not.</p></div>
         glResponse = self.runGitlabTasks(data['gitlab'])
         response.append({'gitlab': glResponse})
     if self.lbs:
-        response = response + self.lbs
+        response.append({'loadBalancers': self.lbs})
     return {'msg': {'Resources': response}, 'code': 201}
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.createLoadBalancer">
+    <p>def <span class="ident">createLoadBalancer</span>(</p><p>self, lbName, lbDetails, provider, lbQueue, errors)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Create One loadbalancer and it's dependent Servers.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.createLoadBalancer', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.createLoadBalancer" class="source">
+    <pre><code>def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue, errors):
+    """Create One loadbalancer and it's dependent Servers."""
+    # Create LB here
+    try:
+        print("Creating LB: {}".format(lbName))
+        lbData = provider.loadBalancer(
+            lbDetails['load_balancer'],
+            self.tags
+        )
+        lbDetails['servers']['beId'] = lbData['lbInfo'] \
+            .backend_address_pools[0].id
+        # Create a single item list so we can re-use createVms
+        serverList = list()
+        serverList.append(lbDetails['servers'])
+        self.createVms(serverList, provider)
+        record = self.tags['uuid']
+        if 'domain' in lbDetails['load_balancer']:
+            record = lbDetails['load_balancer']['domain'] + '-' + record
+        else:
+            record = lbDetails['load_balancer']['name'] + '-' + record
+        result = provider.addDNS(
+            lbData['publicIp'].ip_address,
+            record
+        )
+        for vm in self.vms:
+            if vm['servers'] == lbDetails['load_balancer']['be_servers']:
+                lbQueue.put({
+                    lbDetails['load_balancer']['name']: result,
+                    'vms': vm
+                })
+    except Exception as e:
+        print("Error creating LB {}".format(str(e)))
+        errors.put(Exception(e))
 </code></pre>
   </div>
 </div>
@@ -3332,50 +3490,46 @@ resources are 'okay' or not.</p></div>
     <pre><code>def createLoadBalancers(self, data, provider):
     """Create Load balancers."""
     print("Creating Load Balancers")
-    for item in data:
-        for lbName, details in item.items():
-            if details['load_balancer']['health_protocol'] == 'Tcp' or \
-                    details['load_balancer']['health_protocol'] == 'Http':
-                if details['load_balancer']['health_protocol'] == 'Http':
-                    if 'health_path' not in details['load_balancer']:
-                        e = {
-                            'error': "Must specify health_path with Http"
-                        }
-                        raise Exception(e)
-                # Create LB here
-                print("Creating LB: {}".format(lbName))
-                lbData = provider.loadBalancer(
-                    details['load_balancer'],
-                    self.tags
-                )
-                # Create Vm's Here
-                details['servers']['beId'] = lbData['lbInfo'] \
-                    .backend_address_pools[0].id
-                serverList = list()
-                serverList.append(details['servers'])
-                self.createVms(
-                    serverList,
-                    provider
-                )
-                record = self.tags['uuid']
-                if 'domain' in details['load_balancer']:
-                    record = details['load_balancer']['domain'] + '-' + \
-                        record
-                else:
-                    record = details['load_balancer']['name'] + '-' + \
-                        record
-                result = provider.addDNS(
-                    lbData['publicIp'].ip_address,
-                    record
-                )
-                self.lbs.append({
-                    details['load_balancer']['name']: result
-                })
-            else:
-                e = {
-                    'error': "back_end_protocol must be 'Http' or 'Tcp'"
+    lbQueue = Queue()
+    errors = Queue()
+    lbProcList = list()
+    try:
+        for item in data:
+            for lbName, details in item.items():
+                # For each LB Spawn a child process
+                if self.validateLoadBalancer(details['load_balancer']):
+                    p = Process(
+                        target=self.createLoadBalancer,
+                        args=(lbName, details, provider, lbQueue, errors)
+                    )
+                    lbProcList.append(p)
+                    p.start()
+        for proc in lbProcList:
+            try:
+                proc.join(600)
+            except:
+                proc.terminate()
+                raise
+            if not errors.empty():
+                # If it's not empty there's an error
+                raise {
+                    'error': "Error in child process for LB: {}"
+                    .format(errors.get()),
+                    'code': 500
                 }
-                raise Exception(e)
+            if lbQueue.empty():
+                raise {'error': "Time out creating LB", 'code': 500}
+            else:
+                tmpData = lbQueue.get()
+                self.lbs.append(tmpData)
+    except Exception as e:
+        if e.args[0] is dict:
+            raise
+        else:
+            raise Exception({
+                'error': "Unknown error while creating LBs: {}"
+                .format(str(e))
+            })
 </code></pre>
   </div>
 </div>
@@ -3399,6 +3553,7 @@ resources are 'okay' or not.</p></div>
     """Create Networks."""
     # Must complete before everything else is built
     subNets = Queue()
+    errors = Queue()
     print("Creating network")
     netProcs = list()
     try:
@@ -3406,34 +3561,28 @@ resources are 'okay' or not.</p></div>
             netId = str(self.tags['uuid'])+network['name']+str(idx)
             p = Process(
                 target=provider.network,
-                args=(network, netId, self.tags, subNets)
+                args=(network, netId, self.tags, subNets, errors)
             )
             netProcs.append(p)
             p.start()
         subnets = dict()
         for proc in netProcs:
-            lives = 600
-            while True:
-                # Wait for 1 seconds then take a life
-                proc.join(1)
-                lives = lives - 1
-                if not subNets.empty():
-                    subnets['subnets'] = subNets.get()
-                    # break the while true
-                    break
-                elif lives <= 0:
-                    if proc.is_alive():
-                        # If it's been 600 seconds and we're trapped in the
-                        # while loop. Kill the process.
-                        proc.terminate()
-                        raise Exception({
-                            'error': "Took too long",
-                            'code': 500
-                        })
-                    else:
-                        print("Proc Dead already")
-                        # Process already dead
-                        break
+            try:
+                proc.join(600)
+            except:
+                proc.terminate()
+                raise
+            if not errors.empty():
+                # If it's not empty there's an error
+                raise {
+                    'error': "Error in child process for networking: {}"
+                    .format(errors.get()),
+                    'code': 500
+                }
+            if subNets.empty():
+                raise {'error': "Time out creating network", 'code': 500}
+            else:
+                subnets['subnets'] = subNets.get()
     except Exception as e:
         if e.args[0] is dict:
             raise
@@ -3471,6 +3620,7 @@ with all of dependencies each VM needs.</p></div>
     """
     print("Creating Servers")
     vms = Queue()
+    errors = Queue()
     vmLock = Lock()
     # Processes that can be run in parrallel
     serverProcs = list()
@@ -3490,6 +3640,7 @@ with all of dependencies each VM needs.</p></div>
                     vmSubnet,
                     vms,
                     vmLock,
+                    errors,
                     persistData
                 )
             )
@@ -3502,35 +3653,35 @@ with all of dependencies each VM needs.</p></div>
             serverProcs.append(vmDetails)
             p.start()
         for proc in serverProcs:
-            lives = 600
-            while True:
-                # Wait for 1 seconds then take a life
-                proc['process'].join(1)
-                lives = lives - 1
-                if not vms.empty():
-                    tmpData = vms.get()
-                    # break the while true
-                    break
-                elif lives <= 0:
-                    if proc['process'].is_alive():
-                        # If it's been 600 seconds and we're trapped in the
-                        # while loop. Kill the process.
-                        proc.terminate()
-                        raise Exception({
-                            'error': "Took too long",
-                            'code': 500
-                        })
-                    else:
-                        # Process already dead
-                        break
-            if 'dns' in proc:
-                # Only apply to the first server
-                result = provider.addDNS(
-                    tmpData['vms'][0]['public_ip'],
-                    proc['dns'] + '-' + self.tags['uuid']
-                )
-                tmpData['dns'] = result
-            self.vms.append(tmpData)
+            try:
+                proc['process'].join(600)
+            except:
+                proc['process'].terminate()
+                raise
+            if not errors.empty():
+                # If it's not empty there's an error
+                print("Errors not empty")
+                raise {
+                    'error': "Error in child process for VM: {}"
+                    .format(errors.get()),
+                    'code': 500
+                }
+            if vms.empty():
+                print("vms empty")
+                raise Exception({
+                    'error': "Time out creating VMs",
+                    'code': 500
+                })
+            else:
+                tmpData = vms.get()
+                if 'dns' in proc:
+                    # Only apply to the first server
+                    result = provider.addDNS(
+                        tmpData['vms'][0]['public_ip'],
+                        proc['dns'] + '-' + self.tags['uuid']
+                    )
+                    tmpData['dns'] = result
+                self.vms.append(tmpData)
     except Exception as e:
         if e.args[0] is dict:
             raise
@@ -3607,6 +3758,12 @@ with all of dependencies each VM needs.</p></div>
     """Stop or Start an environment."""
     if not self.checkUUIDInUse(data['uuid']):
         raise Exception({'error': 'Invalid UUID', 'code': 404})
+    if 'application' in data:
+        if self.checkJenkinsRunning(data['application'], data['uuid']):
+            raise Exception({
+                'error': 'Jenkins build running already',
+                'code': 409
+            })
     provider = Azure(
         self.config.credentials['azure'],
         self.config.defaults['resource_group_name'],
@@ -3720,7 +3877,7 @@ with all of dependencies each VM needs.</p></div>
             'Broken resources': broken
         })
         response['status'] = "Failed"
-    return {'msg': {'Resources': response}, 'code': 200}
+    return {'msg': response, 'code': 200}
 </code></pre>
   </div>
 </div>
@@ -3747,7 +3904,6 @@ with all of dependencies each VM needs.</p></div>
         user=self.config.credentials['jenkins']['user'],
         password=self.config.credentials['jenkins']['password']
     )
-    print("Getting Job Status")
     status = jenkinsServer.getBuildStatus(
         pipeline,
         uuid
@@ -4047,7 +4203,7 @@ with all of dependencies each VM needs.</p></div>
     else:
         raise Exception({'error': 'ID must be provided', 'code': 400})
     if 'application' in data:
-        if self.checkJenkinsRunning(data['application'], data['id']):
+        if self.checkJenkinsRunning(data['application'], data['uuid']):
             raise Exception({
                 'error': 'Jenkins build running already',
                 'code': 409
@@ -4235,7 +4391,7 @@ with all of dependencies each VM needs.</p></div>
     else:
         raise Exception({'error': 'ID must be provided', 'code': 400})
     if 'application' in data:
-        if self.checkJenkinsRunning(data['application'], data['id']):
+        if self.checkJenkinsRunning(data['application'], data['uuid']):
             raise Exception({
                 'error': 'Jenkins build running already',
                 'code': 409
@@ -4361,6 +4517,43 @@ with all of dependencies each VM needs.</p></div>
     <pre><code>def stopVM(self, provider, vm):
     """Stop a running VM."""
     provider.stopVm(vm['name'], vm['resourceGroup'])
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="platforminfra.controller.Controller.validateLoadBalancer">
+    <p>def <span class="ident">validateLoadBalancer</span>(</p><p>self, lb)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Validate a LB's config.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.validateLoadBalancer', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.controller.Controller.validateLoadBalancer" class="source">
+    <pre><code>def validateLoadBalancer(self, lb):
+    """Validate a LB's config."""
+    validate = False
+    if lb['health_protocol'] == 'Tcp' or \
+            lb['health_protocol'] == 'Http':
+        if lb['health_protocol'] == 'Http':
+            if 'health_path' not in lb:
+                e = {
+                    'error': "Must specify health_path with Http"
+                }
+                raise Exception(e)
+        validate = True
+    else:
+        e = {
+            'error': "health_protocol must be 'Http' or 'Tcp'"
+        }
+        raise Exception(e)
+    return validate
 </code></pre>
   </div>
 </div>
