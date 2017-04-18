@@ -30,7 +30,7 @@
       }
   }],
 
-    "provisioners": [
+  "provisioners": [
     {
       "type": "shell",
       "scripts": "Scripts/ansible.sh",

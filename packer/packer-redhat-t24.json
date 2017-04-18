@@ -27,7 +27,7 @@
       "ssh_password": "{{user `ssh_pass`}}"
   }],
 
-    "provisioners": [
+  "provisioners": [
     {
       "type": "shell",
       "scripts": "Scripts/ansible.sh",
