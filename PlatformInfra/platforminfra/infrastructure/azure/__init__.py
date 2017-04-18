@@ -489,6 +489,7 @@ class Azure(object):
                     self.id: network.subnets[0]
                 })
         except Exception as e:
+            print("Error creating network {}".format(str(e)))
             errors.put(Exception(e))
 
     def nsg(self, vm, tags):
@@ -592,19 +593,22 @@ class Azure(object):
         if len(tags) > 0:
             pubIpParams['tags'] = tags
 
-        asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
-          self.resourceGroup,
-          pubIPName,
-          pubIpParams
-        )
-        asycPubIPCreation.wait()
-        pubIP = asycPubIPCreation.result()
-        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
-        asyncNicCreation = netClient.network_interfaces.create_or_update(
-          self.resourceGroup,
-          vmName + "nic",
-          nicParams
-        )
+        try:
+            asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
+              self.resourceGroup,
+              pubIPName,
+              pubIpParams
+            )
+            asycPubIPCreation.wait()
+            pubIP = asycPubIPCreation.result()
+            nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
+            asyncNicCreation = netClient.network_interfaces.create_or_update(
+              self.resourceGroup,
+              vmName + "nic",
+              nicParams
+            )
+        except:
+            raise
         details = dict()
         details['public_ip_name'] = pubIPName
         details['nic'] = asyncNicCreation.result()
@@ -628,7 +632,7 @@ class Azure(object):
             persistData
         )
         tmpVm.create(vmName, vmNic, vmQ)
-        print("VM Created")
+        print("{} VM Created".format(vmName))
 
     def virtualMachine(
                 self, vm, tags, subnet, vmQueue, vmLock, errors,
@@ -651,7 +655,8 @@ class Azure(object):
                     'tags': tags
                   }
                 )
-            except:
+            except Exception as e:
+                print("Passing Exception {}".format(e))
                 pass
             vmLock.release()
             vmProcList = list()
@@ -688,7 +693,9 @@ class Azure(object):
 
             vmQueue.put({'servers': vm['name'], 'vms': results})
         except Exception as e:
+            print("Caught exception inside VM {}".format(str(e)))
             errors.put(Exception(e))
+            pass
 
     def lbWorker(self, opts, lb, tags):
         """Worker to create a LB."""

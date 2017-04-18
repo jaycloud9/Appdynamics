@@ -409,7 +409,7 @@ class Controller(object):
                     }
                 if subNets.empty():
                     raise {'error': "Time out creating network", 'code': 500}
-                while not subNets.empty():
+                else:
                     subnets['subnets'] = subNets.get()
         except Exception as e:
             if e.args[0] is dict:
@@ -479,23 +479,28 @@ class Controller(object):
                     raise
                 if not errors.empty():
                     # If it's not empty there's an error
+                    print("Errors not empty")
                     raise {
                         'error': "Error in child process for VM: {}"
                         .format(errors.get()),
                         'code': 500
                     }
                 if vms.empty():
-                    raise {'error': "Time out creating VMs", 'code': 500}
-                while not vms.empty():
+                    print("vms empty")
+                    raise Exception({
+                        'error': "Time out creating VMs",
+                        'code': 500
+                    })
+                else:
                     tmpData = vms.get()
-                if 'dns' in proc:
-                    # Only apply to the first server
-                    result = provider.addDNS(
-                        tmpData['vms'][0]['public_ip'],
-                        proc['dns'] + '-' + self.tags['uuid']
-                    )
-                    tmpData['dns'] = result
-                self.vms.append(tmpData)
+                    if 'dns' in proc:
+                        # Only apply to the first server
+                        result = provider.addDNS(
+                            tmpData['vms'][0]['public_ip'],
+                            proc['dns'] + '-' + self.tags['uuid']
+                        )
+                        tmpData['dns'] = result
+                    self.vms.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
                 raise
@@ -504,6 +509,7 @@ class Controller(object):
                     'error': "Unknown error while creating Vms: {}"
                     .format(str(e))
                 })
+                # raise Exception(e)
 
     def createLoadBalancer(self, lbName, lbDetails, provider, lbQueue, errors):
         """Create One loadbalancer and it's dependent Servers."""
@@ -537,6 +543,7 @@ class Controller(object):
                         'vms': vm
                     })
         except Exception as e:
+            print("Error creating LB {}".format(str(e)))
             errors.put(Exception(e))
 
     def validateLoadBalancer(self, lb):
@@ -591,9 +598,9 @@ class Controller(object):
                     }
                 if lbQueue.empty():
                     raise {'error': "Time out creating LB", 'code': 500}
-            while not lbQueue.empty():
-                tmpData = lbQueue.get()
-                self.lbs.append(tmpData)
+                else:
+                    tmpData = lbQueue.get()
+                    self.lbs.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
                 raise
