@@ -4,7 +4,6 @@ from . import dependencies
 from .vm import Vm
 from .loadBalancer import LoadBalancer
 
-
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.storage import StorageManagementClient
@@ -685,8 +684,7 @@ class Azure(object):
             if 'existing' in vm:
                 i = len(vm['existing']) + 1
             while i <= vm['count']:
-                tmpStr = self.id + vm['name'] + str(i)
-                vmName = ''.join(e for e in tmpStr if e.isalnum())
+                vmName = self.id + vm['name'] + str(i)
                 print("Creating {}".format(vmName))
                 p = Process(
                     target=self.vmWorker,

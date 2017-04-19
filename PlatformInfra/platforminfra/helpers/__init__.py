@@ -16,6 +16,7 @@ import gitlab
 from gitlab.exceptions import GitlabCreateError
 import random
 import string
+import re
 
 
 class Helpers(object):
@@ -26,6 +27,15 @@ class Helpers(object):
         return ''.join(
             random.choice(string.ascii_lowercase) for i in range(length)
         )
+
+    def validString(validate):
+        """Given a string Validate it is 'acceptable'."""
+        pattern = re.compile("[a-zA-Z0-9-]*")
+        match = pattern.search(validate)
+        if match.group(0) == validate:
+            return True
+        else:
+            return False
 
 
 class Response(object):

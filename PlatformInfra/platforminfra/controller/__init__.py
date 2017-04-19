@@ -631,8 +631,14 @@ class Controller(object):
                 'code': 400
             })
         if 'id' in data:
-            if self.checkUUIDInUse(data['id']):
-                raise Exception({'error': 'UUID in use', 'code': 412})
+            if Helpers.validString(data['id']):
+                if self.checkUUIDInUse(data['id']):
+                    raise Exception({'error': 'UUID in use', 'code': 412})
+            else:
+                raise Exception({
+                    'error': 'UUID is not valid, must be [a-zA-Z0-9-]',
+                    'code': 412
+                })
         else:
             raise Exception({'error': 'ID must be provided', 'code': 400})
         if 'application' in data:
