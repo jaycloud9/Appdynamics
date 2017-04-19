@@ -41,5 +41,4 @@ print('# List of snapshots:')
 
 for blob in blob_service.list_blobs(args.container, include='snapshots'):
   if blob.name == args.blob:
-    print(blob.name)
-    print(blob.snapshot)
+    print("Blob {} with snapshot {}".format(blob.name, blob.snapshot))
