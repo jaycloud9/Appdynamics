@@ -1,7 +1,14 @@
 #!/usr/bin/env groovy
 
-stage('test') {
+stage('Setup Pyenv') {
   node {
+    sh "echo 'export PYENV_ROOT=\"$HOME/.pyenv"' >> ~/.bash_profile
+$ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile'
+  }
+}
+
+stage('test') {
+  node('python3.5') {
     deleteDir()
     checkout scm
     dir('PlatformInfra') {
