@@ -37,7 +37,7 @@ if (env.BRANCH_NAME == 'master') {
   stage('Setup Python 3.5') {
     node {
       PYTHON_PATH = sh (
-        script: 'echo "$(pwd)/Python-3.5.1',
+        script: 'echo "$(pwd)/Python-3.5.1"',
         returnStdout: true
       ).trim()
       deleteDir()
