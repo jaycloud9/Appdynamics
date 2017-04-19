@@ -37,7 +37,7 @@ if (env.BRANCH_NAME == 'master') {
   stage('Install Python 3.5') {
     node {
       deleteDir()
-      PYTHON_PATH = '/opt/py3.5.1'
+      PYTHON_PATH = '/tmp/py3.5.1'
       def folder = new File( ${PYTHON_PATH} )
       if ( !folder.exists() ) {
         sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
