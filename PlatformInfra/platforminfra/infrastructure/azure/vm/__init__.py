@@ -58,7 +58,7 @@ class Vm(object):
         baseUrl = "https://{}.blob.core.windows.net/".format(
             self.storageAccount
         )
-        container = "system"
+        container = "system/"
         filter = image['os'] + '/' + image['type'] + "_" + image['build']
         disks = self.getStorageDisks(filter)
         for item in disks:
@@ -113,7 +113,9 @@ class Vm(object):
                  )
             }
         if image:
-            storageProfile['os_disk']['image'] = self.getImage(image)
+            storageProfile['os_disk']['image'] = {
+                'uri': self.getImage(image)
+            }
             storageProfile['os_disk']['os_type'] = osType[image['os']]
         else:
             storageProfile['image_reference'] =\
@@ -184,7 +186,6 @@ class Vm(object):
                 'id': asId
             },
         }
-        print('VM Params: {}'.format(self.vmParams))
 
     def publicIp(self, pubIpName):
         """Get the Public IP of a VM."""
