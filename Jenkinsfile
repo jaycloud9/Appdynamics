@@ -34,7 +34,7 @@ if (env.BRANCH_NAME == 'master') {
     sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/azure_rm.py --vault-password-file ~/vault-password  -u mpadmin --private-key=./infra/keys/key.pem master.yml'
   }
 } else {
-  stage('Setup Python 3.5') {
+  stage('Install Python 3.5') {
     node {
       deleteDir()
       dir('py3.5.1') {
@@ -55,10 +55,17 @@ if (env.BRANCH_NAME == 'master') {
     }
   }
 
+  stage('Install PlatformInfra Dependencies') {
+    dir('platformInfraApi') {
+      checkout scm
+      dir('PlatformInfra') {
+        pyshell('pip install -e .')
+      }
+    }
+  }
   stage('test') {
     node() {
       dir('platformInfraApi') {
-        checkout scm
         dir('PlatformInfra') {
           pyshell('python -W ignore setup.py test')
         }
