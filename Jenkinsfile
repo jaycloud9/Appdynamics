@@ -9,11 +9,21 @@ stage('Setup Python 3.5') {
       sh './configure --prefix=$(pwd)/py35'
       sh 'make'
       sh 'make altinstall'
-      sh 'export PATH=$(pwd)/py35/bin:$PATH'
-      sh 'export LD_LIBRARY_PATH=$(pwd)/py35/lib'
-      sh 'alias python=python3.5'
-      sh 'alias pip=pip3.5'
-      sh 'python --version'
+      sh '''
+        export PATH=$(pwd)/py35/bin:$PATH
+        export LD_LIBRARY_PATH=$(pwd)/py35/lib
+        alias python=python3.5
+        which python
+        alias pip=pip3.5
+        python --version
+      '''
+      try {
+       sh 'if [[ $(python --version) == "Python 3.5.1" ]]; then exit 0; else exit 1"; fi'
+       currentBuild.result = 'SUCCESS'
+      } catch (Exception err) {
+       currentBuild.result = 'FAILURE'
+      }
+      echo "RESULT: ${currentBuild.result}"
     }
   }
 }
@@ -22,7 +32,6 @@ stage('test') {
   node() {
     checkout scm
     dir('PlatformInfra') {
-      sh 'ls'
       sh 'make test'
     }
   }
