@@ -1235,7 +1235,7 @@ class Azure(object):
                         disk
                     )
             except Exception as e:
-                print(e)
+                raise Exception(e)
 
     def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
@@ -1318,6 +1318,7 @@ class Azure(object):
                     resources["vhds"] = disks
 
             except CloudError as e:
+                # TODO: Decide to raiseor not, not frequently happening.
                 print("Error: {}".format(e))
                 pass
             return resources
@@ -1333,6 +1334,7 @@ class Azure(object):
                     resource = self.getResourceById(page.type, page.id)
                     ids.add(resource.tags['uuid'])
             except CloudError as e:
+                # TODO: Decide to raise or not, Not frequently happening
                 print("Error: {}".format(e))
                 pass
             return list(ids)
@@ -1481,58 +1483,62 @@ class Azure(object):
 
         return network.subnets[0]
 
-    def network(self, network, netName, tags, subNets):
+    def network(self, network, netName, tags, subNets, errors):
         """Create networks."""
-        netClient = NetworkManagementClient(
-            self.authAccount, self.credentials['subscription_id']
-        )
-        params = {
-           'location': self.config['region'],
-           'address_space': {
-             'address_prefixes': [network['cidr']]
-           }
-        }
-        if len(tags) > 0:
-            params["tags"] = tags
-
-        subFound = False
-        netFound = False
         try:
-            network = netClient.virtual_networks.get(
-                self.resourceGroup,
-                netName
+            netClient = NetworkManagementClient(
+                self.authAccount, self.credentials['subscription_id']
             )
-            if network.provisioning_state == 'Succeeded':
-                netFound = True
-            if len(network.subnets) != 0:
-                subFound = True
-        except:
-            pass
+            params = {
+               'location': self.config['region'],
+               'address_space': {
+                 'address_prefixes': [network['cidr']]
+               }
+            }
+            if len(tags) > 0:
+                params["tags"] = tags
 
-        if not netFound:
-            asyncNetCreation = netClient.virtual_networks.create_or_update(
-              self.resourceGroup,
-              netName,
-              params
-            )
-            asyncNetCreation.wait()
-        # This will need to loop when we want more than 1 subnet per network
-        if not subFound:
-            subNetName = netName + "sub1"
-            asyncSubnetCreation = netClient.subnets.create_or_update(
-              self.resourceGroup,
-              netName,
-              subNetName,
-              {'address_prefix': network['subnet']}
-            )
-            asyncSubnetCreation.wait()
-            subNets.put({
-                self.id: asyncSubnetCreation.result()
-            })
-        else:
-            subNets.put({
-                self.id: network.subnets[0]
-            })
+            subFound = False
+            netFound = False
+            try:
+                network = netClient.virtual_networks.get(
+                    self.resourceGroup,
+                    netName
+                )
+                if network.provisioning_state == 'Succeeded':
+                    netFound = True
+                if len(network.subnets) != 0:
+                    subFound = True
+            except:
+                pass
+
+            if not netFound:
+                asyncNetCreation = netClient.virtual_networks.create_or_update(
+                  self.resourceGroup,
+                  netName,
+                  params
+                )
+                asyncNetCreation.wait()
+            # This will need to loop if we want more than 1 subnet per network
+            if not subFound:
+                subNetName = netName + "sub1"
+                asyncSubnetCreation = netClient.subnets.create_or_update(
+                  self.resourceGroup,
+                  netName,
+                  subNetName,
+                  {'address_prefix': network['subnet']}
+                )
+                asyncSubnetCreation.wait()
+                subNets.put({
+                    self.id: asyncSubnetCreation.result()
+                })
+            else:
+                subNets.put({
+                    self.id: network.subnets[0]
+                })
+        except Exception as e:
+            print("Error creating network {}".format(str(e)))
+            errors.put(Exception(e))
 
     def nsg(self, vm, tags):
         """Create NSG."""
@@ -1635,19 +1641,22 @@ class Azure(object):
         if len(tags) > 0:
             pubIpParams['tags'] = tags
 
-        asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
-          self.resourceGroup,
-          pubIPName,
-          pubIpParams
-        )
-        asycPubIPCreation.wait()
-        pubIP = asycPubIPCreation.result()
-        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
-        asyncNicCreation = netClient.network_interfaces.create_or_update(
-          self.resourceGroup,
-          vmName + "nic",
-          nicParams
-        )
+        try:
+            asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
+              self.resourceGroup,
+              pubIPName,
+              pubIpParams
+            )
+            asycPubIPCreation.wait()
+            pubIP = asycPubIPCreation.result()
+            nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
+            asyncNicCreation = netClient.network_interfaces.create_or_update(
+              self.resourceGroup,
+              vmName + "nic",
+              nicParams
+            )
+        except:
+            raise
         details = dict()
         details['public_ip_name'] = pubIPName
         details['nic'] = asyncNicCreation.result()
@@ -1671,64 +1680,70 @@ class Azure(object):
             persistData
         )
         tmpVm.create(vmName, vmNic, vmQ)
-        print("VM Created")
+        print("{} VM Created".format(vmName))
 
     def virtualMachine(
-                self, vm, tags, subnet, vmQueue, vmLock,
-                persistData=False
+                self, vm, tags, subnet, vmQueue, vmLock, errors,
+                persistData=False,
             ):
         """Create a VM."""
-        print("Creating VMs: {}".format(vm['name']))
-        vmLock.acquire()
-        cmpClient = ComputeManagementClient(
-            self.authAccount, self.credentials['subscription_id']
-        )
-        asName = self.id + '-as' + vm['name']
         try:
-            asInfo = cmpClient.availability_sets.create_or_update(
-              self.resourceGroup,
-              asName,
-              {
-                'location': self.config['region'],
-                'tags': tags
-              }
+            print("Creating VMs: {}".format(vm['name']))
+            vmLock.acquire()
+            cmpClient = ComputeManagementClient(
+                self.authAccount, self.credentials['subscription_id']
             )
-        except:
-            pass
-        vmLock.release()
-        vmProcList = list()
-        opts = dict()
-        opts['config'] = self.config
-        opts['sa'] = self.storageAccount
-        opts['rg'] = self.resourceGroup
-        opts['authAccount'] = self.authAccount
-        opts['credentials'] = self.credentials
-        vmQ = Queue()
-        lock = Lock()
-        results = list()
-        i = 1
-        if 'existing' in vm:
-            i = len(vm['existing']) + 1
-        while i <= vm['count']:
-            tmpStr = self.id + vm['name'] + str(i)
-            vmName = ''.join(e for e in tmpStr if e.isalnum())
-            print("Creating {}".format(vmName))
-            p = Process(
-                target=self.vmWorker,
-                args=(
-                    opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
-                    persistData
+            asName = self.id + '-as' + vm['name']
+            try:
+                asInfo = cmpClient.availability_sets.create_or_update(
+                  self.resourceGroup,
+                  asName,
+                  {
+                    'location': self.config['region'],
+                    'tags': tags
+                  }
                 )
-            )
-            vmProcList.append(p)
-            p.start()
-            i = i + 1
-        for proc in vmProcList:
-            # Wait for all VM's to create
-            proc.join()
-            results.append(vmQ.get())
+            except Exception as e:
+                print("Passing Exception {}".format(e))
+                pass
+            vmLock.release()
+            vmProcList = list()
+            opts = dict()
+            opts['config'] = self.config
+            opts['sa'] = self.storageAccount
+            opts['rg'] = self.resourceGroup
+            opts['authAccount'] = self.authAccount
+            opts['credentials'] = self.credentials
+            vmQ = Queue()
+            lock = Lock()
+            results = list()
+            i = 1
+            if 'existing' in vm:
+                i = len(vm['existing']) + 1
+            while i <= vm['count']:
+                tmpStr = self.id + vm['name'] + str(i)
+                vmName = ''.join(e for e in tmpStr if e.isalnum())
+                print("Creating {}".format(vmName))
+                p = Process(
+                    target=self.vmWorker,
+                    args=(
+                        opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                        persistData
+                    )
+                )
+                vmProcList.append(p)
+                p.start()
+                i = i + 1
+            for proc in vmProcList:
+                # Wait for all VM's to create
+                proc.join()
+                results.append(vmQ.get())
 
-        vmQueue.put({'servers': vm['name'], 'vms': results})
+            vmQueue.put({'servers': vm['name'], 'vms': results})
+        except Exception as e:
+            print("Caught exception inside VM {}".format(str(e)))
+            errors.put(Exception(e))
+            pass
 
     def lbWorker(self, opts, lb, tags):
         """Worker to create a LB."""
@@ -1984,7 +1999,7 @@ class Azure(object):
                         disk
                     )
             except Exception as e:
-                print(e)
+                raise Exception(e)
 
     def deleteStorageAccountContainer(self, containerName):
         """Delete a storage Blob."""
@@ -2067,6 +2082,7 @@ class Azure(object):
                     resources["vhds"] = disks
 
             except CloudError as e:
+                # TODO: Decide to raiseor not, not frequently happening.
                 print("Error: {}".format(e))
                 pass
             return resources
@@ -2082,6 +2098,7 @@ class Azure(object):
                     resource = self.getResourceById(page.type, page.id)
                     ids.add(resource.tags['uuid'])
             except CloudError as e:
+                # TODO: Decide to raise or not, Not frequently happening
                 print("Error: {}".format(e))
                 pass
             return list(ids)
@@ -2230,58 +2247,62 @@ class Azure(object):
 
         return network.subnets[0]
 
-    def network(self, network, netName, tags, subNets):
+    def network(self, network, netName, tags, subNets, errors):
         """Create networks."""
-        netClient = NetworkManagementClient(
-            self.authAccount, self.credentials['subscription_id']
-        )
-        params = {
-           'location': self.config['region'],
-           'address_space': {
-             'address_prefixes': [network['cidr']]
-           }
-        }
-        if len(tags) > 0:
-            params["tags"] = tags
-
-        subFound = False
-        netFound = False
         try:
-            network = netClient.virtual_networks.get(
-                self.resourceGroup,
-                netName
+            netClient = NetworkManagementClient(
+                self.authAccount, self.credentials['subscription_id']
             )
-            if network.provisioning_state == 'Succeeded':
-                netFound = True
-            if len(network.subnets) != 0:
-                subFound = True
-        except:
-            pass
+            params = {
+               'location': self.config['region'],
+               'address_space': {
+                 'address_prefixes': [network['cidr']]
+               }
+            }
+            if len(tags) > 0:
+                params["tags"] = tags
 
-        if not netFound:
-            asyncNetCreation = netClient.virtual_networks.create_or_update(
-              self.resourceGroup,
-              netName,
-              params
-            )
-            asyncNetCreation.wait()
-        # This will need to loop when we want more than 1 subnet per network
-        if not subFound:
-            subNetName = netName + "sub1"
-            asyncSubnetCreation = netClient.subnets.create_or_update(
-              self.resourceGroup,
-              netName,
-              subNetName,
-              {'address_prefix': network['subnet']}
-            )
-            asyncSubnetCreation.wait()
-            subNets.put({
-                self.id: asyncSubnetCreation.result()
-            })
-        else:
-            subNets.put({
-                self.id: network.subnets[0]
-            })
+            subFound = False
+            netFound = False
+            try:
+                network = netClient.virtual_networks.get(
+                    self.resourceGroup,
+                    netName
+                )
+                if network.provisioning_state == 'Succeeded':
+                    netFound = True
+                if len(network.subnets) != 0:
+                    subFound = True
+            except:
+                pass
+
+            if not netFound:
+                asyncNetCreation = netClient.virtual_networks.create_or_update(
+                  self.resourceGroup,
+                  netName,
+                  params
+                )
+                asyncNetCreation.wait()
+            # This will need to loop if we want more than 1 subnet per network
+            if not subFound:
+                subNetName = netName + "sub1"
+                asyncSubnetCreation = netClient.subnets.create_or_update(
+                  self.resourceGroup,
+                  netName,
+                  subNetName,
+                  {'address_prefix': network['subnet']}
+                )
+                asyncSubnetCreation.wait()
+                subNets.put({
+                    self.id: asyncSubnetCreation.result()
+                })
+            else:
+                subNets.put({
+                    self.id: network.subnets[0]
+                })
+        except Exception as e:
+            print("Error creating network {}".format(str(e)))
+            errors.put(Exception(e))
 
     def nsg(self, vm, tags):
         """Create NSG."""
@@ -2384,19 +2405,22 @@ class Azure(object):
         if len(tags) > 0:
             pubIpParams['tags'] = tags
 
-        asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
-          self.resourceGroup,
-          pubIPName,
-          pubIpParams
-        )
-        asycPubIPCreation.wait()
-        pubIP = asycPubIPCreation.result()
-        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
-        asyncNicCreation = netClient.network_interfaces.create_or_update(
-          self.resourceGroup,
-          vmName + "nic",
-          nicParams
-        )
+        try:
+            asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
+              self.resourceGroup,
+              pubIPName,
+              pubIpParams
+            )
+            asycPubIPCreation.wait()
+            pubIP = asycPubIPCreation.result()
+            nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
+            asyncNicCreation = netClient.network_interfaces.create_or_update(
+              self.resourceGroup,
+              vmName + "nic",
+              nicParams
+            )
+        except:
+            raise
         details = dict()
         details['public_ip_name'] = pubIPName
         details['nic'] = asyncNicCreation.result()
@@ -2420,64 +2444,70 @@ class Azure(object):
             persistData
         )
         tmpVm.create(vmName, vmNic, vmQ)
-        print("VM Created")
+        print("{} VM Created".format(vmName))
 
     def virtualMachine(
-                self, vm, tags, subnet, vmQueue, vmLock,
-                persistData=False
+                self, vm, tags, subnet, vmQueue, vmLock, errors,
+                persistData=False,
             ):
         """Create a VM."""
-        print("Creating VMs: {}".format(vm['name']))
-        vmLock.acquire()
-        cmpClient = ComputeManagementClient(
-            self.authAccount, self.credentials['subscription_id']
-        )
-        asName = self.id + '-as' + vm['name']
         try:
-            asInfo = cmpClient.availability_sets.create_or_update(
-              self.resourceGroup,
-              asName,
-              {
-                'location': self.config['region'],
-                'tags': tags
-              }
+            print("Creating VMs: {}".format(vm['name']))
+            vmLock.acquire()
+            cmpClient = ComputeManagementClient(
+                self.authAccount, self.credentials['subscription_id']
             )
-        except:
-            pass
-        vmLock.release()
-        vmProcList = list()
-        opts = dict()
-        opts['config'] = self.config
-        opts['sa'] = self.storageAccount
-        opts['rg'] = self.resourceGroup
-        opts['authAccount'] = self.authAccount
-        opts['credentials'] = self.credentials
-        vmQ = Queue()
-        lock = Lock()
-        results = list()
-        i = 1
-        if 'existing' in vm:
-            i = len(vm['existing']) + 1
-        while i <= vm['count']:
-            tmpStr = self.id + vm['name'] + str(i)
-            vmName = ''.join(e for e in tmpStr if e.isalnum())
-            print("Creating {}".format(vmName))
-            p = Process(
-                target=self.vmWorker,
-                args=(
-                    opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
-                    persistData
+            asName = self.id + '-as' + vm['name']
+            try:
+                asInfo = cmpClient.availability_sets.create_or_update(
+                  self.resourceGroup,
+                  asName,
+                  {
+                    'location': self.config['region'],
+                    'tags': tags
+                  }
                 )
-            )
-            vmProcList.append(p)
-            p.start()
-            i = i + 1
-        for proc in vmProcList:
-            # Wait for all VM's to create
-            proc.join()
-            results.append(vmQ.get())
+            except Exception as e:
+                print("Passing Exception {}".format(e))
+                pass
+            vmLock.release()
+            vmProcList = list()
+            opts = dict()
+            opts['config'] = self.config
+            opts['sa'] = self.storageAccount
+            opts['rg'] = self.resourceGroup
+            opts['authAccount'] = self.authAccount
+            opts['credentials'] = self.credentials
+            vmQ = Queue()
+            lock = Lock()
+            results = list()
+            i = 1
+            if 'existing' in vm:
+                i = len(vm['existing']) + 1
+            while i <= vm['count']:
+                tmpStr = self.id + vm['name'] + str(i)
+                vmName = ''.join(e for e in tmpStr if e.isalnum())
+                print("Creating {}".format(vmName))
+                p = Process(
+                    target=self.vmWorker,
+                    args=(
+                        opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                        persistData
+                    )
+                )
+                vmProcList.append(p)
+                p.start()
+                i = i + 1
+            for proc in vmProcList:
+                # Wait for all VM's to create
+                proc.join()
+                results.append(vmQ.get())
 
-        vmQueue.put({'servers': vm['name'], 'vms': results})
+            vmQueue.put({'servers': vm['name'], 'vms': results})
+        except Exception as e:
+            print("Caught exception inside VM {}".format(str(e)))
+            errors.put(Exception(e))
+            pass
 
     def lbWorker(self, opts, lb, tags):
         """Worker to create a LB."""
@@ -2828,7 +2858,7 @@ class Azure(object):
                     disk
                 )
         except Exception as e:
-            print(e)
+            raise Exception(e)
 </code></pre>
   </div>
 </div>
@@ -2987,6 +3017,7 @@ class Azure(object):
             if disks:
                 resources["vhds"] = disks
         except CloudError as e:
+            # TODO: Decide to raiseor not, not frequently happening.
             print("Error: {}".format(e))
             pass
         return resources
@@ -3002,6 +3033,7 @@ class Azure(object):
                 resource = self.getResourceById(page.type, page.id)
                 ids.add(resource.tags['uuid'])
         except CloudError as e:
+            # TODO: Decide to raise or not, Not frequently happening
             print("Error: {}".format(e))
             pass
         return list(ids)
@@ -3205,7 +3237,7 @@ class Azure(object):
             
   <div class="item">
     <div class="name def" id="platforminfra.infrastructure.azure.Azure.network">
-    <p>def <span class="ident">network</span>(</p><p>self, network, netName, tags, subNets)</p>
+    <p>def <span class="ident">network</span>(</p><p>self, network, netName, tags, subNets, errors)</p>
     </div>
     
 
@@ -3215,56 +3247,60 @@ class Azure(object):
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.infrastructure.azure.Azure.network', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.infrastructure.azure.Azure.network" class="source">
-    <pre><code>def network(self, network, netName, tags, subNets):
+    <pre><code>def network(self, network, netName, tags, subNets, errors):
     """Create networks."""
-    netClient = NetworkManagementClient(
-        self.authAccount, self.credentials['subscription_id']
-    )
-    params = {
-       'location': self.config['region'],
-       'address_space': {
-         'address_prefixes': [network['cidr']]
-       }
-    }
-    if len(tags) > 0:
-        params["tags"] = tags
-    subFound = False
-    netFound = False
     try:
-        network = netClient.virtual_networks.get(
-            self.resourceGroup,
-            netName
+        netClient = NetworkManagementClient(
+            self.authAccount, self.credentials['subscription_id']
         )
-        if network.provisioning_state == 'Succeeded':
-            netFound = True
-        if len(network.subnets) != 0:
-            subFound = True
-    except:
-        pass
-    if not netFound:
-        asyncNetCreation = netClient.virtual_networks.create_or_update(
-          self.resourceGroup,
-          netName,
-          params
-        )
-        asyncNetCreation.wait()
-    # This will need to loop when we want more than 1 subnet per network
-    if not subFound:
-        subNetName = netName + "sub1"
-        asyncSubnetCreation = netClient.subnets.create_or_update(
-          self.resourceGroup,
-          netName,
-          subNetName,
-          {'address_prefix': network['subnet']}
-        )
-        asyncSubnetCreation.wait()
-        subNets.put({
-            self.id: asyncSubnetCreation.result()
-        })
-    else:
-        subNets.put({
-            self.id: network.subnets[0]
-        })
+        params = {
+           'location': self.config['region'],
+           'address_space': {
+             'address_prefixes': [network['cidr']]
+           }
+        }
+        if len(tags) > 0:
+            params["tags"] = tags
+        subFound = False
+        netFound = False
+        try:
+            network = netClient.virtual_networks.get(
+                self.resourceGroup,
+                netName
+            )
+            if network.provisioning_state == 'Succeeded':
+                netFound = True
+            if len(network.subnets) != 0:
+                subFound = True
+        except:
+            pass
+        if not netFound:
+            asyncNetCreation = netClient.virtual_networks.create_or_update(
+              self.resourceGroup,
+              netName,
+              params
+            )
+            asyncNetCreation.wait()
+        # This will need to loop if we want more than 1 subnet per network
+        if not subFound:
+            subNetName = netName + "sub1"
+            asyncSubnetCreation = netClient.subnets.create_or_update(
+              self.resourceGroup,
+              netName,
+              subNetName,
+              {'address_prefix': network['subnet']}
+            )
+            asyncSubnetCreation.wait()
+            subNets.put({
+                self.id: asyncSubnetCreation.result()
+            })
+        else:
+            subNets.put({
+                self.id: network.subnets[0]
+            })
+    except Exception as e:
+        print("Error creating network {}".format(str(e)))
+        errors.put(Exception(e))
 </code></pre>
   </div>
 </div>
@@ -3297,19 +3333,22 @@ class Azure(object):
     }
     if len(tags) > 0:
         pubIpParams['tags'] = tags
-    asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
-      self.resourceGroup,
-      pubIPName,
-      pubIpParams
-    )
-    asycPubIPCreation.wait()
-    pubIP = asycPubIPCreation.result()
-    nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
-    asyncNicCreation = netClient.network_interfaces.create_or_update(
-      self.resourceGroup,
-      vmName + "nic",
-      nicParams
-    )
+    try:
+        asycPubIPCreation = netClient.public_ip_addresses.create_or_update(
+          self.resourceGroup,
+          pubIPName,
+          pubIpParams
+        )
+        asycPubIPCreation.wait()
+        pubIP = asycPubIPCreation.result()
+        nicParams = self.generateNicParams(vm, vmName, subnet, pubIP, tags)
+        asyncNicCreation = netClient.network_interfaces.create_or_update(
+          self.resourceGroup,
+          vmName + "nic",
+          nicParams
+        )
+    except:
+        raise
     details = dict()
     details['public_ip_name'] = pubIPName
     details['nic'] = asyncNicCreation.result()
@@ -3560,7 +3599,7 @@ class Azure(object):
             
   <div class="item">
     <div class="name def" id="platforminfra.infrastructure.azure.Azure.virtualMachine">
-    <p>def <span class="ident">virtualMachine</span>(</p><p>self, vm, tags, subnet, vmQueue, vmLock, persistData=False)</p>
+    <p>def <span class="ident">virtualMachine</span>(</p><p>self, vm, tags, subnet, vmQueue, vmLock, errors, persistData=False)</p>
     </div>
     
 
@@ -3571,60 +3610,66 @@ class Azure(object):
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.infrastructure.azure.Azure.virtualMachine', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.infrastructure.azure.Azure.virtualMachine" class="source">
     <pre><code>def virtualMachine(
-            self, vm, tags, subnet, vmQueue, vmLock,
-            persistData=False
+            self, vm, tags, subnet, vmQueue, vmLock, errors,
+            persistData=False,
         ):
     """Create a VM."""
-    print("Creating VMs: {}".format(vm['name']))
-    vmLock.acquire()
-    cmpClient = ComputeManagementClient(
-        self.authAccount, self.credentials['subscription_id']
-    )
-    asName = self.id + '-as' + vm['name']
     try:
-        asInfo = cmpClient.availability_sets.create_or_update(
-          self.resourceGroup,
-          asName,
-          {
-            'location': self.config['region'],
-            'tags': tags
-          }
+        print("Creating VMs: {}".format(vm['name']))
+        vmLock.acquire()
+        cmpClient = ComputeManagementClient(
+            self.authAccount, self.credentials['subscription_id']
         )
-    except:
-        pass
-    vmLock.release()
-    vmProcList = list()
-    opts = dict()
-    opts['config'] = self.config
-    opts['sa'] = self.storageAccount
-    opts['rg'] = self.resourceGroup
-    opts['authAccount'] = self.authAccount
-    opts['credentials'] = self.credentials
-    vmQ = Queue()
-    lock = Lock()
-    results = list()
-    i = 1
-    if 'existing' in vm:
-        i = len(vm['existing']) + 1
-    while i <= vm['count']:
-        tmpStr = self.id + vm['name'] + str(i)
-        vmName = ''.join(e for e in tmpStr if e.isalnum())
-        print("Creating {}".format(vmName))
-        p = Process(
-            target=self.vmWorker,
-            args=(
-                opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
-                persistData
+        asName = self.id + '-as' + vm['name']
+        try:
+            asInfo = cmpClient.availability_sets.create_or_update(
+              self.resourceGroup,
+              asName,
+              {
+                'location': self.config['region'],
+                'tags': tags
+              }
             )
-        )
-        vmProcList.append(p)
-        p.start()
-        i = i + 1
-    for proc in vmProcList:
-        # Wait for all VM's to create
-        proc.join()
-        results.append(vmQ.get())
-    vmQueue.put({'servers': vm['name'], 'vms': results})
+        except Exception as e:
+            print("Passing Exception {}".format(e))
+            pass
+        vmLock.release()
+        vmProcList = list()
+        opts = dict()
+        opts['config'] = self.config
+        opts['sa'] = self.storageAccount
+        opts['rg'] = self.resourceGroup
+        opts['authAccount'] = self.authAccount
+        opts['credentials'] = self.credentials
+        vmQ = Queue()
+        lock = Lock()
+        results = list()
+        i = 1
+        if 'existing' in vm:
+            i = len(vm['existing']) + 1
+        while i <= vm['count']:
+            tmpStr = self.id + vm['name'] + str(i)
+            vmName = ''.join(e for e in tmpStr if e.isalnum())
+            print("Creating {}".format(vmName))
+            p = Process(
+                target=self.vmWorker,
+                args=(
+                    opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
+                    persistData
+                )
+            )
+            vmProcList.append(p)
+            p.start()
+            i = i + 1
+        for proc in vmProcList:
+            # Wait for all VM's to create
+            proc.join()
+            results.append(vmQ.get())
+        vmQueue.put({'servers': vm['name'], 'vms': results})
+    except Exception as e:
+        print("Caught exception inside VM {}".format(str(e)))
+        errors.put(Exception(e))
+        pass
 </code></pre>
   </div>
 </div>
@@ -3662,7 +3707,7 @@ class Azure(object):
         persistData
     )
     tmpVm.create(vmName, vmNic, vmQ)
-    print("VM Created")
+    print("{} VM Created".format(vmName))
 </code></pre>
   </div>
 </div>

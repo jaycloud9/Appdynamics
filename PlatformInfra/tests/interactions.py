@@ -62,7 +62,7 @@ def scale(
 
 
 def status(app, envid, infrastructureTemplateID="test"):
-    """Status check of an environment."""
+    """Check status of an environment."""
     print("Status check of environment", envid)
     url = urlp.urljoin(base_path, "environments/" + envid + "/status")
     request_data = json.dumps(
@@ -91,6 +91,7 @@ def getResponseData(rv):
 
 
 def getConfigGitlabUrl():
+    """Get the Gitlab URL from the config."""
     config = Config()
     config_url = config.credentials["gitlab"]["url"]
     print("Gitlab URL:", config_url)
@@ -98,6 +99,7 @@ def getConfigGitlabUrl():
 
 
 def getWebsiteUrl(envid):
+    """Get the website URL from the Config."""
     config = Config()
     website_url = config.test["website_url"]  # Template. Contains {{id}}
     url = Environment().from_string(website_url).render(id=envid)
