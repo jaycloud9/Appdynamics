@@ -1,5 +1,16 @@
 #!/usr/bin/env groovy
 
+def shell(command) {
+  sh """
+    export PATH=\$(pwd)/py35/bin:$PATH
+    export LD_LIBRARY_PATH=\$(pwd)/py35/lib
+    alias python=python3.5
+    which python
+    alias pip=pip3.5
+    ${command}
+  """
+}
+
 stage('Setup Python 3.5') {
   node {
     deleteDir()
@@ -17,22 +28,18 @@ stage('Setup Python 3.5') {
         alias pip=pip3.5
         python --version
       '''
-      try {
-       sh 'if [[ $(python --version) == "Python 3.5.1" ]]; then exit 0; else exit 1"; fi'
-       currentBuild.result = 'SUCCESS'
-      } catch (Exception err) {
-       currentBuild.result = 'FAILURE'
-      }
-      echo "RESULT: ${currentBuild.result}"
+      shell('python --version')
     }
   }
 }
 
 stage('test') {
   node() {
-    checkout scm
-    dir('PlatformInfra') {
-      sh 'make test'
+    dir('platformInfraApi') {
+      checkout scm
+      dir('PlatformInfra') {
+        sh 'make test'
+      }
     }
   }
 }
