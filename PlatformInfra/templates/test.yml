@@ -21,7 +21,24 @@ services:
       dns_servers: 8.8.8.8,4.4.4.4
       subnet: 10.10.1.0/24
   servers:
-    - name: test
+    - name: test1
       count: 1
       dns: test
       service_port: 8080
+    - name: test2
+      count: 1
+      dns: test
+      service_port: 8080
+      os:
+        publisher: 'RedHat'
+        offer: 'RHEL'
+        sku: '7.3'
+        version: 'latest'
+    - name: test3
+      count: 1
+      dns: test
+      service_port: 8080
+      image:
+        os: 'redhat'
+        type: 't24'
+        build: '33'

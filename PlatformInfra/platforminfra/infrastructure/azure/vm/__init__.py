@@ -1,7 +1,8 @@
 """Module for managing VM's."""
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
-from msrestazure.azure_exceptions import CloudError
+from azure.storage.blob import BlockBlobService
+from azure.mgmt.storage import StorageManagementClient
 
 
 class Vm(object):
@@ -16,50 +17,73 @@ class Vm(object):
         self.authAccount = opts['authAccount']
         self.credentials = opts['credentials']
 
-    def generateParams(self, nicId, vmName, asId, tags, persistData=False):
-        """Create the VM parameters structure."""
+    def generateImageReference(self, os=dict):
+        """Generate an image_reference."""
+        imageReference = {
+          'publisher': os.get('publisher', "RedHat"),
+          'offer': os.get('offer', 'RHEL'),
+          'sku': os.get('sku', '7.2'),
+          'version': os.get('version', 'latest')
+        }
+        return imageReference
+
+    def getStorageDisks(self, filter):
+        """Get a list of Storage disks."""
+        saKey = self.getStorageAccountKey()
+        disks = list()
+        blockBlobService = BlockBlobService(
+            account_name=self.storageAccount,
+            account_key=saKey
+        )
+        blobs = blockBlobService.list_blobs('system')
+        for blob in blobs:
+            if 'vhd' in blob.name:
+                if filter in blob.name:
+                    disks.append(blob.name)
+        return disks
+
+    def getStorageAccountKey(self):
+        """Return a Storage account Key."""
+        strClient = StorageManagementClient(
+            self.authAccount, self.credentials['subscription_id']
+        )
+        saKeys = strClient.storage_accounts.list_keys(
+            self.resourceGroup,
+            self.storageAccount
+        )
+        return saKeys.keys[0].value
+
+    def getImage(self, image):
+        """Generate the Image URL for `image`."""
+        baseUrl = "https://{}.blob.core.windows.net/".format(
+            self.storageAccount
+        )
+        container = "system/"
+        filter = image['os'] + '/' + image['type'] + "_" + image['build']
+        disks = self.getStorageDisks(filter)
+        for item in disks:
+            disk = item
+
+        if len(disks) == 1:
+            return baseUrl + container + disk
+        elif disks:
+            raise Exception({'error': 'no disk found for {}'.format(image)})
+        else:
+            raise Exception({'error': 'Found too many disks'})
+
+    def generateStorageProfile(
+        self,
+        tags,
+        vmName,
+        persistData=False,
+        os=dict,
+        image=None
+    ):
+        """Generate the Storage profile for a VM."""
         createOption = "Empty"
         if persistData:
             createOption = "Attach"
-        self.vmParams = {
-          'location': self.config['region'],
-          'tags': tags,
-          'os_profile': {
-            'computer_name': vmName,
-            'admin_username': self.config['user'],
-            'linux_configuration': {
-              'ssh': {
-                'public_keys': [{
-                  'path': '/home/{}/.ssh/authorized_keys'.format(
-                    self.config['user']
-                    ),
-                  'key_data': self.config["public_ssh_key"]
-                }]
-              }
-            }
-          },
-          'hardware_profile': {
-            'vm_size': self.config['server_size']
-          },
-          'storage_profile': {
-            'image_reference': {
-              'publisher': 'RedHat',
-              'offer': 'RHEL',
-              'sku': '7.2',
-              'version': 'latest'
-            },
-            'os_disk': {
-              'name': vmName + 'disk',
-              'caching': 'None',
-              'create_option': 'fromImage',
-              'vhd': {
-                'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
-                    self.storageAccount,
-                    tags['uuid'],
-                    vmName + '.vhd'
-                 )
-              },
-            },
+        storageProfile = {
             'data_disks': [{
               'name': vmName + 'datadisk1.vhd',
               'disk_size_gb': 200,
@@ -72,15 +96,95 @@ class Vm(object):
               },
               'create_option': createOption
             }]
-          },
-          'network_profile': {
-              'network_interfaces': [{
-                  'id': nicId,
-              }]
-          },
-          'availability_set': {
-            'id': asId
-          },
+        }
+        osType = {
+            'redhat': 'Linux',
+            'windows': 'Windows'
+        }
+        storageProfile['os_disk'] = dict()
+        storageProfile['os_disk']['name'] = vmName + 'disk'
+        storageProfile['os_disk']['caching'] = 'ReadWrite'
+        storageProfile['os_disk']['create_option'] = 'fromImage'
+        storageProfile['os_disk']['vhd'] = {
+                'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
+                    self.storageAccount,
+                    tags['uuid'],
+                    vmName + '.vhd'
+                 )
+            }
+        if image:
+            storageProfile['os_disk']['image'] = {
+                'uri': self.getImage(image)
+            }
+            storageProfile['os_disk']['os_type'] = osType[image['os']]
+        else:
+            storageProfile['image_reference'] =\
+                self.generateImageReference(os)
+        return storageProfile
+
+    def generateParams(
+        self,
+        nicId,
+        vmName,
+        asId,
+        tags,
+        persistData=False,
+        os=None,
+        image=None
+    ):
+        """Create the VM parameters structure.
+
+        generateParams can take an os dictionary that containes other OS
+        versions i.e.::
+            {
+                'publisher': 'RedHat',
+                'offer': 'RHEL',
+                'sku': '7.2',
+                'version': 'latest'
+            }
+
+        if Image is passed in a custom image can be used tyo create a Vm::
+            {
+                'os': 'redhat',
+                'type': 't24',
+                'build': '32'
+            }
+        """
+        self.vmParams = {
+            'location': self.config['region'],
+            'tags': tags,
+            'os_profile': {
+                'computer_name': vmName,
+                'admin_username': self.config['user'],
+                'linux_configuration': {
+                    'ssh': {
+                        'public_keys': [{
+                            'path': '/home/{}/.ssh/authorized_keys'.format(
+                                self.config['user']
+                            ),
+                            'key_data': self.config["public_ssh_key"]
+                        }]
+                    }
+                }
+            },
+            'hardware_profile': {
+                'vm_size': self.config['server_size']
+            },
+            'storage_profile': self.generateStorageProfile(
+                tags,
+                vmName,
+                persistData,
+                os,
+                image
+            ),
+            'network_profile': {
+                'network_interfaces': [{
+                    'id': nicId,
+                }]
+            },
+            'availability_set': {
+                'id': asId
+            },
         }
 
     def publicIp(self, pubIpName):
@@ -97,7 +201,7 @@ class Vm(object):
         """Get the Private ip address."""
         return nic.ip_configurations[0].private_ip_address
 
-    def create(self, vmName, vmNic, vmQueue):
+    def create(self, vmName, vmNic, vmQueue, errorQ):
         """Create a VM."""
         cmpClient = ComputeManagementClient(
             self.authAccount,
@@ -115,5 +219,6 @@ class Vm(object):
                 'public_ip': self.publicIp(vmNic['public_ip_name']),
                 'private_ip': self.privateIp(vmNic['nic'])
             })
-        except CloudError:
-            raise
+        except Exception as e:
+            print("VM Creation Error: {}".format(e))
+            errorQ.put(e)

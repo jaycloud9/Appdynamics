@@ -615,11 +615,20 @@ class Azure(object):
         return details
 
     def vmWorker(
-                self, opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
-                persistData
+                self, opts, vm, vmName, tags, asInfo, subnet, vmQ, errorQ,
+                lock, persistData
             ):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
+        if 'os' in vm:
+            os = vm['os']
+        else:
+            os = dict()
+        if 'image' in vm:
+            image = vm['image']
+        else:
+            image = dict()
+
         lock.acquire()
         vmNic = self.nic(vm, vmName, subnet, tags)
         lock.release()
@@ -629,9 +638,11 @@ class Azure(object):
             vmName,
             asInfo.id,
             {**tags, **tmpDict},
-            persistData
+            persistData,
+            os,
+            image
         )
-        tmpVm.create(vmName, vmNic, vmQ)
+        tmpVm.create(vmName, vmNic, vmQ, errorQ)
         print("{} VM Created".format(vmName))
 
     def virtualMachine(
@@ -667,6 +678,7 @@ class Azure(object):
             opts['authAccount'] = self.authAccount
             opts['credentials'] = self.credentials
             vmQ = Queue()
+            errorQ = Queue()
             lock = Lock()
             results = list()
             i = 1
@@ -679,8 +691,8 @@ class Azure(object):
                 p = Process(
                     target=self.vmWorker,
                     args=(
-                        opts, vm, vmName, tags, asInfo, subnet, vmQ, lock,
-                        persistData
+                        opts, vm, vmName, tags, asInfo, subnet, vmQ, errorQ,
+                        lock, persistData
                     )
                 )
                 vmProcList.append(p)
@@ -688,8 +700,23 @@ class Azure(object):
                 i = i + 1
             for proc in vmProcList:
                 # Wait for all VM's to create
-                proc.join()
-                results.append(vmQ.get())
+                proc.join(400)
+                if not errorQ.empty():
+                    # If it's not empty there's an error
+                    raise Exception({
+                        'error': "Error in VmWorker process: {}"
+                        .format(errors.get()),
+                        'code': 500
+                    })
+                if vmQ.empty():
+                    # There should be items on the queue else it either
+                    # Failed or timed-out
+                    raise Exception({
+                        'error': "Time out creating VM",
+                        'code': 500
+                    })
+                else:
+                    results.append(vmQ.get())
 
             vmQueue.put({'servers': vm['name'], 'vms': results})
         except Exception as e:
