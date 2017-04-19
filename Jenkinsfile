@@ -36,12 +36,13 @@ if (env.BRANCH_NAME == 'master') {
 } else {
   stage('Setup Python 3.5') {
     node {
-      PYTHON_PATH = sh (
-        script: 'echo "$(pwd)/Python-3.5.1"',
-        returnStdout: true
-      ).trim()
       deleteDir()
-      dir('Python-3.5.1')
+      dir('Python-3.5.1') {
+        PYTHON_PATH = sh (
+          script: 'pwd',
+          returnStdout: true
+        ).trim()
+      }
       sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
       sh 'tar -xzvf Python-3.5.1.tgz'
       dir('Python-3.5.1-build') {
