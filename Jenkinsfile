@@ -3,9 +3,9 @@
 stage('test') {
   node {
     checkout scm
-    sh 'pwd'
-    sh 'ls -l'
     sh 'cd PlatformInfra/'
+    sh 'cat Makefile'
+    sh 'which make'
     sh 'make test'
     sh 'cd ..'
   }
