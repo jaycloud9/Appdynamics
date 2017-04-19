@@ -402,11 +402,11 @@ class Controller(object):
                     raise
                 if not errors.empty():
                     # If it's not empty there's an error
-                    raise {
+                    raise Exception({
                         'error': "Error in child process for networking: {}"
                         .format(errors.get()),
                         'code': 500
-                    }
+                    })
                 if subNets.empty():
                     raise Exception({
                         'error': "Time out creating network",
@@ -416,7 +416,7 @@ class Controller(object):
                     subnets['subnets'] = subNets.get()
         except Exception as e:
             if e.args[0] is dict:
-                raise
+                raise Exception(e)
             else:
                 raise Exception({
                     'error': "Unknown error while creating networks: {}"
@@ -483,11 +483,11 @@ class Controller(object):
                 if not errors.empty():
                     # If it's not empty there's an error
                     print("Errors not empty")
-                    raise {
+                    raise Exception({
                         'error': "Error in child process for VM: {}"
                         .format(errors.get()),
                         'code': 500
-                    }
+                    })
                 if vms.empty():
                     print("vms empty")
                     raise Exception({
@@ -506,7 +506,7 @@ class Controller(object):
                     self.vms.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
-                raise
+                raise Exception(e)
             else:
                 raise Exception({
                     'error': "Unknown error while creating Vms: {}"
@@ -600,13 +600,16 @@ class Controller(object):
                         'code': 500
                     }
                 if lbQueue.empty():
-                    raise {'error': "Time out creating LB", 'code': 500}
+                    raise Exception({
+                        'error': "Time out creating LB",
+                        'code': 500
+                    })
                 else:
                     tmpData = lbQueue.get()
                     self.lbs.append(tmpData)
         except Exception as e:
             if e.args[0] is dict:
-                raise
+                raise Exception(e)
             else:
                 raise Exception({
                     'error': "Unknown error while creating LBs: {}"
