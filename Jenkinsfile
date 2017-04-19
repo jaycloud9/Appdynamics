@@ -4,10 +4,10 @@ stage('test') {
   node {
     deleteDir()
     checkout scm
-    sh 'cd PlatformInfra'
-    sh 'ls'
-    sh 'make test'
-    sh 'cd ..'
+    dir(PlatformInfra) {
+      sh 'ls'
+      sh 'make test'
+    }
   }
 }
 
