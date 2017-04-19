@@ -408,7 +408,10 @@ class Controller(object):
                         'code': 500
                     }
                 if subNets.empty():
-                    raise {'error': "Time out creating network", 'code': 500}
+                    raise Exception({
+                        'error': "Time out creating network",
+                        'code': 500
+                    })
                 else:
                     subnets['subnets'] = subNets.get()
         except Exception as e:

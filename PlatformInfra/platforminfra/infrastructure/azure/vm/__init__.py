@@ -3,7 +3,6 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.storage.blob import BlockBlobService
 from azure.mgmt.storage import StorageManagementClient
-from msrestazure.azure_exceptions import CloudError
 
 
 class Vm(object):
@@ -38,12 +37,8 @@ class Vm(object):
         )
         blobs = blockBlobService.list_blobs('system')
         for blob in blobs:
-            print('blob name {}'.format(blob.name))
-            print("filter = {}".format(filter))
             if 'vhd' in blob.name:
-                print('has vhd')
                 if filter in blob.name:
-                    print("has filter {}".format(filter))
                     disks.append(blob.name)
         return disks
 
@@ -81,7 +76,7 @@ class Vm(object):
         tags,
         vmName,
         persistData=False,
-        os=None,
+        os=dict,
         image=None
     ):
         """Generate the Storage profile for a VM."""
@@ -106,43 +101,23 @@ class Vm(object):
             'redhat': 'Linux',
             'windows': 'Windows'
         }
+        storageProfile['os_disk'] = dict()
+        storageProfile['os_disk']['name'] = vmName + 'disk'
+        storageProfile['os_disk']['caching'] = 'ReadWrite'
+        storageProfile['os_disk']['create_option'] = 'fromImage'
+        storageProfile['os_disk']['vhd'] = {
+                'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
+                    self.storageAccount,
+                    tags['uuid'],
+                    vmName + '.vhd'
+                 )
+            }
         if image:
-            try:
-                storageProfile['os_disk'] = {
-                    'name': vmName + 'disk',
-                    'caching': 'ReadWrite',
-                    'create_option': 'fromImage',
-                    'os_type': osType[image['os']],
-                    'vhd': {
-                        'image': self.getImage(image),
-                        'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
-                            self.storageAccount,
-                            tags['uuid'],
-                            vmName + '.vhd'
-                         )
-                    },
-                },
-            except:
-                raise
+            storageProfile['os_disk']['image'] = self.getImage(image)
+            storageProfile['os_disk']['os_type'] = osType[image['os']]
         else:
-            if os:
-                storageProfile['image_reference'] =\
-                    self.generateImageReference(os)
-            else:
-                storageProfile['image_reference'] =\
-                    self.generateImageReference({})
-            storageProfile['os_disk'] = {
-                'name': vmName + 'disk',
-                'caching': 'None',
-                'create_option': 'fromImage',
-                'vhd': {
-                    'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
-                        self.storageAccount,
-                        tags['uuid'],
-                        vmName + '.vhd'
-                     )
-                },
-            },
+            storageProfile['image_reference'] =\
+                self.generateImageReference(os)
         return storageProfile
 
     def generateParams(
@@ -209,6 +184,7 @@ class Vm(object):
                 'id': asId
             },
         }
+        print('VM Params: {}'.format(self.vmParams))
 
     def publicIp(self, pubIpName):
         """Get the Public IP of a VM."""
@@ -224,7 +200,7 @@ class Vm(object):
         """Get the Private ip address."""
         return nic.ip_configurations[0].private_ip_address
 
-    def create(self, vmName, vmNic, vmQueue):
+    def create(self, vmName, vmNic, vmQueue, errorQ):
         """Create a VM."""
         cmpClient = ComputeManagementClient(
             self.authAccount,
@@ -242,5 +218,6 @@ class Vm(object):
                 'public_ip': self.publicIp(vmNic['public_ip_name']),
                 'private_ip': self.privateIp(vmNic['nic'])
             })
-        except CloudError:
-            raise
+        except Exception as e:
+            print("VM Creation Error: {}".format(e))
+            errorQ.put(e)
