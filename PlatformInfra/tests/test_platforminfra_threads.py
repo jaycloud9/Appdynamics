@@ -1,14 +1,11 @@
 """PlatformInfra Tests Module."""
 
-import platforminfra
 import unittest
 from platforminfra.views import base_path
 import urllib.parse as urlp
-import json
 import time
-import tests.interactions as interactions
+from tests.interactions import Interactions
 import threading
-from multiprocessing import Process
 import requests
 from platforminfra.config import Config
 
@@ -32,34 +29,18 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         global TEST_ENVIDS
         global SERVER_URL
         global CONCURRENT_DEPLOYMENTS
-        global API_HOST
-        global API_PORT
         TEST_ENVIDS = config.test["environment_ids"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
-        API_HOST = config.test["api_host"]
-        API_PORT = config.test["api_port"]
-        SERVER_URL = "http://" + API_HOST + ":" + str(API_PORT)
-
-        """Set Up Flask."""
-        self.server_process = Process(target=self.start_and_init_server)
-        self.server_process.start()
-        time.sleep(1)
+        self.interactions = Interactions()
 
     def tearDown(self):
         """Tear Down Flask App."""
-        try:
-            self.server_process.terminate()
-        except Exception as ex:
-            print(ex)
-
         # Destroy environments, using the flask test client
-        app = platforminfra.app.test_client()
         for envid in TEST_ENVIDS:
-            interactions.destroy(app, envid)
+            self.interactions.destroy(envid)
 
-    def start_and_init_server(self):
-        """A helper function to start out server in a thread."""
-        platforminfra.app.run(threaded=True, host=API_HOST, port=API_PORT)
+        """Stop flask if it is running"""
+        self.interactions.close()
 
     def destroyEnvironment(
         self,
@@ -90,19 +71,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         """
         try:
             print("Creating environment", envid)
-            url = urlp.urljoin(SERVER_URL + base_path, "environments")
-            request_data = json.dumps(
-                dict(
-                    id=envid,
-                    application=application,
-                    infrastructureTemplateID=infrastructureTemplateID
-                )
-            )
-            print("Requesting", url)
-            r = requests.post(
-                url,
-                data=request_data,
-                headers={'content-type': 'application/json'}
+            r = self.interactions.create(
+                envid,
+                application,
+                infrastructureTemplateID
             )
             print("Status code:", r.status_code)
             print("Response:", r.text)
@@ -114,7 +86,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
             )
 
             # Website URL is up and running
-            r = requests.get(interactions.getWebsiteUrl(envid))
+            r = requests.get(self.interactions.getWebsiteUrl(envid))
             self.assertEqual(r.status_code, 200)
 
         except Exception as ex:
@@ -153,7 +125,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         if len(self.exceptions) > 0:
             print("Number of exceptions:", len(self.exceptions))
             # May be several exceptions, but we'll just raise the first one
-            raise self.exception[0]
+            raise self.exceptions[0]
 
 
 if __name__ == '__main__':
