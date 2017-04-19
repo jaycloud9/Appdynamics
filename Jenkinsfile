@@ -20,14 +20,6 @@ stage('Setup Python 3.5') {
       sh './configure --prefix=$(pwd)/py35'
       sh 'make'
       sh 'make altinstall'
-      sh '''
-        export PATH=$(pwd)/py35/bin:$PATH
-        export LD_LIBRARY_PATH=$(pwd)/py35/lib
-        alias python=python3.5
-        which python
-        alias pip=pip3.5
-        python --version
-      '''
       shell('python --version')
     }
   }
@@ -38,7 +30,7 @@ stage('test') {
     dir('platformInfraApi') {
       checkout scm
       dir('PlatformInfra') {
-        sh 'make test'
+        shell('make test')
       }
     }
   }
