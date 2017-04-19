@@ -2,9 +2,10 @@
 
 stage('test') {
   node {
+    deleteDir()
     checkout scm
     sh 'cd PlatformInfra/'
-    sh 'cat Makefile'
+    sh 'ls'
     sh 'which make'
     sh 'make test'
     sh 'cd ..'
