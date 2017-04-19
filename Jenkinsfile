@@ -38,7 +38,7 @@ if (env.BRANCH_NAME == 'master') {
     node {
       deleteDir()
       PYTHON_PATH = '/tmp/py3.5.1'
-      def folder = new File( ${PYTHON_PATH} )
+      def folder = new File( PYTHON_PATH )
       if ( !folder.exists() ) {
         sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
         sh 'tar -xzvf Python-3.5.1.tgz'
