@@ -86,10 +86,6 @@ class Jenkins(object):
     def runBuildWithParams(self, build, params):
         """Run a build with params and return it's info."""
         self.server.build_job(build, params)
-        lastBuildNumber = self.server.get_job_info(
-            build)['lastCompletedBuild']['number']
-        buildInfo = self.server.get_build_info(build, lastBuildNumber)
-        return buildInfo
 
     def getBuildStatus(self, buildName, uuid):
         """Get all of the running jobs back.

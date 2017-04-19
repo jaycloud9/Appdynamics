@@ -18,17 +18,17 @@ class Vm(object):
         self.authAccount = opts['authAccount']
         self.credentials = opts['credentials']
 
-    def generateImageReference(self, **kwargs):
+    def generateImageReference(self, os=dict):
         """Generate an image_reference."""
         imageReference = {
-          'publisher': kwargs.get('publisher', "RedHat"),
-          'offer': kwargs.get('offer', 'RHEL'),
-          'sku': kwargs.get('sku', '7.2'),
-          'version': kwargs.get('version', 'latest')
+          'publisher': os.get('publisher', "RedHat"),
+          'offer': os.get('offer', 'RHEL'),
+          'sku': os.get('sku', '7.2'),
+          'version': os.get('version', 'latest')
         }
         return imageReference
 
-    def getStorageDisks(self, id, filter):
+    def getStorageDisks(self, filter):
         """Get a list of Storage disks."""
         saKey = self.getStorageAccountKey()
         disks = list()
@@ -36,19 +36,14 @@ class Vm(object):
             account_name=self.storageAccount,
             account_key=saKey
         )
-        found = False
-        containers = blockBlobService.list_containers()
-        for container in containers:
-            if id == container.name:
-                found = True
-        if found:
-            blobs = blockBlobService.list_blobs(id)
-            for blob in blobs:
-                if filter:
-                    search = ''.join(e for e in filter['value'] if e.isalnum())
-                    if search in blob.name:
-                        disks.append(blob.name)
-                else:
+        blobs = blockBlobService.list_blobs('system')
+        for blob in blobs:
+            print('blob name {}'.format(blob.name))
+            print("filter = {}".format(filter))
+            if 'vhd' in blob.name:
+                print('has vhd')
+                if filter in blob.name:
+                    print("has filter {}".format(filter))
                     disks.append(blob.name)
         return disks
 
@@ -68,18 +63,18 @@ class Vm(object):
         baseUrl = "https://{}.blob.core.windows.net/".format(
             self.storageAccount
         )
-        imagePath = "system/Microsoft.Compute/Images/{}/".format(image['os'])
-        filter = {'value': "{}_{}".format(image['type'], image['build'])}
-        disks = self.getStorageDisks(imagePath, filter)
-        print("Disks: {}".format(disks))
+        container = "system"
+        filter = image['os'] + '/' + image['type'] + "_" + image['build']
+        disks = self.getStorageDisks(filter)
         for item in disks:
-            if '.vhd' in item:
-                disk = item
+            disk = item
 
         if len(disks) == 1:
-            return baseUrl + imagePath + disk
+            return baseUrl + container + disk
+        elif disks:
+            raise Exception({'error': 'no disk found for {}'.format(image)})
         else:
-            raise {'error': 'Found too many disks'}
+            raise Exception({'error': 'Found too many disks'})
 
     def generateStorageProfile(
         self,
@@ -135,7 +130,7 @@ class Vm(object):
                     self.generateImageReference(os)
             else:
                 storageProfile['image_reference'] =\
-                    self.generateImageReference()
+                    self.generateImageReference({})
             storageProfile['os_disk'] = {
                 'name': vmName + 'disk',
                 'caching': 'None',
@@ -148,7 +143,6 @@ class Vm(object):
                      )
                 },
             },
-        print("Storage Profile: {}".format(storageProfile))
         return storageProfile
 
     def generateParams(
