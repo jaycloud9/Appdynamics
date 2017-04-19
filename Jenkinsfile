@@ -56,15 +56,17 @@ if (env.BRANCH_NAME == 'master') {
   }
 
   stage('Install PlatformInfra Dependencies') {
-    dir('platformInfraApi') {
-      checkout scm
-      dir('PlatformInfra') {
-        pyshell('pip install -e .')
+    node{
+      dir('platformInfraApi') {
+        checkout scm
+        dir('PlatformInfra') {
+          pyshell('pip install -e .')
+        }
       }
     }
   }
   stage('test') {
-    node() {
+    node {
       dir('platformInfraApi') {
         dir('PlatformInfra') {
           pyshell('python -W ignore setup.py test')
