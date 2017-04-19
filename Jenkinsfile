@@ -2,6 +2,8 @@
 
 stage('test') {
   node {
+    sh 'pwd'
+    sh 'ls -l'
     sh 'cd PlatformInfra/'
     sh 'make test'
     sh 'cd ..'
