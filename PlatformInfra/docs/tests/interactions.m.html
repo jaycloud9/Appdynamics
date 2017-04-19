@@ -1073,7 +1073,7 @@ def scale(
 
 
 def status(app, envid, infrastructureTemplateID="test"):
-    """Status check of an environment."""
+    """Check status of an environment."""
     print("Status check of environment", envid)
     url = urlp.urljoin(base_path, "environments/" + envid + "/status")
     request_data = json.dumps(
@@ -1102,6 +1102,7 @@ def getResponseData(rv):
 
 
 def getConfigGitlabUrl():
+    """Get the Gitlab URL from the config."""
     config = Config()
     config_url = config.credentials["gitlab"]["url"]
     print("Gitlab URL:", config_url)
@@ -1109,6 +1110,7 @@ def getConfigGitlabUrl():
 
 
 def getWebsiteUrl(envid):
+    """Get the website URL from the Config."""
     config = Config()
     website_url = config.test["website_url"]  # Template. Contains {{id}}
     url = Environment().from_string(website_url).render(id=envid)
@@ -1203,10 +1205,12 @@ def getWebsiteUrl(envid):
 
     
   
+    <div class="desc"><p>Get the Gitlab URL from the config.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.getConfigGitlabUrl', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.getConfigGitlabUrl" class="source">
     <pre><code>def getConfigGitlabUrl():
+    """Get the Gitlab URL from the config."""
     config = Config()
     config_url = config.credentials["gitlab"]["url"]
     print("Gitlab URL:", config_url)
@@ -1273,10 +1277,12 @@ def getWebsiteUrl(envid):
 
     
   
+    <div class="desc"><p>Get the website URL from the Config.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.getWebsiteUrl', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.getWebsiteUrl" class="source">
     <pre><code>def getWebsiteUrl(envid):
+    """Get the website URL from the Config."""
     config = Config()
     website_url = config.test["website_url"]  # Template. Contains {{id}}
     url = Environment().from_string(website_url).render(id=envid)
@@ -1339,12 +1345,12 @@ def getWebsiteUrl(envid):
 
     
   
-    <div class="desc"><p>Status check of an environment.</p></div>
+    <div class="desc"><p>Check status of an environment.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.status', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.status" class="source">
     <pre><code>def status(app, envid, infrastructureTemplateID="test"):
-    """Status check of an environment."""
+    """Check status of an environment."""
     print("Status check of environment", envid)
     url = urlp.urljoin(base_path, "environments/" + envid + "/status")
     request_data = json.dumps(

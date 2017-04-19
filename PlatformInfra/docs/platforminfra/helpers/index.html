@@ -1118,6 +1118,7 @@ class Response(object):
             rsp = Rsp()
 
         rsp.status_code = self.status_code
+        rsp.headers['Connection'] = 'close'
         return rsp
 
 
@@ -1135,10 +1136,6 @@ class Jenkins(object):
     def runBuildWithParams(self, build, params):
         """Run a build with params and return it's info."""
         self.server.build_job(build, params)
-        lastBuildNumber = self.server.get_job_info(
-            build)['lastCompletedBuild']['number']
-        buildInfo = self.server.get_build_info(build, lastBuildNumber)
-        return buildInfo
 
     def getBuildStatus(self, buildName, uuid):
         """Get all of the running jobs back.
@@ -1637,10 +1634,6 @@ class Gitlab(object):
     def runBuildWithParams(self, build, params):
         """Run a build with params and return it's info."""
         self.server.build_job(build, params)
-        lastBuildNumber = self.server.get_job_info(
-            build)['lastCompletedBuild']['number']
-        buildInfo = self.server.get_build_info(build, lastBuildNumber)
-        return buildInfo
 
     def getBuildStatus(self, buildName, uuid):
         """Get all of the running jobs back.
@@ -1768,10 +1761,6 @@ Else return the last status of the last run job with that param uuid.</p></div>
     <pre><code>def runBuildWithParams(self, build, params):
     """Run a build with params and return it's info."""
     self.server.build_job(build, params)
-    lastBuildNumber = self.server.get_job_info(
-        build)['lastCompletedBuild']['number']
-    buildInfo = self.server.get_build_info(build, lastBuildNumber)
-    return buildInfo
 </code></pre>
   </div>
 </div>
@@ -1841,6 +1830,7 @@ Else return the last status of the last run job with that param uuid.</p></div>
             rsp = Rsp()
 
         rsp.status_code = self.status_code
+        rsp.headers['Connection'] = 'close'
         return rsp
 </code></pre>
   </div>
@@ -1920,6 +1910,7 @@ Else return the last status of the last run job with that param uuid.</p></div>
     else:
         rsp = Rsp()
     rsp.status_code = self.status_code
+    rsp.headers['Connection'] = 'close'
     return rsp
 </code></pre>
   </div>

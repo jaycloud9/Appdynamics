@@ -1110,6 +1110,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """Setup unittest."""
         config = Config()
         global TEST_ENVIDS
         global SERVER_URL
@@ -1147,7 +1148,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         self,
         envid,
     ):
-        """Destroys an environment"""
+        """Destroy an environment."""
         print("Destroying environment", envid)
         url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
         print("Requesting", url)
@@ -1160,7 +1161,9 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         application="T24-Pipeline",
         infrastructureTemplateID="test"
     ):
-        """Create an environment. Does not raise exeptions, but appends them to
+        """Create an environment.
+
+        Does not raise exeptions, but appends them to
         self.execption. Suitable as a thread worker.
 
         Checks:
@@ -1168,7 +1171,6 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
           - Website URL returns 200 response code
 
         """
-
         try:
             print("Creating environment", envid)
             url = urlp.urljoin(SERVER_URL + base_path, "environments")
@@ -1203,10 +1205,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
             self.exceptions.append(ex)
 
     def test_parallel_creation(self):
-        """ Test creation of several environments in parallel, using
-        creationWorker function for concurrent threads.
-        """
+        """Test creation of several environments in parallel.
 
+        Using the creationWorker function for concurrent threads.
+        """
         request_threads = []
 
         # Worker threads might raise an exception. Check this afterwards
@@ -1235,6 +1237,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
             print("Number of exceptions:", len(self.exceptions))
             # May be several exceptions, but we'll just raise the first one
             raise self.exception[0]
+
 
 if __name__ == '__main__':
     unittest.main()
@@ -1315,6 +1318,7 @@ flask application threads.</p></div>
     """
 
     def setUp(self):
+        """Setup unittest."""
         config = Config()
         global TEST_ENVIDS
         global SERVER_URL
@@ -1352,7 +1356,7 @@ flask application threads.</p></div>
         self,
         envid,
     ):
-        """Destroys an environment"""
+        """Destroy an environment."""
         print("Destroying environment", envid)
         url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
         print("Requesting", url)
@@ -1365,7 +1369,9 @@ flask application threads.</p></div>
         application="T24-Pipeline",
         infrastructureTemplateID="test"
     ):
-        """Create an environment. Does not raise exeptions, but appends them to
+        """Create an environment.
+
+        Does not raise exeptions, but appends them to
         self.execption. Suitable as a thread worker.
 
         Checks:
@@ -1373,7 +1379,6 @@ flask application threads.</p></div>
           - Website URL returns 200 response code
 
         """
-
         try:
             print("Creating environment", envid)
             url = urlp.urljoin(SERVER_URL + base_path, "environments")
@@ -1408,10 +1413,10 @@ flask application threads.</p></div>
             self.exceptions.append(ex)
 
     def test_parallel_creation(self):
-        """ Test creation of several environments in parallel, using
-        creationWorker function for concurrent threads.
-        """
+        """Test creation of several environments in parallel.
 
+        Using the creationWorker function for concurrent threads.
+        """
         request_threads = []
 
         # Worker threads might raise an exception. Check this afterwards
@@ -3058,7 +3063,8 @@ are considered successful matches.</p>
 
     
   
-    <div class="desc"><p>Create an environment. Does not raise exeptions, but appends them to
+    <div class="desc"><p>Create an environment.</p>
+<p>Does not raise exeptions, but appends them to
 self.execption. Suitable as a thread worker.</p>
 <p>Checks:
   - Response of environment creation is "Success"
@@ -3072,7 +3078,8 @@ self.execption. Suitable as a thread worker.</p>
     application="T24-Pipeline",
     infrastructureTemplateID="test"
 ):
-    """Create an environment. Does not raise exeptions, but appends them to
+    """Create an environment.
+    Does not raise exeptions, but appends them to
     self.execption. Suitable as a thread worker.
     Checks:
       - Response of environment creation is "Success"
@@ -3169,7 +3176,7 @@ self.execption. Suitable as a thread worker.</p>
 
     
   
-    <div class="desc"><p>Destroys an environment</p></div>
+    <div class="desc"><p>Destroy an environment.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment', this);">Show source &equiv;</a></p>
   <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment" class="source">
@@ -3177,7 +3184,7 @@ self.execption. Suitable as a thread worker.</p>
     self,
     envid,
 ):
-    """Destroys an environment"""
+    """Destroy an environment."""
     print("Destroying environment", envid)
     url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
     print("Requesting", url)
@@ -3512,11 +3519,12 @@ tearDown.</p></div>
 
     
   
-    <div class="desc"><p>Hook method for setting up the test fixture before exercising it.</p></div>
+    <div class="desc"><p>Setup unittest.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp', this);">Show source &equiv;</a></p>
   <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp" class="source">
     <pre><code>def setUp(self):
+    """Setup unittest."""
     config = Config()
     global TEST_ENVIDS
     global SERVER_URL
@@ -3703,14 +3711,14 @@ def subTest(self, msg=None, **params):
 
     
   
-    <div class="desc"><p>Test creation of several environments in parallel, using
-creationWorker function for concurrent threads.</p></div>
+    <div class="desc"><p>Test creation of several environments in parallel.</p>
+<p>Using the creationWorker function for concurrent threads.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation', this);">Show source &equiv;</a></p>
   <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation" class="source">
     <pre><code>def test_parallel_creation(self):
-    """ Test creation of several environments in parallel, using
-    creationWorker function for concurrent threads.
+    """Test creation of several environments in parallel.
+    Using the creationWorker function for concurrent threads.
     """
     request_threads = []
     # Worker threads might raise an exception. Check this afterwards
