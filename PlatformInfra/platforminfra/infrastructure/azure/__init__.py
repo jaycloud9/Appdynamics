@@ -620,6 +620,15 @@ class Azure(object):
             ):
         """Worker to create a VM."""
         tmpVm = Vm(opts)
+        if 'os' in vm:
+            os = vm['os']
+        else:
+            os = None
+        if 'image' in vm:
+            image = vm['image']
+        else:
+            image = None
+
         lock.acquire()
         vmNic = self.nic(vm, vmName, subnet, tags)
         lock.release()
@@ -629,7 +638,9 @@ class Azure(object):
             vmName,
             asInfo.id,
             {**tags, **tmpDict},
-            persistData
+            persistData,
+            os,
+            image
         )
         tmpVm.create(vmName, vmNic, vmQ)
         print("{} VM Created".format(vmName))
