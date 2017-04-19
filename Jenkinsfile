@@ -9,13 +9,10 @@ stage('Setup Python 3.5') {
       sh './configure --prefix=$(pwd)/py35'
       sh 'make'
       sh 'make altinstall'
-      sh 'echo $PATH'
-      sh 'echo $LD_LIBRARY_PATH'
       sh 'export PATH=$(pwd)/py35/bin:$PATH'
       sh 'export LD_LIBRARY_PATH=$(pwd)/py35/lib'
-      sh '$(pwd)/py35/bin/python --version'
-      sh 'echo $PATH'
-      sh 'echo $LD_LIBRARY_PATH'
+      sh 'alias python=python3.5'
+      sh 'alias pip=pip3.5'
       sh 'python --version'
     }
   }
