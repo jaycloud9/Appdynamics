@@ -1,15 +1,23 @@
 #!/usr/bin/env groovy
 
-stage('Setup Pyenv') {
+stage('Setup Python 3.5') {
   node {
-    sh "echo 'export PYENV_ROOT=\"$HOME/.pyenv"' >> ~/.bash_profile
-$ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile'
+    deleteDir()
+    sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
+    sh 'tar -xzvf Python-3.5.1.tgz'
+    dir('Python-3.5.1') {
+      sh './configure --prefix=./py35'
+      sh 'make'
+      sh 'make altinstall'
+      sh 'export PATH=${pwd}/py35/bin:$PATH'
+      sh 'export LD_LIBRARY_PATH=${pwd}/py35/lib'
+      sh 'python --version'
+    }
   }
 }
 
 stage('test') {
   node('python3.5') {
-    deleteDir()
     checkout scm
     dir('PlatformInfra') {
       sh 'ls'
