@@ -2,6 +2,7 @@
 
 stage('test') {
   node {
+    checkout scm
     sh 'pwd'
     sh 'ls -l'
     sh 'cd PlatformInfra/'
