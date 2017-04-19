@@ -16,16 +16,16 @@ defaults:
   storage_account_name: "mpdevtestsa"
 test:
   environment_ids:
-    - "abcdefghijk0"
-    - "abcdefghijk1"
-    - "abcdefghijk2"
-    - "abcdefghijk3"
-    - "abcdefghijk4"
-    - "abcdefghijk5"
-    - "abcdefghijk6"
-    - "abcdefghijk7"
-    - "abcdefghijk8"
-    - "abcdefghijk9"
+    - "abcdef-ghijk0"
+    - "abcdef-ghijk1"
+    - "abcdef-ghijk2"
+    - "abcdef-ghijk3"
+    - "abcdef-ghijk4"
+    - "abcdef-ghijk5"
+    - "abcdef-ghijk6"
+    - "abcdef-ghijk7"
+    - "abcdef-ghijk8"
+    - "abcdef-ghijk9"
   scale_to: 1
   concurrent_deployments: 3
   api_host: "127.0.0.1"
