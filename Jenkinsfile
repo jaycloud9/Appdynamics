@@ -1,14 +1,5 @@
 #!/usr/bin/env groovy
 
-properties([
-  [
-    $class: 'jenkins.model.BuildDiscarderProperty',
-    strategy: [
-      $class: 'LogRotator',
-      numToKeepStr: '200'
-    ]
-  ],
-
 stage('test') {
   node {
     sh 'make test'
