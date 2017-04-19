@@ -41,6 +41,7 @@ if (env.BRANCH_NAME == 'master') {
         returnStdout: true
       ).trim()
       deleteDir()
+      dir('Python-3.5.1')
       sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
       sh 'tar -xzvf Python-3.5.1.tgz'
       dir('Python-3.5.1-build') {
