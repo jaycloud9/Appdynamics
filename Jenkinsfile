@@ -30,7 +30,7 @@ stage('test') {
     dir('platformInfraApi') {
       checkout scm
       dir('PlatformInfra') {
-        shell('make test')
+        shell('python -W ignore setup.py test')
       }
     }
   }
