@@ -2,7 +2,9 @@
 
 stage('test') {
   node {
+    sh 'cd PlatformInfra/'
     sh 'make test'
+    sh 'cd ..'
   }
 }
 
