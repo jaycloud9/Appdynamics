@@ -3,8 +3,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
-    <title>platforminfra.config API documentation</title>
-    <meta name="description" content="Module for Loading the configuration of PlatformInfra." />
+    <title>tests API documentation</title>
+    <meta name="description" content="" />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
   
@@ -971,21 +971,13 @@ table {
     <ul id="index">
 
 
-    <li class="set"><h3><a href="#header-classes">Classes</a></h3>
-      <ul>
-        <li class="mono">
-        <span class="class_name"><a href="#platforminfra.config.Config">Config</a></span>
-        
-          
-  <ul>
-    <li class="mono"><a href="#platforminfra.config.Config.__init__">__init__</a></li>
-    <li class="mono"><a href="#platforminfra.config.Config.loadConfig">loadConfig</a></li>
-  </ul>
 
-        </li>
+    <li class="set"><h3><a href="#header-submodules">Sub-modules</a></h3>
+      <ul>
+        <li class="mono"><a href="interactions.m.html">tests.interactions</a></li>
+        <li class="mono"><a href="test_platforminfra_threads.m.html">tests.test_platforminfra_threads</a></li>
       </ul>
     </li>
-
     </ul>
   </div>
 
@@ -997,159 +989,31 @@ table {
 
 
   <header id="section-intro">
-  <h1 class="title"><span class="name">platforminfra.config</span> module</h1>
-  <p>Module for Loading the configuration of PlatformInfra.</p>
+  <h1 class="title"><span class="name">tests</span> module</h1>
   
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.config', this);">Show source &equiv;</a></p>
-  <div id="source-platforminfra.config" class="source">
-    <pre><code>"""Module for Loading the configuration of PlatformInfra."""
-
-import os.path
-import yaml
-
-
-class Config(object):
-    """Class for managing the PlatformInfra Config."""
-
-    def __init__(self, config="config.yml"):
-        """Create a Config object."""
-        if os.path.exists(config):
-            self.configFile = config
-            self.loadConfig()
-
-    def loadConfig(self):
-        """Load a Template from a file."""
-        fp = self.configFile
-        if os.path.isfile(fp):
-            stream = open(fp, 'r')
-            self.properties = yaml.load(stream)
-            if 'credentials' in self.properties:
-                self.credentials = self.properties['credentials']
-            if 'defaults' in self.properties:
-                self.defaults = self.properties['defaults']
-            if 'test' in self.properties:
-                self.test = self.properties['test']
-            else:
-                raise Exception("No Credentials provided")
-        else:
-            raise IOError
-</code></pre>
-  </div>
+  
 
   </header>
 
   <section id="section-items">
 
 
-    <h2 class="section-title" id="header-classes">Classes</h2>
-      
+
+    <h2 class="section-title" id="header-submodules">Sub-modules</h2>
       <div class="item">
-      <p id="platforminfra.config.Config" class="name">class <span class="ident">Config</span></p>
+      <p class="name"><a href="interactions.m.html">tests.interactions</a></p>
       
   
-    <div class="desc"><p>Class for managing the PlatformInfra Config.</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.config.Config', this);">Show source &equiv;</a></p>
-  <div id="source-platforminfra.config.Config" class="source">
-    <pre><code>class Config(object):
-    """Class for managing the PlatformInfra Config."""
+    <div class="desc"><p>PlatformInfra Tests Module.</p></div>
 
-    def __init__(self, config="config.yml"):
-        """Create a Config object."""
-        if os.path.exists(config):
-            self.configFile = config
-            self.loadConfig()
-
-    def loadConfig(self):
-        """Load a Template from a file."""
-        fp = self.configFile
-        if os.path.isfile(fp):
-            stream = open(fp, 'r')
-            self.properties = yaml.load(stream)
-            if 'credentials' in self.properties:
-                self.credentials = self.properties['credentials']
-            if 'defaults' in self.properties:
-                self.defaults = self.properties['defaults']
-            if 'test' in self.properties:
-                self.test = self.properties['test']
-            else:
-                raise Exception("No Credentials provided")
-        else:
-            raise IOError
-</code></pre>
-  </div>
-</div>
-
-
-      <div class="class">
-          <h3>Ancestors (in MRO)</h3>
-          <ul class="class_list">
-          <li><a href="#platforminfra.config.Config">Config</a></li>
-          <li>builtins.object</li>
-          </ul>
-          <h3>Static methods</h3>
-            
-  <div class="item">
-    <div class="name def" id="platforminfra.config.Config.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, config=&#39;config.yml&#39;)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Create a Config object.</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.config.Config.__init__', this);">Show source &equiv;</a></p>
-  <div id="source-platforminfra.config.Config.__init__" class="source">
-    <pre><code>def __init__(self, config="config.yml"):
-    """Create a Config object."""
-    if os.path.exists(config):
-        self.configFile = config
-        self.loadConfig()
-</code></pre>
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="platforminfra.config.Config.loadConfig">
-    <p>def <span class="ident">loadConfig</span>(</p><p>self)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Load a Template from a file.</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.config.Config.loadConfig', this);">Show source &equiv;</a></p>
-  <div id="source-platforminfra.config.Config.loadConfig" class="source">
-    <pre><code>def loadConfig(self):
-    """Load a Template from a file."""
-    fp = self.configFile
-    if os.path.isfile(fp):
-        stream = open(fp, 'r')
-        self.properties = yaml.load(stream)
-        if 'credentials' in self.properties:
-            self.credentials = self.properties['credentials']
-        if 'defaults' in self.properties:
-            self.defaults = self.properties['defaults']
-        if 'test' in self.properties:
-            self.test = self.properties['test']
-        else:
-            raise Exception("No Credentials provided")
-    else:
-        raise IOError
-</code></pre>
-  </div>
-</div>
-
-  </div>
-  
       </div>
-      </div>
+      <div class="item">
+      <p class="name"><a href="test_platforminfra_threads.m.html">tests.test_platforminfra_threads</a></p>
+      
+  
+    <div class="desc"><p>PlatformInfra Tests Module.</p></div>
 
+      </div>
   </section>
 
     </article>

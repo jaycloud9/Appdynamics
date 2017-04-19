@@ -69,6 +69,7 @@ class Response(object):
             rsp = Rsp()
 
         rsp.status_code = self.status_code
+        rsp.headers['Connection'] = 'close'
         return rsp
 
 

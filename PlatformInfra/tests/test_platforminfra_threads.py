@@ -27,6 +27,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        """Setup unittest."""
         config = Config()
         global TEST_ENVIDS
         global SERVER_URL
@@ -64,7 +65,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         self,
         envid,
     ):
-        """Destroys an environment"""
+        """Destroy an environment."""
         print("Destroying environment", envid)
         url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
         print("Requesting", url)
@@ -77,7 +78,9 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         application="T24-Pipeline",
         infrastructureTemplateID="test"
     ):
-        """Create an environment. Does not raise exeptions, but appends them to
+        """Create an environment.
+
+        Does not raise exeptions, but appends them to
         self.execption. Suitable as a thread worker.
 
         Checks:
@@ -85,7 +88,6 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
           - Website URL returns 200 response code
 
         """
-
         try:
             print("Creating environment", envid)
             url = urlp.urljoin(SERVER_URL + base_path, "environments")
@@ -120,10 +122,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
             self.exceptions.append(ex)
 
     def test_parallel_creation(self):
-        """ Test creation of several environments in parallel, using
-        creationWorker function for concurrent threads.
-        """
+        """Test creation of several environments in parallel.
 
+        Using the creationWorker function for concurrent threads.
+        """
         request_threads = []
 
         # Worker threads might raise an exception. Check this afterwards
@@ -152,6 +154,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
             print("Number of exceptions:", len(self.exceptions))
             # May be several exceptions, but we'll just raise the first one
             raise self.exception[0]
+
 
 if __name__ == '__main__':
     unittest.main()

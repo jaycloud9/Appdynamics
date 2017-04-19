@@ -1155,7 +1155,7 @@ class Jenkins(object):
                 if 'parameters' in action:
                     for param in action['parameters']:
                         if (
-                            param['name'] == "uuid" and
+                            param['name'] == "UUID" and
                             param['value'] == uuid
                         ):
                             if jobInfo['result']:
@@ -1657,7 +1657,7 @@ class Gitlab(object):
                 if 'parameters' in action:
                     for param in action['parameters']:
                         if (
-                            param['name'] == "uuid" and
+                            param['name'] == "UUID" and
                             param['value'] == uuid
                         ):
                             if jobInfo['result']:
@@ -1735,7 +1735,7 @@ Else return the last status of the last run job with that param uuid.</p></div>
             if 'parameters' in action:
                 for param in action['parameters']:
                     if (
-                        param['name'] == "uuid" and
+                        param['name'] == "UUID" and
                         param['value'] == uuid
                     ):
                         if jobInfo['result']:
