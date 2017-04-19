@@ -1,39 +1,14 @@
 #!/usr/bin/env groovy
 
-def shell(command) {
+def pyshell(command) {
   sh """
-    export PATH=\$(pwd)/py35/bin:$PATH
-    export LD_LIBRARY_PATH=\$(pwd)/py35/lib
+    export PATH=${PYTHON_PATH}/bin:$PATH
+    export LD_LIBRARY_PATH=${PYTHON_PATH}/lib
+    echo $PATH
     alias python=python3.5
-    which python
     alias pip=pip3.5
     ${command}
   """
-}
-
-stage('Setup Python 3.5') {
-  node {
-    deleteDir()
-    sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
-    sh 'tar -xzvf Python-3.5.1.tgz'
-    dir('Python-3.5.1') {
-      sh './configure --prefix=$(pwd)/py35'
-      sh 'make'
-      sh 'make altinstall'
-      shell('python --version')
-    }
-  }
-}
-
-stage('test') {
-  node() {
-    dir('platformInfraApi') {
-      checkout scm
-      dir('PlatformInfra') {
-        shell('python -W ignore setup.py test')
-      }
-    }
-  }
 }
 
 if (env.BRANCH_NAME == 'master') {
@@ -47,9 +22,7 @@ if (env.BRANCH_NAME == 'master') {
     sh 'chmod 400 infra/keys/key.pem ; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i infra/keys/key.pem infra/platform_infra_api*.rpm mpadmin@51.141.31.84:/home/mpadmin/'
     sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i infra/keys/key.pem mpadmin@51.141.31.84 "sudo mv /home/mpadmin/*.rpm /temenos-artificats ;sudo chown root:root /temenos-artificats/*.rpm; sudo createrepo --update /temenos-artificats/"'
   }
-}
-
-if (env.BRANCH_NAME == 'stable') {
+} else if (env.BRANCH_NAME == 'stable') {
   stage('Deploy') {
     git branch: 'master', credentialsId: '6a40fcf8-c20b-463d-bd69-d483304049f2', url: 'git@github.com:temenostech/Temenos-PaaS-config.git'
     sh 'chmod 400 ./keys/key.pem;export ANSIBLE_ROLES_PATH="../roles"'
@@ -59,5 +32,35 @@ if (env.BRANCH_NAME == 'stable') {
     tags=uuid:${env.UUID}
     EOF"""
     sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/azure_rm.py --vault-password-file ~/vault-password  -u mpadmin --private-key=./infra/keys/key.pem master.yml'
+  }
+} else {
+  stage('Setup Python 3.5') {
+    node {
+      PYTHON_PATH = sh (
+        script: 'echo "$(pwd)/Python-3.5.1',
+        returnStdout: true
+      ).trim()
+      deleteDir()
+      sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
+      sh 'tar -xzvf Python-3.5.1.tgz'
+      dir('Python-3.5.1-build') {
+        sh "./configure --prefix=${PYTHON_PATH}"
+        sh 'make'
+        sh 'make altinstall'
+
+        pyshell('python --version')
+      }
+    }
+  }
+
+  stage('test') {
+    node() {
+      dir('platformInfraApi') {
+        checkout scm
+        dir('PlatformInfra') {
+          pyshell('python -W ignore setup.py test')
+        }
+      }
+    }
   }
 }
