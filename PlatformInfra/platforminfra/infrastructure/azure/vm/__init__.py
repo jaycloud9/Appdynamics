@@ -22,65 +22,65 @@ class Vm(object):
         if persistData:
             createOption = "Attach"
         self.vmParams = {
-          'location': self.config['region'],
-          'tags': tags,
-          'os_profile': {
-            'computer_name': vmName,
-            'admin_username': self.config['user'],
-            'linux_configuration': {
-              'ssh': {
-                'public_keys': [{
-                  'path': '/home/{}/.ssh/authorized_keys'.format(
-                    self.config['user']
-                    ),
-                  'key_data': self.config["public_ssh_key"]
+            'location': self.config['region'],
+            'tags': tags,
+            'os_profile': {
+                'computer_name': vmName,
+                'admin_username': self.config['user'],
+                'linux_configuration': {
+                    'ssh': {
+                        'public_keys': [{
+                            'path': '/home/{}/.ssh/authorized_keys'.format(
+                                self.config['user']
+                            ),
+                            'key_data': self.config["public_ssh_key"]
+                        }]
+                    }
+                }
+            },
+            'hardware_profile': {
+                'vm_size': self.config['server_size']
+            },
+            'storage_profile': {
+                'image_reference': {
+                  'publisher': 'RedHat',
+                  'offer': 'RHEL',
+                  'sku': '7.2',
+                  'version': 'latest'
+                },
+                'os_disk': {
+                  'name': vmName + 'disk',
+                  'caching': 'None',
+                  'create_option': 'fromImage',
+                  'vhd': {
+                      'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
+                            self.storageAccount,
+                            tags['uuid'],
+                            vmName + '.vhd'
+                         )
+                       },
+                 },
+                'data_disks': [{
+                  'name': vmName + 'datadisk1.vhd',
+                  'disk_size_gb': 200,
+                  'lun': 0,
+                  'vhd': {
+                    'uri': "https://{}.blob.core.windows.net/{}/{}".format(
+                        self.storageAccount,
+                        tags['uuid'],
+                        vmName + 'datadisk1.vhd')
+                  },
+                  'create_option': createOption
                 }]
-              }
-            }
-          },
-          'hardware_profile': {
-            'vm_size': self.config['server_size']
-          },
-          'storage_profile': {
-            'image_reference': {
-              'publisher': 'RedHat',
-              'offer': 'RHEL',
-              'sku': '7.2',
-              'version': 'latest'
             },
-            'os_disk': {
-              'name': vmName + 'disk',
-              'caching': 'None',
-              'create_option': 'fromImage',
-              'vhd': {
-                'uri': 'https://{}.blob.core.windows.net/{}/{}'.format(
-                    self.storageAccount,
-                    tags['uuid'],
-                    vmName + '.vhd'
-                 )
-              },
+            'network_profile': {
+                'network_interfaces': [{
+                    'id': nicId,
+                }]
             },
-            'data_disks': [{
-              'name': vmName + 'datadisk1.vhd',
-              'disk_size_gb': 200,
-              'lun': 0,
-              'vhd': {
-                'uri': "https://{}.blob.core.windows.net/{}/{}".format(
-                    self.storageAccount,
-                    tags['uuid'],
-                    vmName + 'datadisk1.vhd')
-              },
-              'create_option': createOption
-            }]
-          },
-          'network_profile': {
-              'network_interfaces': [{
-                  'id': nicId,
-              }]
-          },
-          'availability_set': {
-            'id': asId
-          },
+            'availability_set': {
+                'id': asId
+            },
         }
 
     def publicIp(self, pubIpName):
