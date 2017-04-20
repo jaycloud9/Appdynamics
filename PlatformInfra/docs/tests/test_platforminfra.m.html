@@ -3,7 +3,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
-    <title>tests.test_platforminfra_threads API documentation</title>
+    <title>tests.test_platforminfra API documentation</title>
     <meta name="description" content="PlatformInfra Tests Module." />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
@@ -972,12 +972,8 @@ table {
     <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
       
   <ul>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.API_HOST">API_HOST</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.API_PORT">API_PORT</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.CONCURRENT_DEPLOYMENTS">CONCURRENT_DEPLOYMENTS</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.SERVER_URL">SERVER_URL</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.TEST_ENVIDS">TEST_ENVIDS</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.base_path">base_path</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.SCALE_TO">SCALE_TO</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.TEST_ENVIDS">TEST_ENVIDS</a></li>
   </ul>
 
     </li>
@@ -986,78 +982,79 @@ table {
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
-        <span class="class_name"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase">PlatformInfraThreadsTestCase</a></span>
+        <span class="class_name"><a href="#tests.test_platforminfra.PlatformInfraTestCase">PlatformInfraTestCase</a></span>
         
           
   <ul>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.__init__">__init__</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addCleanup">addCleanup</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addTypeEqualityFunc">addTypeEqualityFunc</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEqual">assertAlmostEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEquals">assertAlmostEquals</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertCountEqual">assertCountEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictContainsSubset">assertDictContainsSubset</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictEqual">assertDictEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEqual">assertEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEquals">assertEquals</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertFalse">assertFalse</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreater">assertGreater</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreaterEqual">assertGreaterEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIn">assertIn</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIs">assertIs</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsInstance">assertIsInstance</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNone">assertIsNone</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNot">assertIsNot</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNotNone">assertIsNotNone</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLess">assertLess</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLessEqual">assertLessEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertListEqual">assertListEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLogs">assertLogs</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertMultiLineEqual">assertMultiLineEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEqual">assertNotAlmostEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEquals">assertNotAlmostEquals</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEqual">assertNotEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEquals">assertNotEquals</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIn">assertNotIn</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIsInstance">assertNotIsInstance</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegex">assertNotRegex</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegexpMatches">assertNotRegexpMatches</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaises">assertRaises</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegex">assertRaisesRegex</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegexp">assertRaisesRegexp</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegex">assertRegex</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegexpMatches">assertRegexpMatches</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSequenceEqual">assertSequenceEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSetEqual">assertSetEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTrue">assertTrue</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTupleEqual">assertTupleEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarns">assertWarns</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarnsRegex">assertWarnsRegex</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assert_">assert_</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.countTestCases">countTestCases</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.creationWorker">creationWorker</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.debug">debug</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.defaultTestResult">defaultTestResult</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment">destroyEnvironment</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.doCleanups">doCleanups</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.fail">fail</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIf">failIf</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfAlmostEqual">failIfAlmostEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfEqual">failIfEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnless">failUnless</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessAlmostEqual">failUnlessAlmostEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessEqual">failUnlessEqual</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessRaises">failUnlessRaises</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.id">id</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.run">run</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp">setUp</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.shortDescription">shortDescription</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.skipTest">skipTest</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.subTest">subTest</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDown">tearDown</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation">test_parallel_creation</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUpClass">setUpClass</a></li>
-    <li class="mono"><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDownClass">tearDownClass</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.__init__">__init__</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.addCleanup">addCleanup</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.addTypeEqualityFunc">addTypeEqualityFunc</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEqual">assertAlmostEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEquals">assertAlmostEquals</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertCountEqual">assertCountEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertDictContainsSubset">assertDictContainsSubset</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertDictEqual">assertDictEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertEqual">assertEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertEquals">assertEquals</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertFalse">assertFalse</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertGreater">assertGreater</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertGreaterEqual">assertGreaterEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIn">assertIn</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIs">assertIs</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIsInstance">assertIsInstance</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIsNone">assertIsNone</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIsNot">assertIsNot</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertIsNotNone">assertIsNotNone</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertLess">assertLess</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertLessEqual">assertLessEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertListEqual">assertListEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertLogs">assertLogs</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertMultiLineEqual">assertMultiLineEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEqual">assertNotAlmostEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEquals">assertNotAlmostEquals</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotEqual">assertNotEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotEquals">assertNotEquals</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotIn">assertNotIn</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotIsInstance">assertNotIsInstance</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotRegex">assertNotRegex</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertNotRegexpMatches">assertNotRegexpMatches</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertRaises">assertRaises</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegex">assertRaisesRegex</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegexp">assertRaisesRegexp</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertRegex">assertRegex</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertRegexpMatches">assertRegexpMatches</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertSequenceEqual">assertSequenceEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertSetEqual">assertSetEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertTrue">assertTrue</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertTupleEqual">assertTupleEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertWarns">assertWarns</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assertWarnsRegex">assertWarnsRegex</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.assert_">assert_</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.checkSuccess">checkSuccess</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.countTestCases">countTestCases</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.debug">debug</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.defaultTestResult">defaultTestResult</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.doCleanups">doCleanups</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.fail">fail</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failIf">failIf</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failIfAlmostEqual">failIfAlmostEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failIfEqual">failIfEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failUnless">failUnless</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failUnlessAlmostEqual">failUnlessAlmostEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failUnlessEqual">failUnlessEqual</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.failUnlessRaises">failUnlessRaises</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.id">id</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.run">run</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.setUp">setUp</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.shortDescription">shortDescription</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.skipTest">skipTest</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.subTest">subTest</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.tearDown">tearDown</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.test_config_gitlab_url">test_config_gitlab_url</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.test_create_and_destroy">test_create_and_destroy</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.test_scale">test_scale</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.setUpClass">setUpClass</a></li>
+    <li class="mono"><a href="#tests.test_platforminfra.PlatformInfraTestCase.tearDownClass">tearDownClass</a></li>
   </ul>
 
         </li>
@@ -1075,139 +1072,244 @@ table {
 
 
   <header id="section-intro">
-  <h1 class="title"><span class="name">tests.test_platforminfra_threads</span> module</h1>
+  <h1 class="title"><span class="name">tests.test_platforminfra</span> module</h1>
   <p>PlatformInfra Tests Module.</p>
   
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra" class="source">
     <pre><code>"""PlatformInfra Tests Module."""
 
 import unittest
-from platforminfra.views import base_path
 import urllib.parse as urlp
+import requests
+import dns.resolver
+import re
 import time
 from tests.interactions import Interactions
-import threading
-import requests
 from platforminfra.config import Config
 
 TEST_ENVIDS = None
-CONCURRENT_DEPLOYMENTS = None
-API_HOST = None
-API_PORT = None
-SERVER_URL = None
+SCALE_TO = None
 
 
-class PlatformInfraThreadsTestCase(unittest.TestCase):
-    """Platfrom Infra Threads Test Cases.
+class PlatformInfraTestCase(unittest.TestCase):
+    """Platfrom Infra Test Cases.
 
     A class whose instances are single test cases to test the PlatformInfra
-    flask application threads.
+    flask application.
     """
 
     def setUp(self):
-        """Setup unittest."""
-        config = Config()
+        """Setup Unittest."""
         global TEST_ENVIDS
-        global SERVER_URL
-        global CONCURRENT_DEPLOYMENTS
+        global SCALE_TO
+        config = Config()
         TEST_ENVIDS = config.test["environment_ids"]
-        CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
+        SCALE_TO = config.test["scale_to"]
         self.interactions = Interactions()
 
     def tearDown(self):
-        """Tear Down Flask App."""
-        # Destroy environments, using the flask test client
+        """Destroy any deployments created"""
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+                self.interactions.destroy(envid)
 
-        """Stop flask if it is running"""
         self.interactions.close()
 
-    def destroyEnvironment(
-        self,
-        envid,
-    ):
-        """Destroy an environment."""
-        print("Destroying environment", envid)
-        url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
-        print("Requesting", url)
-        r = requests.delete(url)
-        print("Status code:", r.status_code)
+    def checkSuccess(self, response_data, message):
+        """Check that "response" is "Success" in response data."""
+        response = response_data["response"]
+        self.assertEqual(
+            response, "Success", message
+        )
 
-    def creationWorker(
-        self,
-        envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
-    ):
-        """Create an environment.
+    def test_config_gitlab_url(self):
+        """Test the gitlab URL is correct."""
+        url = self.interactions.getConfigGitlabUrl()
+        url_components = urlp.urlparse(url)
+        print("Gitlab url from configuration:", url)
+        self.assertTrue(url_components.scheme.startswith("http"))
+        self.assertTrue(len(url_components.netloc) > 0)
 
-        Does not raise exeptions, but appends them to
-        self.execption. Suitable as a thread worker.
+    def test_scale(self):
+        """Test the creation and scaling of one environment.
 
-        Checks:
-          - Response of environment creation is "Success"
-          - Website URL returns 200 response code
+        1: Environmnet creation
+
+          - Returns 201
+          - Tests that the response is "Succcess"
+          - Request status response until response is "Success"
+
+        2: Scale Environment
+
+          - Tests that the response is "Succcess"
+          - Request status response until response is "Success"
+          - Check that the correct number of servers are listed in the response
+            data
+          - Checks that the website returns a 200 status
 
         """
-        try:
-            print("Creating environment", envid)
-            r = self.interactions.create(
-                envid,
-                application,
-                infrastructureTemplateID
-            )
-            print("Status code:", r.status_code)
-            print("Response:", r.text)
+        envid = TEST_ENVIDS[1]
 
-            self.assertEqual(
-                "Success",
-                r.json()["response"],
-                "Check for creation success of environmnet ID " + envid
-            )
+        # Create environment
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        self.assertEqual(rv.status_code, 201, "Environment creation")
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(response_data, "Testing environment creation")
 
-            # Website URL is up and running
-            r = requests.get(self.interactions.getWebsiteUrl(envid))
-            self.assertEqual(r.status_code, 200)
+        # Wait for environment
+        for i in range(1, 20):
+            # Check Status of success
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
+            response = response_data["response"]
+            if response == "Success":
+                break
+            time.sleep(2)
+        self.checkSuccess(
+            response_data,
+            "Status of environment creation. " +
+            "Response of:"+str(response_data)
+        )
 
-        except Exception as ex:
-            print("Caught an exception from worker thread:", ex)
-            self.exceptions.append(ex)
+        # Scale environment
+        rv = self.interactions.scale(envid, SCALE_TO)
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(
+            response_data,
+            "Testing environment scale. " +
+            "Response of:"+str(response_data)
+        )
 
-    def test_parallel_creation(self):
-        """Test creation of several environments in parallel.
+        # Wait for environment
+        for i in range(1, 20):
+            # Check Status of success
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
+            response = response_data["response"]
+            if response == "Success":
+                break
+            time.sleep(2)
+        self.assertEqual(
+            response, "Success",
+            "Status of environment scale after several at status request. " +
+            "Response of:"+str(response_data)
+        )
 
-        Using the creationWorker function for concurrent threads.
+        # Check Status has SCALE_TO servers
+        rv = self.interactions.status(envid)
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(
+            response_data,
+            "Testing environment creation. Response of:"+str(response_data)
+        )
+
+        print("Checking response data of status check")
+        vm_counter = 0
+        for resource in response_data["Resources"][0]["Environment resources"]:
+            if "name" in resource:
+                # Check resources (whatever it is) succeeded
+                self.assertEqual(
+                    resource["provisioningState"], "Succeeded",
+                    "Provisioning state for resource " + str(resource["name"])
+                )
+                # Match on t24 + number
+                s = re.search('^.*t24(\d+)$', resource["name"])
+                if s:
+                    print("VM", resource["name"], "found in response data")
+                    vm_counter = vm_counter + 1
+                    self.assertEqual(
+                        resource["status"], "VM running",
+                        "VM is running"
+                    )
+        self.assertEqual(
+            vm_counter, SCALE_TO,
+            "Test for correct number of VMs"
+        )
+
+        # Website URL is up and running
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
+        self.assertEqual(r.status_code, 200)
+
+    def test_create_and_destroy(self):
+        """Test the creation and destruction of one environment.
+
+        Testing the following:
+
+        1: Environment Creation
+
+          - Returns 201
+          - Correct keys found in JSON resonse data for response, servers,
+            dns, and public ip address
+          - Tests that the response is "Succcess"
+          - Tests that website responds correctly
+
+        2: Environments Listing
+
+          - Tests that the new environment ID is present in the environments
+        list
+
+        3: Website URL
+
+          - Tests that the URL is accessible and returns a 200 response
+
+        4: Destroy Environment
+
+          - Tests that the destroy command returns a 204 status
+          - Tests that the destroy response is "Success"
+
+        5:  Environments Listing
+
+          - Tests that the new environment ID is no longer present in the
+        environments list
+
         """
-        request_threads = []
+        envid = TEST_ENVIDS[0]
 
-        # Worker threads might raise an exception. Check this afterwards
-        self.exceptions = []
+        print("Create and destroy of environment", envid)
 
-        # Start threads
-        for i in range(CONCURRENT_DEPLOYMENTS):
-            t = threading.Thread(
-                target=self.creationWorker,
-                args=(TEST_ENVIDS[i],)
-            )
-            request_threads.append(t)
-            t.start()
+        # Create environment
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        self.assertEqual(rv.status_code, 201, "Environment creation")
+        response_data = self.interactions.getResponseData(rv)
 
-        # Wait until all of the threads are complete
-        all_done = False
-        while not all_done:
-            all_done = True
-            for t in request_threads:
-                if t.is_alive():
-                    all_done = False
-                    time.sleep(1)
+        print("Creation response data:", str(response_data))
 
-        # Check to see if we caught any exceptions
-        if len(self.exceptions) > 0:
-            print("Number of exceptions:", len(self.exceptions))
-            # May be several exceptions, but we'll just raise the first one
-            raise self.exceptions[0]
+        # KeyErrors. i.e. does the response contain the fields we expect
+        servers = response_data["Resources"][0]["servers"]
+        print("Servers:", str(servers))
+        domain_name = response_data["Resources"][0]["dns"]
+        public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
+
+        # Test that the environment shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertTrue(
+            envid in response_data["Environments"],
+            "Created environment shows in environments list"
+        )
+
+        # DNS resolves to correct IP
+        dnsq = dns.resolver.query(domain_name, 'A')
+        print("Dopmain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+        self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
+
+        # Website URL is up and running
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
+        self.assertEqual(r.status_code, 200)
+
+        # Environment destuction
+        rv = self.interactions.destroy(envid)
+        self.assertEqual(rv.status_code, 204, "Destroy environment")
+
+        # Tests that the environment no longer shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertFalse(
+            envid in response_data["Environments"],
+            "Destroyed environment no longer in environments list"
+        )
 
 
 if __name__ == '__main__':
@@ -1220,7 +1322,7 @@ if __name__ == '__main__':
   <section id="section-items">
     <h2 class="section-title" id="header-variables">Module variables</h2>
       <div class="item">
-      <p id="tests.test_platforminfra_threads.API_HOST" class="name">var <span class="ident">API_HOST</span></p>
+      <p id="tests.test_platforminfra.SCALE_TO" class="name">var <span class="ident">SCALE_TO</span></p>
       
   
   <div class="source_cont">
@@ -1228,39 +1330,7 @@ if __name__ == '__main__':
 
       </div>
       <div class="item">
-      <p id="tests.test_platforminfra_threads.API_PORT" class="name">var <span class="ident">API_PORT</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="tests.test_platforminfra_threads.CONCURRENT_DEPLOYMENTS" class="name">var <span class="ident">CONCURRENT_DEPLOYMENTS</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="tests.test_platforminfra_threads.SERVER_URL" class="name">var <span class="ident">SERVER_URL</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="tests.test_platforminfra_threads.TEST_ENVIDS" class="name">var <span class="ident">TEST_ENVIDS</span></p>
-      
-  
-  <div class="source_cont">
-</div>
-
-      </div>
-      <div class="item">
-      <p id="tests.test_platforminfra_threads.base_path" class="name">var <span class="ident">base_path</span></p>
+      <p id="tests.test_platforminfra.TEST_ENVIDS" class="name">var <span class="ident">TEST_ENVIDS</span></p>
       
   
   <div class="source_cont">
@@ -1272,125 +1342,233 @@ if __name__ == '__main__':
     <h2 class="section-title" id="header-classes">Classes</h2>
       
       <div class="item">
-      <p id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase" class="name">class <span class="ident">PlatformInfraThreadsTestCase</span></p>
+      <p id="tests.test_platforminfra.PlatformInfraTestCase" class="name">class <span class="ident">PlatformInfraTestCase</span></p>
       
   
-    <div class="desc"><p>Platfrom Infra Threads Test Cases.</p>
+    <div class="desc"><p>Platfrom Infra Test Cases.</p>
 <p>A class whose instances are single test cases to test the PlatformInfra
-flask application threads.</p></div>
+flask application.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase" class="source">
-    <pre><code>class PlatformInfraThreadsTestCase(unittest.TestCase):
-    """Platfrom Infra Threads Test Cases.
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase" class="source">
+    <pre><code>class PlatformInfraTestCase(unittest.TestCase):
+    """Platfrom Infra Test Cases.
 
     A class whose instances are single test cases to test the PlatformInfra
-    flask application threads.
+    flask application.
     """
 
     def setUp(self):
-        """Setup unittest."""
-        config = Config()
+        """Setup Unittest."""
         global TEST_ENVIDS
-        global SERVER_URL
-        global CONCURRENT_DEPLOYMENTS
+        global SCALE_TO
+        config = Config()
         TEST_ENVIDS = config.test["environment_ids"]
-        CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
+        SCALE_TO = config.test["scale_to"]
         self.interactions = Interactions()
 
     def tearDown(self):
-        """Tear Down Flask App."""
-        # Destroy environments, using the flask test client
+        """Destroy any deployments created"""
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+                self.interactions.destroy(envid)
 
-        """Stop flask if it is running"""
         self.interactions.close()
 
-    def destroyEnvironment(
-        self,
-        envid,
-    ):
-        """Destroy an environment."""
-        print("Destroying environment", envid)
-        url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
-        print("Requesting", url)
-        r = requests.delete(url)
-        print("Status code:", r.status_code)
+    def checkSuccess(self, response_data, message):
+        """Check that "response" is "Success" in response data."""
+        response = response_data["response"]
+        self.assertEqual(
+            response, "Success", message
+        )
 
-    def creationWorker(
-        self,
-        envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
-    ):
-        """Create an environment.
+    def test_config_gitlab_url(self):
+        """Test the gitlab URL is correct."""
+        url = self.interactions.getConfigGitlabUrl()
+        url_components = urlp.urlparse(url)
+        print("Gitlab url from configuration:", url)
+        self.assertTrue(url_components.scheme.startswith("http"))
+        self.assertTrue(len(url_components.netloc) > 0)
 
-        Does not raise exeptions, but appends them to
-        self.execption. Suitable as a thread worker.
+    def test_scale(self):
+        """Test the creation and scaling of one environment.
 
-        Checks:
-          - Response of environment creation is "Success"
-          - Website URL returns 200 response code
+        1: Environmnet creation
+
+          - Returns 201
+          - Tests that the response is "Succcess"
+          - Request status response until response is "Success"
+
+        2: Scale Environment
+
+          - Tests that the response is "Succcess"
+          - Request status response until response is "Success"
+          - Check that the correct number of servers are listed in the response
+            data
+          - Checks that the website returns a 200 status
 
         """
-        try:
-            print("Creating environment", envid)
-            r = self.interactions.create(
-                envid,
-                application,
-                infrastructureTemplateID
-            )
-            print("Status code:", r.status_code)
-            print("Response:", r.text)
+        envid = TEST_ENVIDS[1]
 
-            self.assertEqual(
-                "Success",
-                r.json()["response"],
-                "Check for creation success of environmnet ID " + envid
-            )
+        # Create environment
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        self.assertEqual(rv.status_code, 201, "Environment creation")
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(response_data, "Testing environment creation")
 
-            # Website URL is up and running
-            r = requests.get(self.interactions.getWebsiteUrl(envid))
-            self.assertEqual(r.status_code, 200)
+        # Wait for environment
+        for i in range(1, 20):
+            # Check Status of success
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
+            response = response_data["response"]
+            if response == "Success":
+                break
+            time.sleep(2)
+        self.checkSuccess(
+            response_data,
+            "Status of environment creation. " +
+            "Response of:"+str(response_data)
+        )
 
-        except Exception as ex:
-            print("Caught an exception from worker thread:", ex)
-            self.exceptions.append(ex)
+        # Scale environment
+        rv = self.interactions.scale(envid, SCALE_TO)
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(
+            response_data,
+            "Testing environment scale. " +
+            "Response of:"+str(response_data)
+        )
 
-    def test_parallel_creation(self):
-        """Test creation of several environments in parallel.
+        # Wait for environment
+        for i in range(1, 20):
+            # Check Status of success
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
+            response = response_data["response"]
+            if response == "Success":
+                break
+            time.sleep(2)
+        self.assertEqual(
+            response, "Success",
+            "Status of environment scale after several at status request. " +
+            "Response of:"+str(response_data)
+        )
 
-        Using the creationWorker function for concurrent threads.
+        # Check Status has SCALE_TO servers
+        rv = self.interactions.status(envid)
+        response_data = self.interactions.getResponseData(rv)
+        self.checkSuccess(
+            response_data,
+            "Testing environment creation. Response of:"+str(response_data)
+        )
+
+        print("Checking response data of status check")
+        vm_counter = 0
+        for resource in response_data["Resources"][0]["Environment resources"]:
+            if "name" in resource:
+                # Check resources (whatever it is) succeeded
+                self.assertEqual(
+                    resource["provisioningState"], "Succeeded",
+                    "Provisioning state for resource " + str(resource["name"])
+                )
+                # Match on t24 + number
+                s = re.search('^.*t24(\d+)$', resource["name"])
+                if s:
+                    print("VM", resource["name"], "found in response data")
+                    vm_counter = vm_counter + 1
+                    self.assertEqual(
+                        resource["status"], "VM running",
+                        "VM is running"
+                    )
+        self.assertEqual(
+            vm_counter, SCALE_TO,
+            "Test for correct number of VMs"
+        )
+
+        # Website URL is up and running
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
+        self.assertEqual(r.status_code, 200)
+
+    def test_create_and_destroy(self):
+        """Test the creation and destruction of one environment.
+
+        Testing the following:
+
+        1: Environment Creation
+
+          - Returns 201
+          - Correct keys found in JSON resonse data for response, servers,
+            dns, and public ip address
+          - Tests that the response is "Succcess"
+          - Tests that website responds correctly
+
+        2: Environments Listing
+
+          - Tests that the new environment ID is present in the environments
+        list
+
+        3: Website URL
+
+          - Tests that the URL is accessible and returns a 200 response
+
+        4: Destroy Environment
+
+          - Tests that the destroy command returns a 204 status
+          - Tests that the destroy response is "Success"
+
+        5:  Environments Listing
+
+          - Tests that the new environment ID is no longer present in the
+        environments list
+
         """
-        request_threads = []
+        envid = TEST_ENVIDS[0]
 
-        # Worker threads might raise an exception. Check this afterwards
-        self.exceptions = []
+        print("Create and destroy of environment", envid)
 
-        # Start threads
-        for i in range(CONCURRENT_DEPLOYMENTS):
-            t = threading.Thread(
-                target=self.creationWorker,
-                args=(TEST_ENVIDS[i],)
-            )
-            request_threads.append(t)
-            t.start()
+        # Create environment
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        self.assertEqual(rv.status_code, 201, "Environment creation")
+        response_data = self.interactions.getResponseData(rv)
 
-        # Wait until all of the threads are complete
-        all_done = False
-        while not all_done:
-            all_done = True
-            for t in request_threads:
-                if t.is_alive():
-                    all_done = False
-                    time.sleep(1)
+        print("Creation response data:", str(response_data))
 
-        # Check to see if we caught any exceptions
-        if len(self.exceptions) > 0:
-            print("Number of exceptions:", len(self.exceptions))
-            # May be several exceptions, but we'll just raise the first one
-            raise self.exceptions[0]
+        # KeyErrors. i.e. does the response contain the fields we expect
+        servers = response_data["Resources"][0]["servers"]
+        print("Servers:", str(servers))
+        domain_name = response_data["Resources"][0]["dns"]
+        public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
+
+        # Test that the environment shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertTrue(
+            envid in response_data["Environments"],
+            "Created environment shows in environments list"
+        )
+
+        # DNS resolves to correct IP
+        dnsq = dns.resolver.query(domain_name, 'A')
+        print("Dopmain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+        self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
+
+        # Website URL is up and running
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
+        self.assertEqual(r.status_code, 200)
+
+        # Environment destuction
+        rv = self.interactions.destroy(envid)
+        self.assertEqual(rv.status_code, 204, "Destroy environment")
+
+        # Tests that the environment no longer shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertFalse(
+            envid in response_data["Environments"],
+            "Destroyed environment no longer in environments list"
+        )
 </code></pre>
   </div>
 </div>
@@ -1399,13 +1577,13 @@ flask application threads.</p></div>
       <div class="class">
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
-          <li><a href="#tests.test_platforminfra_threads.PlatformInfraThreadsTestCase">PlatformInfraThreadsTestCase</a></li>
+          <li><a href="#tests.test_platforminfra.PlatformInfraTestCase">PlatformInfraTestCase</a></li>
           <li>unittest.case.TestCase</li>
           <li>builtins.object</li>
           </ul>
           <h3>Class variables</h3>
             <div class="item">
-            <p id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failureException" class="name">var <span class="ident">failureException</span></p>
+            <p id="tests.test_platforminfra.PlatformInfraTestCase.failureException" class="name">var <span class="ident">failureException</span></p>
             
 
             
@@ -1415,7 +1593,7 @@ flask application threads.</p></div>
 
             </div>
             <div class="item">
-            <p id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.longMessage" class="name">var <span class="ident">longMessage</span></p>
+            <p id="tests.test_platforminfra.PlatformInfraTestCase.longMessage" class="name">var <span class="ident">longMessage</span></p>
             
 
             
@@ -1425,7 +1603,7 @@ flask application threads.</p></div>
 
             </div>
             <div class="item">
-            <p id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.maxDiff" class="name">var <span class="ident">maxDiff</span></p>
+            <p id="tests.test_platforminfra.PlatformInfraTestCase.maxDiff" class="name">var <span class="ident">maxDiff</span></p>
             
 
             
@@ -1437,7 +1615,7 @@ flask application threads.</p></div>
           <h3>Static methods</h3>
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.__init__">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.__init__">
     <p>def <span class="ident">__init__</span>(</p><p>self, methodName=&#39;runTest&#39;)</p>
     </div>
     
@@ -1448,8 +1626,8 @@ flask application threads.</p></div>
 method when executed. Raises a ValueError if the instance does
 not have a method with the specified name.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.__init__', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.__init__" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.__init__" class="source">
     <pre><code>def __init__(self, methodName='runTest'):
     """Create an instance of the class that will use the named test
        method when executed. Raises a ValueError if the instance does
@@ -1488,7 +1666,7 @@ not have a method with the specified name.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addCleanup">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.addCleanup">
     <p>def <span class="ident">addCleanup</span>(</p><p>self, function, *args, **kwargs)</p>
     </div>
     
@@ -1500,8 +1678,8 @@ completed. Functions added are called on a LIFO basis and are
 called after tearDown on test failure or success.</p>
 <p>Cleanup items are called even if setUp fails (unlike tearDown).</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addCleanup', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addCleanup" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.addCleanup', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.addCleanup" class="source">
     <pre><code>def addCleanup(self, function, *args, **kwargs):
     """Add a function, with arguments, to be called when the test is
     completed. Functions added are called on a LIFO basis and are
@@ -1516,7 +1694,7 @@ called after tearDown on test failure or success.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addTypeEqualityFunc">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.addTypeEqualityFunc">
     <p>def <span class="ident">addTypeEqualityFunc</span>(</p><p>self, typeobj, function)</p>
     </div>
     
@@ -1533,8 +1711,8 @@ their own type equality functions to provide nicer error messages.</p>
             msg= argument that raises self.failureException with a
             useful error message when the two arguments are not equal.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addTypeEqualityFunc', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.addTypeEqualityFunc" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.addTypeEqualityFunc', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.addTypeEqualityFunc" class="source">
     <pre><code>def addTypeEqualityFunc(self, typeobj, function):
     """Add a type specific assertEqual style function to compare a type.
     This method is for use by TestCase subclasses that need to register
@@ -1555,7 +1733,7 @@ their own type equality functions to provide nicer error messages.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEqual">
     <p>def <span class="ident">assertAlmostEqual</span>(</p><p>self, first, second, places=None, msg=None, delta=None)</p>
     </div>
     
@@ -1571,8 +1749,8 @@ as significant digits (measured from the most signficant digit).</p>
 <p>If the two objects compare equal then they will automatically
 compare almost equal.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEqual" class="source">
     <pre><code>def assertAlmostEqual(self, first, second, places=None, msg=None,
                       delta=None):
     """Fail if the two objects are unequal as determined by their
@@ -1613,7 +1791,7 @@ compare almost equal.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEquals">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEquals">
     <p>def <span class="ident">assertAlmostEquals</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -1621,8 +1799,8 @@ compare almost equal.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEquals', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertAlmostEquals" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEquals', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertAlmostEquals" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -1636,7 +1814,7 @@ compare almost equal.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertCountEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertCountEqual">
     <p>def <span class="ident">assertCountEqual</span>(</p><p>self, first, second, msg=None)</p>
     </div>
     
@@ -1653,8 +1831,8 @@ it verifies that the elements occur the same number of times.</p>
     - [0, 1, 1] and [1, 0, 1] compare equal.
     - [0, 0, 1] and [0, 1] compare unequal.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertCountEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertCountEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertCountEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertCountEqual" class="source">
     <pre><code>def assertCountEqual(self, first, second, msg=None):
     """An unordered sequence comparison asserting that the same elements,
     regardless of order.  If the same element occurs more than once,
@@ -1691,7 +1869,7 @@ it verifies that the elements occur the same number of times.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictContainsSubset">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertDictContainsSubset">
     <p>def <span class="ident">assertDictContainsSubset</span>(</p><p>self, subset, dictionary, msg=None)</p>
     </div>
     
@@ -1700,8 +1878,8 @@ it verifies that the elements occur the same number of times.</p>
   
     <div class="desc"><p>Checks whether dictionary is a superset of subset.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictContainsSubset', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictContainsSubset" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertDictContainsSubset', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertDictContainsSubset" class="source">
     <pre><code>def assertDictContainsSubset(self, subset, dictionary, msg=None):
     """Checks whether dictionary is a superset of subset."""
     warnings.warn('assertDictContainsSubset is deprecated',
@@ -1734,7 +1912,7 @@ it verifies that the elements occur the same number of times.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertDictEqual">
     <p>def <span class="ident">assertDictEqual</span>(</p><p>self, d1, d2, msg=None)</p>
     </div>
     
@@ -1742,8 +1920,8 @@ it verifies that the elements occur the same number of times.</p>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertDictEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertDictEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertDictEqual" class="source">
     <pre><code>def assertDictEqual(self, d1, d2, msg=None):
     self.assertIsInstance(d1, dict, 'First argument is not a dictionary')
     self.assertIsInstance(d2, dict, 'Second argument is not a dictionary')
@@ -1762,7 +1940,7 @@ it verifies that the elements occur the same number of times.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertEqual">
     <p>def <span class="ident">assertEqual</span>(</p><p>self, first, second, msg=None)</p>
     </div>
     
@@ -1772,8 +1950,8 @@ it verifies that the elements occur the same number of times.</p>
     <div class="desc"><p>Fail if the two objects are unequal as determined by the '=='
 operator.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertEqual" class="source">
     <pre><code>def assertEqual(self, first, second, msg=None):
     """Fail if the two objects are unequal as determined by the '=='
        operator.
@@ -1788,7 +1966,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEquals">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertEquals">
     <p>def <span class="ident">assertEquals</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -1796,8 +1974,8 @@ operator.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEquals', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertEquals" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertEquals', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertEquals" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -1811,7 +1989,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertFalse">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertFalse">
     <p>def <span class="ident">assertFalse</span>(</p><p>self, expr, msg=None)</p>
     </div>
     
@@ -1820,8 +1998,8 @@ operator.</p></div>
   
     <div class="desc"><p>Check that the expression is false.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertFalse', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertFalse" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertFalse', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertFalse" class="source">
     <pre><code>def assertFalse(self, expr, msg=None):
     """Check that the expression is false."""
     if expr:
@@ -1835,7 +2013,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreater">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertGreater">
     <p>def <span class="ident">assertGreater</span>(</p><p>self, a, b, msg=None)</p>
     </div>
     
@@ -1844,8 +2022,8 @@ operator.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a &gt; b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreater', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreater" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertGreater', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertGreater" class="source">
     <pre><code>def assertGreater(self, a, b, msg=None):
     """Just like self.assertTrue(a > b), but with a nicer default message."""
     if not a > b:
@@ -1859,7 +2037,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreaterEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertGreaterEqual">
     <p>def <span class="ident">assertGreaterEqual</span>(</p><p>self, a, b, msg=None)</p>
     </div>
     
@@ -1868,8 +2046,8 @@ operator.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a &gt;= b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreaterEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertGreaterEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertGreaterEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertGreaterEqual" class="source">
     <pre><code>def assertGreaterEqual(self, a, b, msg=None):
     """Just like self.assertTrue(a >= b), but with a nicer default message."""
     if not a >= b:
@@ -1883,7 +2061,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIn">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIn">
     <p>def <span class="ident">assertIn</span>(</p><p>self, member, container, msg=None)</p>
     </div>
     
@@ -1892,8 +2070,8 @@ operator.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a in b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIn', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIn" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIn', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIn" class="source">
     <pre><code>def assertIn(self, member, container, msg=None):
     """Just like self.assertTrue(a in b), but with a nicer default message."""
     if member not in container:
@@ -1908,7 +2086,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIs">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIs">
     <p>def <span class="ident">assertIs</span>(</p><p>self, expr1, expr2, msg=None)</p>
     </div>
     
@@ -1917,8 +2095,8 @@ operator.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a is b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIs', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIs" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIs', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIs" class="source">
     <pre><code>def assertIs(self, expr1, expr2, msg=None):
     """Just like self.assertTrue(a is b), but with a nicer default message."""
     if expr1 is not expr2:
@@ -1933,7 +2111,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsInstance">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIsInstance">
     <p>def <span class="ident">assertIsInstance</span>(</p><p>self, obj, cls, msg=None)</p>
     </div>
     
@@ -1943,8 +2121,8 @@ operator.</p></div>
     <div class="desc"><p>Same as self.assertTrue(isinstance(obj, cls)), with a nicer
 default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsInstance', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsInstance" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIsInstance', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIsInstance" class="source">
     <pre><code>def assertIsInstance(self, obj, cls, msg=None):
     """Same as self.assertTrue(isinstance(obj, cls)), with a nicer
     default message."""
@@ -1959,7 +2137,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNone">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIsNone">
     <p>def <span class="ident">assertIsNone</span>(</p><p>self, obj, msg=None)</p>
     </div>
     
@@ -1968,8 +2146,8 @@ default message.</p></div>
   
     <div class="desc"><p>Same as self.assertTrue(obj is None), with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNone', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNone" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNone', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNone" class="source">
     <pre><code>def assertIsNone(self, obj, msg=None):
     """Same as self.assertTrue(obj is None), with a nicer default message."""
     if obj is not None:
@@ -1983,7 +2161,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNot">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIsNot">
     <p>def <span class="ident">assertIsNot</span>(</p><p>self, expr1, expr2, msg=None)</p>
     </div>
     
@@ -1992,8 +2170,8 @@ default message.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a is not b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNot', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNot" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNot', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNot" class="source">
     <pre><code>def assertIsNot(self, expr1, expr2, msg=None):
     """Just like self.assertTrue(a is not b), but with a nicer default message."""
     if expr1 is expr2:
@@ -2007,7 +2185,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNotNone">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertIsNotNone">
     <p>def <span class="ident">assertIsNotNone</span>(</p><p>self, obj, msg=None)</p>
     </div>
     
@@ -2016,8 +2194,8 @@ default message.</p></div>
   
     <div class="desc"><p>Included for symmetry with assertIsNone.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNotNone', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertIsNotNone" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNotNone', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertIsNotNone" class="source">
     <pre><code>def assertIsNotNone(self, obj, msg=None):
     """Included for symmetry with assertIsNone."""
     if obj is None:
@@ -2031,7 +2209,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLess">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertLess">
     <p>def <span class="ident">assertLess</span>(</p><p>self, a, b, msg=None)</p>
     </div>
     
@@ -2040,8 +2218,8 @@ default message.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a &lt; b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLess', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLess" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertLess', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertLess" class="source">
     <pre><code>def assertLess(self, a, b, msg=None):
     """Just like self.assertTrue(a < b), but with a nicer default message."""
     if not a < b:
@@ -2055,7 +2233,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLessEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertLessEqual">
     <p>def <span class="ident">assertLessEqual</span>(</p><p>self, a, b, msg=None)</p>
     </div>
     
@@ -2064,8 +2242,8 @@ default message.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a &lt;= b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLessEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLessEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertLessEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertLessEqual" class="source">
     <pre><code>def assertLessEqual(self, a, b, msg=None):
     """Just like self.assertTrue(a <= b), but with a nicer default message."""
     if not a <= b:
@@ -2079,7 +2257,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertListEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertListEqual">
     <p>def <span class="ident">assertListEqual</span>(</p><p>self, list1, list2, msg=None)</p>
     </div>
     
@@ -2093,8 +2271,8 @@ default message.</p></div>
     msg: Optional message to use on failure instead of a list of
             differences.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertListEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertListEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertListEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertListEqual" class="source">
     <pre><code>def assertListEqual(self, list1, list2, msg=None):
     """A list-specific equality assertion.
     Args:
@@ -2112,7 +2290,7 @@ default message.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLogs">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertLogs">
     <p>def <span class="ident">assertLogs</span>(</p><p>self, logger=None, level=None)</p>
     </div>
     
@@ -2136,8 +2314,8 @@ self.assertEqual(cm.output, ['INFO:foo:first message',
                              'ERROR:foo.bar:second message'])
 </code></pre></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLogs', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertLogs" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertLogs', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertLogs" class="source">
     <pre><code>def assertLogs(self, logger=None, level=None):
     """Fail unless a log message of level *level* or higher is emitted
     on *logger_name* or its children.  If omitted, *level* defaults to
@@ -2164,7 +2342,7 @@ self.assertEqual(cm.output, ['INFO:foo:first message',
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertMultiLineEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertMultiLineEqual">
     <p>def <span class="ident">assertMultiLineEqual</span>(</p><p>self, first, second, msg=None)</p>
     </div>
     
@@ -2173,8 +2351,8 @@ self.assertEqual(cm.output, ['INFO:foo:first message',
   
     <div class="desc"><p>Assert that two multi-line strings are equal.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertMultiLineEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertMultiLineEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertMultiLineEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertMultiLineEqual" class="source">
     <pre><code>def assertMultiLineEqual(self, first, second, msg=None):
     """Assert that two multi-line strings are equal."""
     self.assertIsInstance(first, str, 'First argument is not a string')
@@ -2201,7 +2379,7 @@ self.assertEqual(cm.output, ['INFO:foo:first message',
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEqual">
     <p>def <span class="ident">assertNotAlmostEqual</span>(</p><p>self, first, second, places=None, msg=None, delta=None)</p>
     </div>
     
@@ -2216,8 +2394,8 @@ between the two objects is less than the given delta.</p>
 as significant digits (measured from the most signficant digit).</p>
 <p>Objects that are equal automatically fail.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEqual" class="source">
     <pre><code>def assertNotAlmostEqual(self, first, second, places=None, msg=None,
                          delta=None):
     """Fail if the two objects are equal as determined by their
@@ -2254,7 +2432,7 @@ as significant digits (measured from the most signficant digit).</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEquals">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEquals">
     <p>def <span class="ident">assertNotAlmostEquals</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2262,8 +2440,8 @@ as significant digits (measured from the most signficant digit).</p>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEquals', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotAlmostEquals" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEquals', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotAlmostEquals" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2277,7 +2455,7 @@ as significant digits (measured from the most signficant digit).</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotEqual">
     <p>def <span class="ident">assertNotEqual</span>(</p><p>self, first, second, msg=None)</p>
     </div>
     
@@ -2287,8 +2465,8 @@ as significant digits (measured from the most signficant digit).</p>
     <div class="desc"><p>Fail if the two objects are equal as determined by the '!='
 operator.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotEqual" class="source">
     <pre><code>def assertNotEqual(self, first, second, msg=None):
     """Fail if the two objects are equal as determined by the '!='
        operator.
@@ -2305,7 +2483,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEquals">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotEquals">
     <p>def <span class="ident">assertNotEquals</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2313,8 +2491,8 @@ operator.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEquals', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotEquals" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotEquals', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotEquals" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2328,7 +2506,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIn">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotIn">
     <p>def <span class="ident">assertNotIn</span>(</p><p>self, member, container, msg=None)</p>
     </div>
     
@@ -2337,8 +2515,8 @@ operator.</p></div>
   
     <div class="desc"><p>Just like self.assertTrue(a not in b), but with a nicer default message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIn', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIn" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotIn', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotIn" class="source">
     <pre><code>def assertNotIn(self, member, container, msg=None):
     """Just like self.assertTrue(a not in b), but with a nicer default message."""
     if member in container:
@@ -2353,7 +2531,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIsInstance">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotIsInstance">
     <p>def <span class="ident">assertNotIsInstance</span>(</p><p>self, obj, cls, msg=None)</p>
     </div>
     
@@ -2362,8 +2540,8 @@ operator.</p></div>
   
     <div class="desc"><p>Included for symmetry with assertIsInstance.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIsInstance', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotIsInstance" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotIsInstance', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotIsInstance" class="source">
     <pre><code>def assertNotIsInstance(self, obj, cls, msg=None):
     """Included for symmetry with assertIsInstance."""
     if isinstance(obj, cls):
@@ -2377,7 +2555,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegex">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotRegex">
     <p>def <span class="ident">assertNotRegex</span>(</p><p>self, text, unexpected_regex, msg=None)</p>
     </div>
     
@@ -2386,8 +2564,8 @@ operator.</p></div>
   
     <div class="desc"><p>Fail the test if the text matches the regular expression.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegex', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegex" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotRegex', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotRegex" class="source">
     <pre><code>def assertNotRegex(self, text, unexpected_regex, msg=None):
     """Fail the test if the text matches the regular expression."""
     if isinstance(unexpected_regex, (str, bytes)):
@@ -2409,7 +2587,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegexpMatches">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertNotRegexpMatches">
     <p>def <span class="ident">assertNotRegexpMatches</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2417,8 +2595,8 @@ operator.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegexpMatches', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertNotRegexpMatches" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertNotRegexpMatches', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertNotRegexpMatches" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2432,7 +2610,7 @@ operator.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaises">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertRaises">
     <p>def <span class="ident">assertRaises</span>(</p><p>self, expected_exception, *args, **kwargs)</p>
     </div>
     
@@ -2461,8 +2639,8 @@ the_exception = cm.exception
 self.assertEqual(the_exception.error_code, 3)
 </code></pre></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaises', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaises" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertRaises', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertRaises" class="source">
     <pre><code>def assertRaises(self, expected_exception, *args, **kwargs):
     """Fail unless an exception of class expected_exception is raised
        by the callable when invoked with specified positional and
@@ -2494,7 +2672,7 @@ self.assertEqual(the_exception.error_code, 3)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegex">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegex">
     <p>def <span class="ident">assertRaisesRegex</span>(</p><p>self, expected_exception, expected_regex, *args, **kwargs)</p>
     </div>
     
@@ -2511,8 +2689,8 @@ self.assertEqual(the_exception.error_code, 3)
     msg: Optional message used in case of failure. Can only be used
             when assertRaisesRegex is used as a context manager.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegex', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegex" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegex', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegex" class="source">
     <pre><code>def assertRaisesRegex(self, expected_exception, expected_regex,
                       *args, **kwargs):
     """Asserts that the message in a raised exception matches a regex.
@@ -2535,7 +2713,7 @@ self.assertEqual(the_exception.error_code, 3)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegexp">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegexp">
     <p>def <span class="ident">assertRaisesRegexp</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2543,8 +2721,8 @@ self.assertEqual(the_exception.error_code, 3)
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegexp', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRaisesRegexp" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegexp', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertRaisesRegexp" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2558,7 +2736,7 @@ self.assertEqual(the_exception.error_code, 3)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegex">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertRegex">
     <p>def <span class="ident">assertRegex</span>(</p><p>self, text, expected_regex, msg=None)</p>
     </div>
     
@@ -2567,8 +2745,8 @@ self.assertEqual(the_exception.error_code, 3)
   
     <div class="desc"><p>Fail the test unless the text matches the regular expression.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegex', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegex" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertRegex', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertRegex" class="source">
     <pre><code>def assertRegex(self, text, expected_regex, msg=None):
     """Fail the test unless the text matches the regular expression."""
     if isinstance(expected_regex, (str, bytes)):
@@ -2588,7 +2766,7 @@ self.assertEqual(the_exception.error_code, 3)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegexpMatches">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertRegexpMatches">
     <p>def <span class="ident">assertRegexpMatches</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2596,8 +2774,8 @@ self.assertEqual(the_exception.error_code, 3)
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegexpMatches', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertRegexpMatches" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertRegexpMatches', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertRegexpMatches" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2611,7 +2789,7 @@ self.assertEqual(the_exception.error_code, 3)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSequenceEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertSequenceEqual">
     <p>def <span class="ident">assertSequenceEqual</span>(</p><p>self, seq1, seq2, msg=None, seq_type=None)</p>
     </div>
     
@@ -2629,8 +2807,8 @@ which can be indexed, has a length, and has an equality operator.</p>
     msg: Optional message to use on failure instead of a list of
             differences.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSequenceEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSequenceEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertSequenceEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertSequenceEqual" class="source">
     <pre><code>def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
     """An equality assertion for ordered sequences (like lists and tuples).
     For the purposes of this function, a valid ordered sequence type is one
@@ -2726,7 +2904,7 @@ which can be indexed, has a length, and has an equality operator.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSetEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertSetEqual">
     <p>def <span class="ident">assertSetEqual</span>(</p><p>self, set1, set2, msg=None)</p>
     </div>
     
@@ -2743,8 +2921,8 @@ which can be indexed, has a length, and has an equality operator.</p>
 is optimized for sets specifically (parameters must support a
 difference method).</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSetEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertSetEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertSetEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertSetEqual" class="source">
     <pre><code>def assertSetEqual(self, set1, set2, msg=None):
     """A set-specific equality assertion.
     Args:
@@ -2789,7 +2967,7 @@ difference method).</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTrue">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertTrue">
     <p>def <span class="ident">assertTrue</span>(</p><p>self, expr, msg=None)</p>
     </div>
     
@@ -2798,8 +2976,8 @@ difference method).</p></div>
   
     <div class="desc"><p>Check that the expression is true.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTrue', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTrue" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertTrue', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertTrue" class="source">
     <pre><code>def assertTrue(self, expr, msg=None):
     """Check that the expression is true."""
     if not expr:
@@ -2813,7 +2991,7 @@ difference method).</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTupleEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertTupleEqual">
     <p>def <span class="ident">assertTupleEqual</span>(</p><p>self, tuple1, tuple2, msg=None)</p>
     </div>
     
@@ -2827,8 +3005,8 @@ difference method).</p></div>
     msg: Optional message to use on failure instead of a list of
             differences.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTupleEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertTupleEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertTupleEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertTupleEqual" class="source">
     <pre><code>def assertTupleEqual(self, tuple1, tuple2, msg=None):
     """A tuple-specific equality assertion.
     Args:
@@ -2846,7 +3024,7 @@ difference method).</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarns">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertWarns">
     <p>def <span class="ident">assertWarns</span>(</p><p>self, expected_warning, *args, **kwargs)</p>
     </div>
     
@@ -2877,8 +3055,8 @@ the_warning = cm.warning
 self.assertEqual(the_warning.some_attribute, 147)
 </code></pre></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarns', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarns" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertWarns', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertWarns" class="source">
     <pre><code>def assertWarns(self, expected_warning, *args, **kwargs):
     """Fail unless a warning of class warnClass is triggered
        by the callable when invoked with specified positional and
@@ -2912,7 +3090,7 @@ self.assertEqual(the_warning.some_attribute, 147)
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarnsRegex">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assertWarnsRegex">
     <p>def <span class="ident">assertWarnsRegex</span>(</p><p>self, expected_warning, expected_regex, *args, **kwargs)</p>
     </div>
     
@@ -2932,8 +3110,8 @@ are considered successful matches.</p>
     msg: Optional message used in case of failure. Can only be used
             when assertWarnsRegex is used as a context manager.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarnsRegex', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assertWarnsRegex" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assertWarnsRegex', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assertWarnsRegex" class="source">
     <pre><code>def assertWarnsRegex(self, expected_warning, expected_regex,
                      *args, **kwargs):
     """Asserts that the message in a triggered warning matches a regexp.
@@ -2959,7 +3137,7 @@ are considered successful matches.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assert_">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.assert_">
     <p>def <span class="ident">assert_</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -2967,8 +3145,8 @@ are considered successful matches.</p>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assert_', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.assert_" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.assert_', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.assert_" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -2982,7 +3160,32 @@ are considered successful matches.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.countTestCases">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.checkSuccess">
+    <p>def <span class="ident">checkSuccess</span>(</p><p>self, response_data, message)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Check that "response" is "Success" in response data.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.checkSuccess', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.checkSuccess" class="source">
+    <pre><code>def checkSuccess(self, response_data, message):
+    """Check that "response" is "Success" in response data."""
+    response = response_data["response"]
+    self.assertEqual(
+        response, "Success", message
+    )
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.countTestCases">
     <p>def <span class="ident">countTestCases</span>(</p><p>self)</p>
     </div>
     
@@ -2990,8 +3193,8 @@ are considered successful matches.</p>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.countTestCases', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.countTestCases" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.countTestCases', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.countTestCases" class="source">
     <pre><code>def countTestCases(self):
     return 1
 </code></pre>
@@ -3002,64 +3205,7 @@ are considered successful matches.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.creationWorker">
-    <p>def <span class="ident">creationWorker</span>(</p><p>self, envid, application=&#39;T24-Pipeline&#39;, infrastructureTemplateID=&#39;test&#39;)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Create an environment.</p>
-<p>Does not raise exeptions, but appends them to
-self.execption. Suitable as a thread worker.</p>
-<p>Checks:
-  - Response of environment creation is "Success"
-  - Website URL returns 200 response code</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.creationWorker', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.creationWorker" class="source">
-    <pre><code>def creationWorker(
-    self,
-    envid,
-    application="T24-Pipeline",
-    infrastructureTemplateID="test"
-):
-    """Create an environment.
-    Does not raise exeptions, but appends them to
-    self.execption. Suitable as a thread worker.
-    Checks:
-      - Response of environment creation is "Success"
-      - Website URL returns 200 response code
-    """
-    try:
-        print("Creating environment", envid)
-        r = self.interactions.create(
-            envid,
-            application,
-            infrastructureTemplateID
-        )
-        print("Status code:", r.status_code)
-        print("Response:", r.text)
-        self.assertEqual(
-            "Success",
-            r.json()["response"],
-            "Check for creation success of environmnet ID " + envid
-        )
-        # Website URL is up and running
-        r = requests.get(self.interactions.getWebsiteUrl(envid))
-        self.assertEqual(r.status_code, 200)
-    except Exception as ex:
-        print("Caught an exception from worker thread:", ex)
-        self.exceptions.append(ex)
-</code></pre>
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.debug">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.debug">
     <p>def <span class="ident">debug</span>(</p><p>self)</p>
     </div>
     
@@ -3068,8 +3214,8 @@ self.execption. Suitable as a thread worker.</p>
   
     <div class="desc"><p>Run the test without collecting errors in a TestResult</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.debug', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.debug" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.debug', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.debug" class="source">
     <pre><code>def debug(self):
     """Run the test without collecting errors in a TestResult"""
     self.setUp()
@@ -3086,7 +3232,7 @@ self.execption. Suitable as a thread worker.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.defaultTestResult">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.defaultTestResult">
     <p>def <span class="ident">defaultTestResult</span>(</p><p>self)</p>
     </div>
     
@@ -3094,8 +3240,8 @@ self.execption. Suitable as a thread worker.</p>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.defaultTestResult', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.defaultTestResult" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.defaultTestResult', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.defaultTestResult" class="source">
     <pre><code>def defaultTestResult(self):
     return result.TestResult()
 </code></pre>
@@ -3106,36 +3252,7 @@ self.execption. Suitable as a thread worker.</p>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment">
-    <p>def <span class="ident">destroyEnvironment</span>(</p><p>self, envid)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Destroy an environment.</p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.destroyEnvironment" class="source">
-    <pre><code>def destroyEnvironment(
-    self,
-    envid,
-):
-    """Destroy an environment."""
-    print("Destroying environment", envid)
-    url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
-    print("Requesting", url)
-    r = requests.delete(url)
-    print("Status code:", r.status_code)
-</code></pre>
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.doCleanups">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.doCleanups">
     <p>def <span class="ident">doCleanups</span>(</p><p>self)</p>
     </div>
     
@@ -3145,8 +3262,8 @@ self.execption. Suitable as a thread worker.</p>
     <div class="desc"><p>Execute all cleanup functions. Normally called for you after
 tearDown.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.doCleanups', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.doCleanups" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.doCleanups', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.doCleanups" class="source">
     <pre><code>def doCleanups(self):
     """Execute all cleanup functions. Normally called for you after
     tearDown."""
@@ -3166,7 +3283,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.fail">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.fail">
     <p>def <span class="ident">fail</span>(</p><p>self, msg=None)</p>
     </div>
     
@@ -3175,8 +3292,8 @@ tearDown.</p></div>
   
     <div class="desc"><p>Fail immediately, with the given message.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.fail', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.fail" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.fail', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.fail" class="source">
     <pre><code>def fail(self, msg=None):
     """Fail immediately, with the given message."""
     raise self.failureException(msg)
@@ -3188,7 +3305,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIf">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failIf">
     <p>def <span class="ident">failIf</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3196,8 +3313,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIf', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIf" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failIf', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failIf" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3211,7 +3328,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfAlmostEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failIfAlmostEqual">
     <p>def <span class="ident">failIfAlmostEqual</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3219,8 +3336,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfAlmostEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfAlmostEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failIfAlmostEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failIfAlmostEqual" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3234,7 +3351,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failIfEqual">
     <p>def <span class="ident">failIfEqual</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3242,8 +3359,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failIfEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failIfEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failIfEqual" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3257,7 +3374,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnless">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failUnless">
     <p>def <span class="ident">failUnless</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3265,8 +3382,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnless', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnless" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failUnless', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failUnless" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3280,7 +3397,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessAlmostEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failUnlessAlmostEqual">
     <p>def <span class="ident">failUnlessAlmostEqual</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3288,8 +3405,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessAlmostEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessAlmostEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessAlmostEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessAlmostEqual" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3303,7 +3420,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessEqual">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failUnlessEqual">
     <p>def <span class="ident">failUnlessEqual</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3311,8 +3428,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessEqual', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessEqual" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessEqual', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessEqual" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3326,7 +3443,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessRaises">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.failUnlessRaises">
     <p>def <span class="ident">failUnlessRaises</span>(</p><p>*args, **kwargs)</p>
     </div>
     
@@ -3334,8 +3451,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessRaises', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.failUnlessRaises" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessRaises', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.failUnlessRaises" class="source">
     <pre><code>def deprecated_func(*args, **kwargs):
     warnings.warn(
         'Please use {0} instead.'.format(original_func.__name__),
@@ -3349,7 +3466,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.id">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.id">
     <p>def <span class="ident">id</span>(</p><p>self)</p>
     </div>
     
@@ -3357,8 +3474,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.id', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.id" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.id', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.id" class="source">
     <pre><code>def id(self):
     return "%s.%s" % (strclass(self.__class__), self._testMethodName)
 </code></pre>
@@ -3369,7 +3486,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.run">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.run">
     <p>def <span class="ident">run</span>(</p><p>self, result=None)</p>
     </div>
     
@@ -3377,8 +3494,8 @@ tearDown.</p></div>
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.run', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.run" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.run', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.run" class="source">
     <pre><code>def run(self, result=None):
     orig_result = result
     if result is None:
@@ -3449,25 +3566,24 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.setUp">
     <p>def <span class="ident">setUp</span>(</p><p>self)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Setup unittest.</p></div>
+    <div class="desc"><p>Setup Unittest.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUp" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.setUp', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.setUp" class="source">
     <pre><code>def setUp(self):
-    """Setup unittest."""
-    config = Config()
+    """Setup Unittest."""
     global TEST_ENVIDS
-    global SERVER_URL
-    global CONCURRENT_DEPLOYMENTS
+    global SCALE_TO
+    config = Config()
     TEST_ENVIDS = config.test["environment_ids"]
-    CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
+    SCALE_TO = config.test["scale_to"]
     self.interactions = Interactions()
 </code></pre>
   </div>
@@ -3477,7 +3593,7 @@ tearDown.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.shortDescription">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.shortDescription">
     <p>def <span class="ident">shortDescription</span>(</p><p>self)</p>
     </div>
     
@@ -3489,8 +3605,8 @@ description has been provided.</p>
 <p>The default implementation of this method returns the first line of
 the specified test method's docstring.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.shortDescription', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.shortDescription" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.shortDescription', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.shortDescription" class="source">
     <pre><code>def shortDescription(self):
     """Returns a one-line description of the test, or None if no
     description has been provided.
@@ -3507,7 +3623,7 @@ the specified test method's docstring.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.skipTest">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.skipTest">
     <p>def <span class="ident">skipTest</span>(</p><p>self, reason)</p>
     </div>
     
@@ -3516,8 +3632,8 @@ the specified test method's docstring.</p></div>
   
     <div class="desc"><p>Skip this test.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.skipTest', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.skipTest" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.skipTest', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.skipTest" class="source">
     <pre><code>def skipTest(self, reason):
     """Skip this test."""
     raise SkipTest(reason)
@@ -3529,7 +3645,7 @@ the specified test method's docstring.</p></div>
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.subTest">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.subTest">
     <p>def <span class="ident">subTest</span>(</p><p>*args, **kwds)</p>
     </div>
     
@@ -3542,8 +3658,8 @@ keyword parameters.  A failure in the subtest marks the test
 case as failed but resumes execution at the end of the enclosed
 block, allowing further test code to be executed.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.subTest', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.subTest" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.subTest', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.subTest" class="source">
     <pre><code>@contextlib.contextmanager
 def subTest(self, msg=None, **params):
     """Return a context manager that will return the enclosed block
@@ -3582,23 +3698,21 @@ def subTest(self, msg=None, **params):
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDown">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.tearDown">
     <p>def <span class="ident">tearDown</span>(</p><p>self)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Tear Down Flask App.</p></div>
+    <div class="desc"><p>Destroy any deployments created</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDown', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDown" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.tearDown', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.tearDown" class="source">
     <pre><code>def tearDown(self):
-    """Tear Down Flask App."""
-    # Destroy environments, using the flask test client
+    """Destroy any deployments created"""
     for envid in TEST_ENVIDS:
-        self.interactions.destroy(envid)
-    """Stop flask if it is running"""
+            self.interactions.destroy(envid)
     self.interactions.close()
 </code></pre>
   </div>
@@ -3608,46 +3722,250 @@ def subTest(self, msg=None, **params):
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation">
-    <p>def <span class="ident">test_parallel_creation</span>(</p><p>self)</p>
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.test_config_gitlab_url">
+    <p>def <span class="ident">test_config_gitlab_url</span>(</p><p>self)</p>
     </div>
     
 
     
   
-    <div class="desc"><p>Test creation of several environments in parallel.</p>
-<p>Using the creationWorker function for concurrent threads.</p></div>
+    <div class="desc"><p>Test the gitlab URL is correct.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.test_parallel_creation" class="source">
-    <pre><code>def test_parallel_creation(self):
-    """Test creation of several environments in parallel.
-    Using the creationWorker function for concurrent threads.
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.test_config_gitlab_url', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.test_config_gitlab_url" class="source">
+    <pre><code>def test_config_gitlab_url(self):
+    """Test the gitlab URL is correct."""
+    url = self.interactions.getConfigGitlabUrl()
+    url_components = urlp.urlparse(url)
+    print("Gitlab url from configuration:", url)
+    self.assertTrue(url_components.scheme.startswith("http"))
+    self.assertTrue(len(url_components.netloc) > 0)
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.test_create_and_destroy">
+    <p>def <span class="ident">test_create_and_destroy</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Test the creation and destruction of one environment.</p>
+<p>Testing the following:</p>
+<p>1: Environment Creation</p>
+<ul>
+<li>Returns 201</li>
+<li>Correct keys found in JSON resonse data for response, servers,
+    dns, and public ip address</li>
+<li>Tests that the response is "Succcess"</li>
+<li>Tests that website responds correctly</li>
+</ul>
+<p>2: Environments Listing</p>
+<ul>
+<li>Tests that the new environment ID is present in the environments
+list</li>
+</ul>
+<p>3: Website URL</p>
+<ul>
+<li>Tests that the URL is accessible and returns a 200 response</li>
+</ul>
+<p>4: Destroy Environment</p>
+<ul>
+<li>Tests that the destroy command returns a 204 status</li>
+<li>Tests that the destroy response is "Success"</li>
+</ul>
+<p>5:  Environments Listing</p>
+<ul>
+<li>Tests that the new environment ID is no longer present in the
+environments list</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.test_create_and_destroy', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.test_create_and_destroy" class="source">
+    <pre><code>def test_create_and_destroy(self):
+    """Test the creation and destruction of one environment.
+    Testing the following:
+    1: Environment Creation
+      - Returns 201
+      - Correct keys found in JSON resonse data for response, servers,
+        dns, and public ip address
+      - Tests that the response is "Succcess"
+      - Tests that website responds correctly
+    2: Environments Listing
+      - Tests that the new environment ID is present in the environments
+    list
+    3: Website URL
+      - Tests that the URL is accessible and returns a 200 response
+    4: Destroy Environment
+      - Tests that the destroy command returns a 204 status
+      - Tests that the destroy response is "Success"
+    5:  Environments Listing
+      - Tests that the new environment ID is no longer present in the
+    environments list
     """
-    request_threads = []
-    # Worker threads might raise an exception. Check this afterwards
-    self.exceptions = []
-    # Start threads
-    for i in range(CONCURRENT_DEPLOYMENTS):
-        t = threading.Thread(
-            target=self.creationWorker,
-            args=(TEST_ENVIDS[i],)
-        )
-        request_threads.append(t)
-        t.start()
-    # Wait until all of the threads are complete
-    all_done = False
-    while not all_done:
-        all_done = True
-        for t in request_threads:
-            if t.is_alive():
-                all_done = False
-                time.sleep(1)
-    # Check to see if we caught any exceptions
-    if len(self.exceptions) > 0:
-        print("Number of exceptions:", len(self.exceptions))
-        # May be several exceptions, but we'll just raise the first one
-        raise self.exceptions[0]
+    envid = TEST_ENVIDS[0]
+    print("Create and destroy of environment", envid)
+    # Create environment
+    rv = self.interactions.create(envid, "T24-Pipeline", "test")
+    self.assertEqual(rv.status_code, 201, "Environment creation")
+    response_data = self.interactions.getResponseData(rv)
+    print("Creation response data:", str(response_data))
+    # KeyErrors. i.e. does the response contain the fields we expect
+    servers = response_data["Resources"][0]["servers"]
+    print("Servers:", str(servers))
+    domain_name = response_data["Resources"][0]["dns"]
+    public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
+    # Test that the environment shows in environments listing
+    rv = self.interactions.getEnvironments()
+    self.assertEqual(rv.status_code, 200, "Listing environments")
+    response_data = self.interactions.getResponseData(rv)
+    self.assertTrue(
+        envid in response_data["Environments"],
+        "Created environment shows in environments list"
+    )
+    # DNS resolves to correct IP
+    dnsq = dns.resolver.query(domain_name, 'A')
+    print("Dopmain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+    self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
+    # Website URL is up and running
+    r = requests.get(self.interactions.getWebsiteUrl(envid))
+    self.assertEqual(r.status_code, 200)
+    # Environment destuction
+    rv = self.interactions.destroy(envid)
+    self.assertEqual(rv.status_code, 204, "Destroy environment")
+    # Tests that the environment no longer shows in environments listing
+    rv = self.interactions.getEnvironments()
+    self.assertEqual(rv.status_code, 200, "Listing environments")
+    response_data = self.interactions.getResponseData(rv)
+    self.assertFalse(
+        envid in response_data["Environments"],
+        "Destroyed environment no longer in environments list"
+    )
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.test_scale">
+    <p>def <span class="ident">test_scale</span>(</p><p>self)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Test the creation and scaling of one environment.</p>
+<p>1: Environmnet creation</p>
+<ul>
+<li>Returns 201</li>
+<li>Tests that the response is "Succcess"</li>
+<li>Request status response until response is "Success"</li>
+</ul>
+<p>2: Scale Environment</p>
+<ul>
+<li>Tests that the response is "Succcess"</li>
+<li>Request status response until response is "Success"</li>
+<li>Check that the correct number of servers are listed in the response
+    data</li>
+<li>Checks that the website returns a 200 status</li>
+</ul></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.test_scale', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.test_scale" class="source">
+    <pre><code>def test_scale(self):
+    """Test the creation and scaling of one environment.
+    1: Environmnet creation
+      - Returns 201
+      - Tests that the response is "Succcess"
+      - Request status response until response is "Success"
+    2: Scale Environment
+      - Tests that the response is "Succcess"
+      - Request status response until response is "Success"
+      - Check that the correct number of servers are listed in the response
+        data
+      - Checks that the website returns a 200 status
+    """
+    envid = TEST_ENVIDS[1]
+    # Create environment
+    rv = self.interactions.create(envid, "T24-Pipeline", "test")
+    self.assertEqual(rv.status_code, 201, "Environment creation")
+    response_data = self.interactions.getResponseData(rv)
+    self.checkSuccess(response_data, "Testing environment creation")
+    # Wait for environment
+    for i in range(1, 20):
+        # Check Status of success
+        rv = self.interactions.status(envid)
+        response_data = self.interactions.getResponseData(rv)
+        response = response_data["response"]
+        if response == "Success":
+            break
+        time.sleep(2)
+    self.checkSuccess(
+        response_data,
+        "Status of environment creation. " +
+        "Response of:"+str(response_data)
+    )
+    # Scale environment
+    rv = self.interactions.scale(envid, SCALE_TO)
+    response_data = self.interactions.getResponseData(rv)
+    self.checkSuccess(
+        response_data,
+        "Testing environment scale. " +
+        "Response of:"+str(response_data)
+    )
+    # Wait for environment
+    for i in range(1, 20):
+        # Check Status of success
+        rv = self.interactions.status(envid)
+        response_data = self.interactions.getResponseData(rv)
+        response = response_data["response"]
+        if response == "Success":
+            break
+        time.sleep(2)
+    self.assertEqual(
+        response, "Success",
+        "Status of environment scale after several at status request. " +
+        "Response of:"+str(response_data)
+    )
+    # Check Status has SCALE_TO servers
+    rv = self.interactions.status(envid)
+    response_data = self.interactions.getResponseData(rv)
+    self.checkSuccess(
+        response_data,
+        "Testing environment creation. Response of:"+str(response_data)
+    )
+    print("Checking response data of status check")
+    vm_counter = 0
+    for resource in response_data["Resources"][0]["Environment resources"]:
+        if "name" in resource:
+            # Check resources (whatever it is) succeeded
+            self.assertEqual(
+                resource["provisioningState"], "Succeeded",
+                "Provisioning state for resource " + str(resource["name"])
+            )
+            # Match on t24 + number
+            s = re.search('^.*t24(\d+)$', resource["name"])
+            if s:
+                print("VM", resource["name"], "found in response data")
+                vm_counter = vm_counter + 1
+                self.assertEqual(
+                    resource["status"], "VM running",
+                    "VM is running"
+                )
+    self.assertEqual(
+        vm_counter, SCALE_TO,
+        "Test for correct number of VMs"
+    )
+    # Website URL is up and running
+    r = requests.get(self.interactions.getWebsiteUrl(envid))
+    self.assertEqual(r.status_code, 200)
 </code></pre>
   </div>
 </div>
@@ -3657,7 +3975,7 @@ def subTest(self, msg=None, **params):
           <h3>Methods</h3>
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUpClass">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.setUpClass">
     <p>def <span class="ident">setUpClass</span>(</p><p>cls)</p>
     </div>
     
@@ -3666,8 +3984,8 @@ def subTest(self, msg=None, **params):
   
     <div class="desc"><p>Hook method for setting up class fixture before running tests in the class.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUpClass', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.setUpClass" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.setUpClass', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.setUpClass" class="source">
     <pre><code>@classmethod
 def setUpClass(cls):
     "Hook method for setting up class fixture before running tests in the class."
@@ -3679,7 +3997,7 @@ def setUpClass(cls):
   
             
   <div class="item">
-    <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDownClass">
+    <div class="name def" id="tests.test_platforminfra.PlatformInfraTestCase.tearDownClass">
     <p>def <span class="ident">tearDownClass</span>(</p><p>cls)</p>
     </div>
     
@@ -3688,8 +4006,8 @@ def setUpClass(cls):
   
     <div class="desc"><p>Hook method for deconstructing the class fixture after running all tests in the class.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDownClass', this);">Show source &equiv;</a></p>
-  <div id="source-tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.tearDownClass" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.test_platforminfra.PlatformInfraTestCase.tearDownClass', this);">Show source &equiv;</a></p>
+  <div id="source-tests.test_platforminfra.PlatformInfraTestCase.tearDownClass" class="source">
     <pre><code>@classmethod
 def tearDownClass(cls):
     "Hook method for deconstructing the class fixture after running all tests in the class."
