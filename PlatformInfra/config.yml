@@ -30,7 +30,7 @@ test:
   concurrent_deployments: 3
   api_host: "127.0.0.1"
   api_port: 5000
-  run_api: false
+  run_api: true
   # website_url: "http://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
   website_url: "https://github.com/"
   flask_testing: false
