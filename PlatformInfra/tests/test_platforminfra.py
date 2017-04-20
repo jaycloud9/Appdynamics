@@ -8,6 +8,7 @@ import re
 import time
 from tests.interactions import Interactions
 from platforminfra.config import Config
+import threading
 
 TEST_ENVIDS = None
 SCALE_TO = None
@@ -24,15 +25,35 @@ class PlatformInfraTestCase(unittest.TestCase):
         """Setup Unittest."""
         global TEST_ENVIDS
         global SCALE_TO
+        global APPLICATION
+        global INFRATEMPLATEID
+        global SERVERS
         config = Config()
         TEST_ENVIDS = config.test["environment_ids"]
         SCALE_TO = config.test["scale_to"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
+        SERVERS = config.test["servers"]
         self.interactions = Interactions()
 
     def tearDown(self):
         """Destroy any deployments created."""
+        request_threads = list()
         for envid in TEST_ENVIDS:
-                self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         self.interactions.close()
 
@@ -68,11 +89,21 @@ class PlatformInfraTestCase(unittest.TestCase):
             data
           - Checks that the website returns a 200 status
 
+        3: Destroy the scaled environment
+
+          - Tests that the destroy command returns a 204 status
+          - Tests that the destroy response is "Success"
+
+        4:  Environments Listing
+
+          - Tests that the new environment ID is no longer present in the
+        environments list
+
         """
-        envid = TEST_ENVIDS[1]
+        envid = TEST_ENVIDS[0]
 
         # Create environment
-        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(response_data, "Testing environment creation")
@@ -116,6 +147,8 @@ class PlatformInfraTestCase(unittest.TestCase):
             "Response of:"+str(response_data)
         )
 
+        # Give it time to finish comming up
+        time.sleep(60)
         # Check Status has SCALE_TO servers
         rv = self.interactions.status(envid)
         response_data = self.interactions.getResponseData(rv)
@@ -133,8 +166,8 @@ class PlatformInfraTestCase(unittest.TestCase):
                     resource["provisioningState"], "Succeeded",
                     "Provisioning state for resource " + str(resource["name"])
                 )
-                # Match on t24 + number
-                s = re.search('^.*t24(\d+)$', resource["name"])
+                # Match on test1 + number
+                s = re.search("^.*{}(\d+)$".format(SERVERS), resource["name"])
                 if s:
                     print("VM", resource["name"], "found in response data")
                     vm_counter = vm_counter + 1
@@ -150,6 +183,19 @@ class PlatformInfraTestCase(unittest.TestCase):
         # Website URL is up and running
         r = requests.get(self.interactions.getWebsiteUrl(envid))
         self.assertEqual(r.status_code, 200)
+
+        # Environment destuction
+        rv = self.interactions.destroy(envid)
+        self.assertEqual(rv.status_code, 204, "Destroy environment")
+
+        # Tests that the environment no longer shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertFalse(
+            envid in response_data["Environments"],
+            "Destroyed environment no longer in environments list"
+        )
 
     def test_create_and_destroy(self):
         """Test the creation and destruction of one environment.
@@ -189,7 +235,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Create and destroy of environment", envid)
 
         # Create environment
-        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
 
@@ -212,7 +258,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         # DNS resolves to correct IP
         dnsq = dns.resolver.query(domain_name, 'A')
-        print("Dopmain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+        print("Domain name shows a DNS entry of:", dnsq.rrset[0].to_text())
         self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
 
         # Website URL is up and running

@@ -41,43 +41,44 @@ if (env.BRANCH_NAME == 'master') {
     }
   }
 } else {
-  stage('Install Python 3.5') {
-    node {
-      deleteDir()
-      PYTHON_PATH = '/tmp/py3.5.1'
-      if ( !fileExists(PYTHON_PATH) ) {
-        sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
-        sh 'tar -xzvf Python-3.5.1.tgz'
-        dir('Python-3.5.1') {
-          sh "./configure --prefix=${PYTHON_PATH}"
-          sh 'make'
-          sh 'make altinstall'
+    stage('Install Python 3.5') {
+      node {
+        deleteDir()
+        PYTHON_PATH = '/tmp/py3.5.1'
+        if ( !fileExists(PYTHON_PATH) ) {
+          sh 'wget https://www.python.org/ftp/python/3.5.1/Python-3.5.1.tgz'
+          sh 'tar -xzvf Python-3.5.1.tgz'
+          dir('Python-3.5.1') {
+            sh "./configure --prefix=${PYTHON_PATH}"
+            sh 'make'
+            sh 'make altinstall'
+          }
+        } else {
+          echo "Python 3.5 already installed"
         }
-      } else {
-        echo "Python 3.5 already installed"
-      }
 
-      pyshell('python --version')
+        pyshell('python --version')
+      }
     }
-  }
 
-  stage('Install PlatformInfra Dependencies') {
-    node{
-      dir('platformInfraApi') {
-        checkout scm
-        dir('PlatformInfra') {
-          pyshell('pip install -e .')
+    stage('Install PlatformInfra Dependencies') {
+      node{
+        dir('platformInfraApi') {
+          checkout scm
+          dir('PlatformInfra') {
+            pyshell('pip install -e .')
+          }
         }
       }
     }
-  }
-  stage('test') {
-    node {
-      dir('platformInfraApi') {
-        dir('PlatformInfra') {
-          pyshell('python -W ignore setup.py test')
+    stage('test') {
+      node {
+        milestone()
+        dir('platformInfraApi') {
+          dir('PlatformInfra') {
+            pyshell('python -W ignore setup.py test')
+          }
         }
       }
     }
-  }
 }

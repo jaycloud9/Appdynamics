@@ -29,15 +29,33 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         global TEST_ENVIDS
         global SERVER_URL
         global CONCURRENT_DEPLOYMENTS
+        global APPLICATION
+        global INFRATEMPLATEID
         TEST_ENVIDS = config.test["environment_ids"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
         self.interactions = Interactions()
 
     def tearDown(self):
         """Tear Down Flask App."""
         # Destroy environments, using the flask test client
+        request_threads = list()
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         """Stop flask if it is running"""
         self.interactions.close()
@@ -56,8 +74,8 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     def creationWorker(
         self,
         envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment.
 
@@ -69,6 +87,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
           - Website URL returns 200 response code
 
         """
+        if not application:
+            application = APPLICATION
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = INFRATEMPLATEID
         try:
             print("Creating environment", envid)
             r = self.interactions.create(

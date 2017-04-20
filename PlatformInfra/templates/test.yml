@@ -27,7 +27,6 @@ services:
       service_port: 8080
     - name: test2
       count: 1
-      dns: test
       service_port: 8080
       os:
         publisher: 'RedHat'
@@ -36,7 +35,6 @@ services:
         version: 'latest'
     - name: test3
       count: 1
-      dns: test
       service_port: 8080
       image:
         os: 'redhat'

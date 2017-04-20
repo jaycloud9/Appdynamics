@@ -26,8 +26,11 @@ test:
     - "abcdef-ghijk7"
     - "abcdef-ghijk8"
     - "abcdef-ghijk9"
-  scale_to: 5
-  concurrent_deployments: 1
+  scale_to: 10
+  application: "testBuild"
+  infrastructureTemplateId: "test"
+  server: "test1"
+  concurrent_deployments: 5
   api_host: "127.0.0.1"
   api_port: 5000
   run_api: true
