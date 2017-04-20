@@ -1032,11 +1032,16 @@ import time
 
 
 class Interactions():
+    """Interactions Class."""
 
     def __init__(self):
+        """Constructor for Interactions."""
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
+        self.application = self.config.test["application"]
+        self.infraTemplateID = self.config.test["infrastructureTemplateId"]
+        self.servers = self.config.test["servers"]
         self.server_url = "http://" + self.api_host + ":" + str(self.api_port)
         self.base_url = self.server_url + base_path
         if self.config.test["run_api"]:
@@ -1053,7 +1058,7 @@ class Interactions():
             time.sleep(1)
 
     def close(self):
-        """To be called as part of the tear down of tests"""
+        """To be called as part of the tear down of tests."""
         if self.config.test["run_api"] and self.server_process.is_alive():
             self.server_process.terminate()
 
@@ -1068,10 +1073,14 @@ class Interactions():
     def create(
         self,
         envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         url = urlp.urljoin(self.base_url, "environments")
         request_data = json.dumps(
             dict(
@@ -1098,11 +1107,17 @@ class Interactions():
         self,
         envid,
         count,
-        application="T24-Pipeline",
-        servers="t24",
-        infrastructureTemplateID="test"
+        application=None,
+        servers=None,
+        infrastructureTemplateID=None
     ):
         """Sacling an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
+        if not servers:
+            servers = self.servers
         print("Scaling environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/scale")
         request_data = json.dumps(
@@ -1119,8 +1134,10 @@ class Interactions():
             headers={'content-type': 'application/json'}
         )
 
-    def status(self, envid, infrastructureTemplateID="test"):
+    def status(self, envid, infrastructureTemplateID=None):
         """Check status of an environment."""
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         print("Status check of environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/status")
         request_data = json.dumps(
@@ -1152,8 +1169,9 @@ class Interactions():
         return config_url
 
     def getWebsiteUrl(self, envid):
-        """Get the website URL from the Config, where config value may
-        contain {{id}} for the envid value.
+        """Get the website URL from the Config.
+
+        Where config value may contain {{id}} for the envid value.
         """
         website_url = self.config.test["website_url"]
         url = Environment().from_string(website_url).render(id=envid)
@@ -1182,15 +1200,21 @@ class Interactions():
       <p id="tests.interactions.Interactions" class="name">class <span class="ident">Interactions</span></p>
       
   
+    <div class="desc"><p>Interactions Class.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.Interactions', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.Interactions" class="source">
     <pre><code>class Interactions():
+    """Interactions Class."""
 
     def __init__(self):
+        """Constructor for Interactions."""
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
+        self.application = self.config.test["application"]
+        self.infraTemplateID = self.config.test["infrastructureTemplateId"]
+        self.servers = self.config.test["servers"]
         self.server_url = "http://" + self.api_host + ":" + str(self.api_port)
         self.base_url = self.server_url + base_path
         if self.config.test["run_api"]:
@@ -1207,7 +1231,7 @@ class Interactions():
             time.sleep(1)
 
     def close(self):
-        """To be called as part of the tear down of tests"""
+        """To be called as part of the tear down of tests."""
         if self.config.test["run_api"] and self.server_process.is_alive():
             self.server_process.terminate()
 
@@ -1222,10 +1246,14 @@ class Interactions():
     def create(
         self,
         envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         url = urlp.urljoin(self.base_url, "environments")
         request_data = json.dumps(
             dict(
@@ -1252,11 +1280,17 @@ class Interactions():
         self,
         envid,
         count,
-        application="T24-Pipeline",
-        servers="t24",
-        infrastructureTemplateID="test"
+        application=None,
+        servers=None,
+        infrastructureTemplateID=None
     ):
         """Sacling an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
+        if not servers:
+            servers = self.servers
         print("Scaling environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/scale")
         request_data = json.dumps(
@@ -1273,8 +1307,10 @@ class Interactions():
             headers={'content-type': 'application/json'}
         )
 
-    def status(self, envid, infrastructureTemplateID="test"):
+    def status(self, envid, infrastructureTemplateID=None):
         """Check status of an environment."""
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         print("Status check of environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/status")
         request_data = json.dumps(
@@ -1306,8 +1342,9 @@ class Interactions():
         return config_url
 
     def getWebsiteUrl(self, envid):
-        """Get the website URL from the Config, where config value may
-        contain {{id}} for the envid value.
+        """Get the website URL from the Config.
+
+        Where config value may contain {{id}} for the envid value.
         """
         website_url = self.config.test["website_url"]
         url = Environment().from_string(website_url).render(id=envid)
@@ -1334,14 +1371,18 @@ class Interactions():
 
     
   
-    <div class="desc"><p>Initialize self.  See help(type(self)) for accurate signature.</p></div>
+    <div class="desc"><p>Constructor for Interactions.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.Interactions.__init__', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.Interactions.__init__" class="source">
     <pre><code>def __init__(self):
+    """Constructor for Interactions."""
     self.config = Config()
     self.api_host = self.config.test["api_host"]
     self.api_port = self.config.test["api_port"]
+    self.application = self.config.test["application"]
+    self.infraTemplateID = self.config.test["infrastructureTemplateId"]
+    self.servers = self.config.test["servers"]
     self.server_url = "http://" + self.api_host + ":" + str(self.api_port)
     self.base_url = self.server_url + base_path
     if self.config.test["run_api"]:
@@ -1369,12 +1410,12 @@ class Interactions():
 
     
   
-    <div class="desc"><p>To be called as part of the tear down of tests</p></div>
+    <div class="desc"><p>To be called as part of the tear down of tests.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.Interactions.close', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.Interactions.close" class="source">
     <pre><code>def close(self):
-    """To be called as part of the tear down of tests"""
+    """To be called as part of the tear down of tests."""
     if self.config.test["run_api"] and self.server_process.is_alive():
         self.server_process.terminate()
 </code></pre>
@@ -1386,7 +1427,7 @@ class Interactions():
             
   <div class="item">
     <div class="name def" id="tests.interactions.Interactions.create">
-    <p>def <span class="ident">create</span>(</p><p>self, envid, application=&#39;T24-Pipeline&#39;, infrastructureTemplateID=&#39;test&#39;)</p>
+    <p>def <span class="ident">create</span>(</p><p>self, envid, application=None, infrastructureTemplateID=None)</p>
     </div>
     
 
@@ -1399,10 +1440,14 @@ class Interactions():
     <pre><code>def create(
     self,
     envid,
-    application="T24-Pipeline",
-    infrastructureTemplateID="test"
+    application=None,
+    infrastructureTemplateID=None
 ):
     """Create an environment."""
+    if not application:
+        application = self.application
+    if not infrastructureTemplateID:
+        infrastructureTemplateID = self.infraTemplateID
     url = urlp.urljoin(self.base_url, "environments")
     request_data = json.dumps(
         dict(
@@ -1528,14 +1573,14 @@ class Interactions():
 
     
   
-    <div class="desc"><p>Get the website URL from the Config, where config value may
-contain {{id}} for the envid value.</p></div>
+    <div class="desc"><p>Get the website URL from the Config.</p>
+<p>Where config value may contain {{id}} for the envid value.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.Interactions.getWebsiteUrl', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.Interactions.getWebsiteUrl" class="source">
     <pre><code>def getWebsiteUrl(self, envid):
-    """Get the website URL from the Config, where config value may
-    contain {{id}} for the envid value.
+    """Get the website URL from the Config.
+    Where config value may contain {{id}} for the envid value.
     """
     website_url = self.config.test["website_url"]
     url = Environment().from_string(website_url).render(id=envid)
@@ -1550,7 +1595,7 @@ contain {{id}} for the envid value.</p></div>
             
   <div class="item">
     <div class="name def" id="tests.interactions.Interactions.scale">
-    <p>def <span class="ident">scale</span>(</p><p>self, envid, count, application=&#39;T24-Pipeline&#39;, servers=&#39;t24&#39;, infrastructureTemplateID=&#39;test&#39;)</p>
+    <p>def <span class="ident">scale</span>(</p><p>self, envid, count, application=None, servers=None, infrastructureTemplateID=None)</p>
     </div>
     
 
@@ -1564,11 +1609,17 @@ contain {{id}} for the envid value.</p></div>
     self,
     envid,
     count,
-    application="T24-Pipeline",
-    servers="t24",
-    infrastructureTemplateID="test"
+    application=None,
+    servers=None,
+    infrastructureTemplateID=None
 ):
     """Sacling an environment."""
+    if not application:
+        application = self.application
+    if not infrastructureTemplateID:
+        infrastructureTemplateID = self.infraTemplateID
+    if not servers:
+        servers = self.servers
     print("Scaling environment", envid)
     url = urlp.urljoin(self.base_url, "environments/" + envid + "/scale")
     request_data = json.dumps(
@@ -1619,7 +1670,7 @@ contain {{id}} for the envid value.</p></div>
             
   <div class="item">
     <div class="name def" id="tests.interactions.Interactions.status">
-    <p>def <span class="ident">status</span>(</p><p>self, envid, infrastructureTemplateID=&#39;test&#39;)</p>
+    <p>def <span class="ident">status</span>(</p><p>self, envid, infrastructureTemplateID=None)</p>
     </div>
     
 
@@ -1629,8 +1680,10 @@ contain {{id}} for the envid value.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-tests.interactions.Interactions.status', this);">Show source &equiv;</a></p>
   <div id="source-tests.interactions.Interactions.status" class="source">
-    <pre><code>def status(self, envid, infrastructureTemplateID="test"):
+    <pre><code>def status(self, envid, infrastructureTemplateID=None):
     """Check status of an environment."""
+    if not infrastructureTemplateID:
+        infrastructureTemplateID = self.infraTemplateID
     print("Status check of environment", envid)
     url = urlp.urljoin(self.base_url, "environments/" + envid + "/status")
     request_data = json.dumps(
@@ -1671,6 +1724,16 @@ contain {{id}} for the envid value.</p></div>
 
             </div>
             <div class="item">
+            <p id="tests.interactions.Interactions.application" class="name">var <span class="ident">application</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="tests.interactions.Interactions.base_url" class="name">var <span class="ident">base_url</span></p>
             
 
@@ -1691,7 +1754,27 @@ contain {{id}} for the envid value.</p></div>
 
             </div>
             <div class="item">
+            <p id="tests.interactions.Interactions.infraTemplateID" class="name">var <span class="ident">infraTemplateID</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
             <p id="tests.interactions.Interactions.server_url" class="name">var <span class="ident">server_url</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="tests.interactions.Interactions.servers" class="name">var <span class="ident">servers</span></p>
             
 
             

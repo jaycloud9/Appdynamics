@@ -1111,15 +1111,33 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         global TEST_ENVIDS
         global SERVER_URL
         global CONCURRENT_DEPLOYMENTS
+        global APPLICATION
+        global INFRATEMPLATEID
         TEST_ENVIDS = config.test["environment_ids"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
         self.interactions = Interactions()
 
     def tearDown(self):
         """Tear Down Flask App."""
         # Destroy environments, using the flask test client
+        request_threads = list()
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         """Stop flask if it is running"""
         self.interactions.close()
@@ -1138,8 +1156,8 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     def creationWorker(
         self,
         envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment.
 
@@ -1151,6 +1169,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
           - Website URL returns 200 response code
 
         """
+        if not application:
+            application = APPLICATION
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = INFRATEMPLATEID
         try:
             print("Creating environment", envid)
             r = self.interactions.create(
@@ -1294,15 +1316,33 @@ flask application threads.</p></div>
         global TEST_ENVIDS
         global SERVER_URL
         global CONCURRENT_DEPLOYMENTS
+        global APPLICATION
+        global INFRATEMPLATEID
         TEST_ENVIDS = config.test["environment_ids"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
         self.interactions = Interactions()
 
     def tearDown(self):
         """Tear Down Flask App."""
         # Destroy environments, using the flask test client
+        request_threads = list()
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         """Stop flask if it is running"""
         self.interactions.close()
@@ -1321,8 +1361,8 @@ flask application threads.</p></div>
     def creationWorker(
         self,
         envid,
-        application="T24-Pipeline",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment.
 
@@ -1334,6 +1374,10 @@ flask application threads.</p></div>
           - Website URL returns 200 response code
 
         """
+        if not application:
+            application = APPLICATION
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = INFRATEMPLATEID
         try:
             print("Creating environment", envid)
             r = self.interactions.create(
@@ -2686,7 +2730,7 @@ which can be indexed, has a length, and has an equality operator.</p>
                 break
             if item1 != item2:
                 differing += ('\nFirst differing element %d:\n%s\n%s\n' %
-                             ((i,) + _common_shorten_repr(item1, item2)))
+                             (i, item1, item2))
                 break
         else:
             if (len1 == len2 and seq_type is None and
@@ -2698,7 +2742,7 @@ which can be indexed, has a length, and has an equality operator.</p>
                          'elements.\n' % (seq_type_name, len1 - len2))
             try:
                 differing += ('First extra element %d:\n%s\n' %
-                              (len2, safe_repr(seq1[len2])))
+                              (len2, seq1[len2]))
             except (TypeError, IndexError, NotImplementedError):
                 differing += ('Unable to index element %d '
                               'of first %s\n' % (len2, seq_type_name))
@@ -2707,7 +2751,7 @@ which can be indexed, has a length, and has an equality operator.</p>
                          'elements.\n' % (seq_type_name, len2 - len1))
             try:
                 differing += ('First extra element %d:\n%s\n' %
-                              (len1, safe_repr(seq2[len1])))
+                              (len1, seq2[len1]))
             except (TypeError, IndexError, NotImplementedError):
                 differing += ('Unable to index element %d '
                               'of second %s\n' % (len1, seq_type_name))
@@ -3003,7 +3047,7 @@ are considered successful matches.</p>
             
   <div class="item">
     <div class="name def" id="tests.test_platforminfra_threads.PlatformInfraThreadsTestCase.creationWorker">
-    <p>def <span class="ident">creationWorker</span>(</p><p>self, envid, application=&#39;T24-Pipeline&#39;, infrastructureTemplateID=&#39;test&#39;)</p>
+    <p>def <span class="ident">creationWorker</span>(</p><p>self, envid, application=None, infrastructureTemplateID=None)</p>
     </div>
     
 
@@ -3021,8 +3065,8 @@ self.execption. Suitable as a thread worker.</p>
     <pre><code>def creationWorker(
     self,
     envid,
-    application="T24-Pipeline",
-    infrastructureTemplateID="test"
+    application=None,
+    infrastructureTemplateID=None
 ):
     """Create an environment.
     Does not raise exeptions, but appends them to
@@ -3031,6 +3075,10 @@ self.execption. Suitable as a thread worker.</p>
       - Response of environment creation is "Success"
       - Website URL returns 200 response code
     """
+    if not application:
+        application = APPLICATION
+    if not infrastructureTemplateID:
+        infrastructureTemplateID = INFRATEMPLATEID
     try:
         print("Creating environment", envid)
         r = self.interactions.create(
@@ -3466,7 +3514,11 @@ tearDown.</p></div>
     global TEST_ENVIDS
     global SERVER_URL
     global CONCURRENT_DEPLOYMENTS
+    global APPLICATION
+    global INFRATEMPLATEID
     TEST_ENVIDS = config.test["environment_ids"]
+    APPLICATION = config.test["application"]
+    INFRATEMPLATEID = config.test["infrastructureTemplateId"]
     CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
     self.interactions = Interactions()
 </code></pre>
@@ -3596,8 +3648,22 @@ def subTest(self, msg=None, **params):
     <pre><code>def tearDown(self):
     """Tear Down Flask App."""
     # Destroy environments, using the flask test client
+    request_threads = list()
     for envid in TEST_ENVIDS:
-        self.interactions.destroy(envid)
+        t = threading.Thread(
+            target=self.interactions.destroy,
+            args=(envid,)
+        )
+        request_threads.append(t)
+        t.start()
+    # Wait until all of the threads are complete
+    all_done = False
+    while not all_done:
+        all_done = True
+        for t in request_threads:
+            if t.is_alive():
+                all_done = False
+                time.sleep(1)
     """Stop flask if it is running"""
     self.interactions.close()
 </code></pre>
