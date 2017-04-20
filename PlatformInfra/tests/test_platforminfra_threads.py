@@ -56,7 +56,7 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     def creationWorker(
         self,
         envid,
-        application="T24-Pipeline",
+        application="testBuild",
         infrastructureTemplateID="test"
     ):
         """Create an environment.

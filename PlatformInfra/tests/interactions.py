@@ -80,8 +80,8 @@ class Interactions():
         self,
         envid,
         count,
-        application="T24-Pipeline",
-        servers="t24",
+        application="testBuild",
+        servers="test1",
         infrastructureTemplateID="test"
     ):
         """Sacling an environment."""

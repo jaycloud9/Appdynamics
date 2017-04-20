@@ -133,8 +133,8 @@ class PlatformInfraTestCase(unittest.TestCase):
                     resource["provisioningState"], "Succeeded",
                     "Provisioning state for resource " + str(resource["name"])
                 )
-                # Match on t24 + number
-                s = re.search('^.*t24(\d+)$', resource["name"])
+                # Match on test1 + number
+                s = re.search('^.*test1(\d+)$', resource["name"])
                 if s:
                     print("VM", resource["name"], "found in response data")
                     vm_counter = vm_counter + 1
