@@ -1,14 +1,12 @@
 """PlatformInfra Tests Module."""
 
-import platforminfra
 import unittest
-from platforminfra.views import base_path
 import urllib.parse as urlp
 import requests
 import dns.resolver
 import re
 import time
-import tests.interactions as interactions
+from tests.interactions import Interactions
 from platforminfra.config import Config
 
 TEST_ENVIDS = None
@@ -29,17 +27,14 @@ class PlatformInfraTestCase(unittest.TestCase):
         config = Config()
         TEST_ENVIDS = config.test["environment_ids"]
         SCALE_TO = config.test["scale_to"]
-
-        """Set Up Flask."""
-        platforminfra.app.config['TESTING'] = config.test["flask_testing"]
-        platforminfra.app.config['DEBUG'] = config.test["flask_debug"]
-
-        self.app = platforminfra.app.test_client()
+        self.interactions = Interactions()
 
     def tearDown(self):
-        """Tear Dwon Flask App."""
+        """Destroy any deployments created"""
         for envid in TEST_ENVIDS:
-                interactions.destroy(self.app, envid)
+                self.interactions.destroy(envid)
+
+        self.interactions.close()
 
     def checkSuccess(self, response_data, message):
         """Check that "response" is "Success" in response data."""
@@ -48,14 +43,9 @@ class PlatformInfraTestCase(unittest.TestCase):
             response, "Success", message
         )
 
-    def test_root(self):
-        """Test that root page does not exist."""
-        rv = self.app.get(base_path)
-        self.assertEqual(rv.status_code, 404, "Checking "+base_path)
-
     def test_config_gitlab_url(self):
         """Test the gitlab URL is correct."""
-        url = interactions.getConfigGitlabUrl()
+        url = self.interactions.getConfigGitlabUrl()
         url_components = urlp.urlparse(url)
         print("Gitlab url from configuration:", url)
         self.assertTrue(url_components.scheme.startswith("http"))
@@ -82,16 +72,16 @@ class PlatformInfraTestCase(unittest.TestCase):
         envid = TEST_ENVIDS[1]
 
         # Create environment
-        rv = interactions.create(self.app, envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
         self.assertEqual(rv.status_code, 201, "Environment creation")
-        response_data = interactions.getResponseData(rv)
+        response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(response_data, "Testing environment creation")
 
         # Wait for environment
-        for i in range(1, 30):
+        for i in range(1, 20):
             # Check Status of success
-            rv = interactions.status(self.app, envid)
-            response_data = interactions.getResponseData(rv)
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
             response = response_data["response"]
             if response == "Success":
                 break
@@ -103,8 +93,8 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Scale environment
-        rv = interactions.scale(self.app, envid, SCALE_TO)
-        response_data = interactions.getResponseData(rv)
+        rv = self.interactions.scale(envid, SCALE_TO)
+        response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(
             response_data,
             "Testing environment scale. " +
@@ -112,10 +102,10 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Wait for environment
-        for i in range(1, 30):
+        for i in range(1, 20):
             # Check Status of success
-            rv = interactions.status(self.app, envid)
-            response_data = interactions.getResponseData(rv)
+            rv = self.interactions.status(envid)
+            response_data = self.interactions.getResponseData(rv)
             response = response_data["response"]
             if response == "Success":
                 break
@@ -127,8 +117,8 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Check Status has SCALE_TO servers
-        rv = interactions.status(self.app, envid)
-        response_data = interactions.getResponseData(rv)
+        rv = self.interactions.status(envid)
+        response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(
             response_data,
             "Testing environment creation. Response of:"+str(response_data)
@@ -158,7 +148,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Website URL is up and running
-        r = requests.get(interactions.getWebsiteUrl(envid))
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
         self.assertEqual(r.status_code, 200)
 
     def test_create_and_destroy(self):
@@ -199,9 +189,9 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Create and destroy of environment", envid)
 
         # Create environment
-        rv = interactions.create(self.app, envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, "T24-Pipeline", "test")
         self.assertEqual(rv.status_code, 201, "Environment creation")
-        response_data = interactions.getResponseData(rv)
+        response_data = self.interactions.getResponseData(rv)
 
         print("Creation response data:", str(response_data))
 
@@ -212,9 +202,9 @@ class PlatformInfraTestCase(unittest.TestCase):
         public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
 
         # Test that the environment shows in environments listing
-        rv = interactions.getEnvironments(self.app)
+        rv = self.interactions.getEnvironments()
         self.assertEqual(rv.status_code, 200, "Listing environments")
-        response_data = interactions.getResponseData(rv)
+        response_data = self.interactions.getResponseData(rv)
         self.assertTrue(
             envid in response_data["Environments"],
             "Created environment shows in environments list"
@@ -226,17 +216,17 @@ class PlatformInfraTestCase(unittest.TestCase):
         self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
 
         # Website URL is up and running
-        r = requests.get(interactions.getWebsiteUrl(envid))
+        r = requests.get(self.interactions.getWebsiteUrl(envid))
         self.assertEqual(r.status_code, 200)
 
         # Environment destuction
-        rv = interactions.destroy(self.app, envid)
+        rv = self.interactions.destroy(envid)
         self.assertEqual(rv.status_code, 204, "Destroy environment")
 
         # Tests that the environment no longer shows in environments listing
-        rv = interactions.getEnvironments(self.app)
+        rv = self.interactions.getEnvironments()
         self.assertEqual(rv.status_code, 200, "Listing environments")
-        response_data = interactions.getResponseData(rv)
+        response_data = self.interactions.getResponseData(rv)
         self.assertFalse(
             envid in response_data["Environments"],
             "Destroyed environment no longer in environments list"
