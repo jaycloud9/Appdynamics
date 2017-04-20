@@ -29,7 +29,11 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         global TEST_ENVIDS
         global SERVER_URL
         global CONCURRENT_DEPLOYMENTS
+        global APPLICATION
+        global INFRATEMPLATEID
         TEST_ENVIDS = config.test["environment_ids"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
         self.interactions = Interactions()
 
@@ -70,8 +74,8 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     def creationWorker(
         self,
         envid,
-        application="testBuild",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment.
 
@@ -83,6 +87,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
           - Website URL returns 200 response code
 
         """
+        if not application:
+            application = APPLICATION
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = INFRATEMPLATEID
         try:
             print("Creating environment", envid)
             r = self.interactions.create(

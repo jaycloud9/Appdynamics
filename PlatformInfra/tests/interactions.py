@@ -19,6 +19,9 @@ class Interactions():
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
+        self.application = self.config.test["application"]
+        self.infraTemplateID = self.config.test["infrastructureTemplateId"]
+        self.servers = self.config.test["servers"]
         self.server_url = "http://" + self.api_host + ":" + str(self.api_port)
         self.base_url = self.server_url + base_path
         if self.config.test["run_api"]:
@@ -50,10 +53,14 @@ class Interactions():
     def create(
         self,
         envid,
-        application="testBuild",
-        infrastructureTemplateID="test"
+        application=None,
+        infrastructureTemplateID=None
     ):
         """Create an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         url = urlp.urljoin(self.base_url, "environments")
         request_data = json.dumps(
             dict(
@@ -80,11 +87,17 @@ class Interactions():
         self,
         envid,
         count,
-        application="testBuild",
-        servers="test1",
-        infrastructureTemplateID="test"
+        application=None,
+        servers=None,
+        infrastructureTemplateID=None
     ):
         """Sacling an environment."""
+        if not application:
+            application = self.application
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
+        if not servers:
+            servers = self.servers
         print("Scaling environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/scale")
         request_data = json.dumps(
@@ -101,8 +114,10 @@ class Interactions():
             headers={'content-type': 'application/json'}
         )
 
-    def status(self, envid, infrastructureTemplateID="test"):
+    def status(self, envid, infrastructureTemplateID=None):
         """Check status of an environment."""
+        if not infrastructureTemplateID:
+            infrastructureTemplateID = self.infraTemplateID
         print("Status check of environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid + "/status")
         request_data = json.dumps(

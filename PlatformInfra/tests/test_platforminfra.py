@@ -25,9 +25,15 @@ class PlatformInfraTestCase(unittest.TestCase):
         """Setup Unittest."""
         global TEST_ENVIDS
         global SCALE_TO
+        global APPLICATION
+        global INFRATEMPLATEID
+        global SERVERS
         config = Config()
         TEST_ENVIDS = config.test["environment_ids"]
         SCALE_TO = config.test["scale_to"]
+        APPLICATION = config.test["application"]
+        INFRATEMPLATEID = config.test["infrastructureTemplateId"]
+        SERVERS = config.test["servers"]
         self.interactions = Interactions()
 
     def tearDown(self):
@@ -97,7 +103,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         envid = TEST_ENVIDS[0]
 
         # Create environment
-        rv = self.interactions.create(envid, "testBuild", "test")
+        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(response_data, "Testing environment creation")
@@ -161,7 +167,7 @@ class PlatformInfraTestCase(unittest.TestCase):
                     "Provisioning state for resource " + str(resource["name"])
                 )
                 # Match on test1 + number
-                s = re.search('^.*test1(\d+)$', resource["name"])
+                s = re.search("^.*{}(\d+)$".format(SERVERS), resource["name"])
                 if s:
                     print("VM", resource["name"], "found in response data")
                     vm_counter = vm_counter + 1
@@ -229,7 +235,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Create and destroy of environment", envid)
 
         # Create environment
-        rv = self.interactions.create(envid, "testBuild", "test")
+        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
 
