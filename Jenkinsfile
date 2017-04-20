@@ -40,7 +40,7 @@ if (env.BRANCH_NAME == 'master') {
       sh 'export ANSIBLE_HOST_KEY_CHECKING=False;export AZURE_INI_PATH=./new.ini;ansible-playbook -i ./inventory/azure_rm.py --vault-password-file ~/vault-password  -u mpadmin --private-key=./infra/keys/key.pem master.yml'
     }
   }
-} else
+} else {
     stage('Install Python 3.5') {
       node {
         deleteDir()
