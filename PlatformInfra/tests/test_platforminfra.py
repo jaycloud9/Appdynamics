@@ -141,6 +141,8 @@ class PlatformInfraTestCase(unittest.TestCase):
             "Response of:"+str(response_data)
         )
 
+        # Give it time to finish comming up
+        time.sleep(60)
         # Check Status has SCALE_TO servers
         rv = self.interactions.status(envid)
         response_data = self.interactions.getResponseData(rv)
