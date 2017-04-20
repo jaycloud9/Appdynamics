@@ -30,7 +30,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         self.interactions = Interactions()
 
     def tearDown(self):
-        """Destroy any deployments created"""
+        """Destroy any deployments created."""
         for envid in TEST_ENVIDS:
                 self.interactions.destroy(envid)
 

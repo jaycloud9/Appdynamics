@@ -12,8 +12,10 @@ import time
 
 
 class Interactions():
+    """Interactions Class."""
 
     def __init__(self):
+        """Constructor for Interactions."""
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
@@ -33,7 +35,7 @@ class Interactions():
             time.sleep(1)
 
     def close(self):
-        """To be called as part of the tear down of tests"""
+        """To be called as part of the tear down of tests."""
         if self.config.test["run_api"] and self.server_process.is_alive():
             self.server_process.terminate()
 
@@ -132,8 +134,9 @@ class Interactions():
         return config_url
 
     def getWebsiteUrl(self, envid):
-        """Get the website URL from the Config, where config value may
-        contain {{id}} for the envid value.
+        """Get the website URL from the Config.
+
+        Where config value may contain {{id}} for the envid value.
         """
         website_url = self.config.test["website_url"]
         url = Environment().from_string(website_url).render(id=envid)
