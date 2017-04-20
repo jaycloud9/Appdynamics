@@ -29,7 +29,7 @@ test:
   scale_to: 10
   application: "testBuild"
   infrastructureTemplateId: "test"
-  server: "test1"
+  servers: "test1"
   concurrent_deployments: 5
   api_host: "127.0.0.1"
   api_port: 5000
