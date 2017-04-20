@@ -26,8 +26,8 @@ test:
     - "abcdef-ghijk7"
     - "abcdef-ghijk8"
     - "abcdef-ghijk9"
-  scale_to: 2
-  concurrent_deployments: 3
+  scale_to: 5
+  concurrent_deployments: 1
   api_host: "127.0.0.1"
   api_port: 5000
   run_api: true
