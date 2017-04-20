@@ -50,7 +50,7 @@ class Interactions():
     def create(
         self,
         envid,
-        application="T24-Pipeline",
+        application="testBuild",
         infrastructureTemplateID="test"
     ):
         """Create an environment."""

@@ -69,10 +69,10 @@ class PlatformInfraTestCase(unittest.TestCase):
           - Checks that the website returns a 200 status
 
         """
-        envid = TEST_ENVIDS[1]
+        envid = TEST_ENVIDS[0]
 
         # Create environment
-        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, "testBuild", "test")
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
         self.checkSuccess(response_data, "Testing environment creation")
@@ -189,7 +189,7 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Create and destroy of environment", envid)
 
         # Create environment
-        rv = self.interactions.create(envid, "T24-Pipeline", "test")
+        rv = self.interactions.create(envid, "testBuild", "test")
         self.assertEqual(rv.status_code, 201, "Environment creation")
         response_data = self.interactions.getResponseData(rv)
 
