@@ -36,8 +36,22 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
     def tearDown(self):
         """Tear Down Flask App."""
         # Destroy environments, using the flask test client
+        request_threads = list()
         for envid in TEST_ENVIDS:
-            self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         """Stop flask if it is running"""
         self.interactions.close()

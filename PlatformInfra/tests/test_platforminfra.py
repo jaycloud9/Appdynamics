@@ -8,6 +8,7 @@ import re
 import time
 from tests.interactions import Interactions
 from platforminfra.config import Config
+import threading
 
 TEST_ENVIDS = None
 SCALE_TO = None
@@ -31,8 +32,22 @@ class PlatformInfraTestCase(unittest.TestCase):
 
     def tearDown(self):
         """Destroy any deployments created."""
+        request_threads = list()
         for envid in TEST_ENVIDS:
-                self.interactions.destroy(envid)
+            t = threading.Thread(
+                target=self.interactions.destroy,
+                args=(envid,)
+            )
+            request_threads.append(t)
+            t.start()
+        # Wait until all of the threads are complete
+        all_done = False
+        while not all_done:
+            all_done = True
+            for t in request_threads:
+                if t.is_alive():
+                    all_done = False
+                    time.sleep(1)
 
         self.interactions.close()
 
