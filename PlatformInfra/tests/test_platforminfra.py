@@ -68,6 +68,16 @@ class PlatformInfraTestCase(unittest.TestCase):
             data
           - Checks that the website returns a 200 status
 
+        3: Destroy the scaled environment
+
+          - Tests that the destroy command returns a 204 status
+          - Tests that the destroy response is "Success"
+
+        4:  Environments Listing
+
+          - Tests that the new environment ID is no longer present in the
+        environments list
+
         """
         envid = TEST_ENVIDS[0]
 
@@ -151,6 +161,19 @@ class PlatformInfraTestCase(unittest.TestCase):
         r = requests.get(self.interactions.getWebsiteUrl(envid))
         self.assertEqual(r.status_code, 200)
 
+        # Environment destuction
+        rv = self.interactions.destroy(envid)
+        self.assertEqual(rv.status_code, 204, "Destroy environment")
+
+        # Tests that the environment no longer shows in environments listing
+        rv = self.interactions.getEnvironments()
+        self.assertEqual(rv.status_code, 200, "Listing environments")
+        response_data = self.interactions.getResponseData(rv)
+        self.assertFalse(
+            envid in response_data["Environments"],
+            "Destroyed environment no longer in environments list"
+        )
+
     def test_create_and_destroy(self):
         """Test the creation and destruction of one environment.
 
@@ -212,7 +235,7 @@ class PlatformInfraTestCase(unittest.TestCase):
 
         # DNS resolves to correct IP
         dnsq = dns.resolver.query(domain_name, 'A')
-        print("Dopmain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+        print("Domain name shows a DNS entry of:", dnsq.rrset[0].to_text())
         self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
 
         # Website URL is up and running
