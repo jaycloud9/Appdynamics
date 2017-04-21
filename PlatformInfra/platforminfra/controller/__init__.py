@@ -636,7 +636,7 @@ class Controller(object):
                     raise Exception({'error': 'UUID in use', 'code': 412})
             else:
                 raise Exception({
-                    'error': 'UUID is not valid, must be [a-zA-Z0-9-]',
+                    'error': 'UUID is not valid, must be [a-z0-9-]',
                     'code': 412
                 })
         else:
