@@ -23,8 +23,10 @@ if (env.BRANCH_NAME == 'master') {
   }
   stage('Promote') {
     node {
-      sh 'chmod 400 keys/key.pem ; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i keys/key.pem packaging/*.rpm mpadmin@51.141.31.84:/home/mpadmin/'
-      sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i keys/key.pem mpadmin@51.141.31.84 "sudo mv /home/mpadmin/*.rpm /temenos-artificats ;sudo chown root:root /temenos-artificats/*.rpm; sudo createrepo --update /temenos-artificats/"'
+      dir('packaging') {
+        sh 'chmod 400 ../keys/key.pem ; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ../keys/key.pem platform_infra_api*.rpm mpadmin@51.141.31.84:/home/mpadmin/'
+        sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ../keys/key.pem mpadmin@51.141.31.84 "sudo mv /home/mpadmin/*.rpm /temenos-artificats ;sudo chown root:root /temenos-artificats/*.rpm; sudo createrepo --update /temenos-artificats/"'
+      }
     }
   }
 } else if (env.BRANCH_NAME == 'stable') {
