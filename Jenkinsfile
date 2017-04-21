@@ -16,17 +16,13 @@ if (env.BRANCH_NAME == 'master') {
     node {
       deleteDir()
       checkout scm
-      dir('packaging') {
-        'bash -l -c "rvm use 1.9.3;fpm --rpm-os linux  -s dir -t rpm -n platform_infra_api --after-install ./scripts/after_install.sh --version $BUILD_NUMBER ../PlatformInfra=/opt"'
-      }
+        sh 'bash -l -c "rvm use 1.9.3;fpm --rpm-os linux  -s dir -t rpm -n platform_infra_api --after-install ./scripts/after_install.sh --version $BUILD_NUMBER ./PlatformInfra=/opt"'
     }
   }
   stage('Promote') {
     node {
-      dir('packaging') {
-        sh 'chmod 400 ../keys/key.pem ; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ../keys/key.pem platform_infra_api*.rpm mpadmin@51.141.31.84:/home/mpadmin/'
-        sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ../keys/key.pem mpadmin@51.141.31.84 "sudo mv /home/mpadmin/*.rpm /temenos-artificats ;sudo chown root:root /temenos-artificats/*.rpm; sudo createrepo --update /temenos-artificats/"'
-      }
+      sh 'chmod 400 ./keys/key.pem ; scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ./keys/key.pem platform_infra_api*.rpm mpadmin@51.141.31.84:/home/mpadmin/'
+      sh 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ./keys/key.pem mpadmin@51.141.31.84 "sudo mv /home/mpadmin/*.rpm /temenos-artificats ;sudo chown root:root /temenos-artificats/*.rpm; sudo createrepo --update /temenos-artificats/"'
     }
   }
 } else if (env.BRANCH_NAME == 'stable') {
