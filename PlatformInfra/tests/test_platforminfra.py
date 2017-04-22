@@ -268,7 +268,11 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Creation response data:", str(response_data))
 
         # KeyErrors. i.e. does the response contain the fields we expect
-        servers = response_data["Resources"][0]["servers"]
+        for resource in response_data["Resources"]:
+            if "loadBalancers" in resource:
+                servers = resource['loadBalancers'][0]['vms']['servers']
+            else:
+                servers = resource[0]["servers"]
         print("Servers:", str(servers))
         domain_name = None
         if 'dns' in response_data["Resources"][0]:
