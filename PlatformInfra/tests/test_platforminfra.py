@@ -266,15 +266,17 @@ class PlatformInfraTestCase(unittest.TestCase):
                 time.sleep(30)
 
         print("Creation response data:", str(response_data))
-
+        domain_name = None
         # KeyErrors. i.e. does the response contain the fields we expect
+        load_balancer = None
         for resource in response_data["Resources"]:
             if "loadBalancers" in resource:
+                load_balancer = True
                 servers = resource['loadBalancers'][0]['vms']['servers']
+                domain_name = resource['loadBalancers'][0][SERVERS]
             else:
                 servers = resource[0]["servers"]
         print("Servers:", str(servers))
-        domain_name = None
         if 'dns' in response_data["Resources"][0]:
             domain_name = response_data["Resources"][0]["dns"]
         public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
@@ -293,7 +295,8 @@ class PlatformInfraTestCase(unittest.TestCase):
         if domain_name:
             dnsq = dns.resolver.query(domain_name, 'A')
             print("Domain name shows a DNS entry of:", dnsq.rrset[0].to_text())
-            self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
+            if not load_balancer:
+                self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
 
         # Website URL is up and running
         r = requests.get(self.interactions.getWebsiteUrl(envid))
