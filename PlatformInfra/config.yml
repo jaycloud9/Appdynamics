@@ -27,14 +27,13 @@ test:
     - "abcdef-ghijk8"
     - "abcdef-ghijk9"
   scale_to: 10
-  application: "testBuild"
-  infrastructureTemplateId: "test"
-  servers: "test1"
   concurrent_deployments: 5
+  application: "T24_Pipeline_H2"
+  infrastructureTemplateId: "t24"
+  servers: "t24"
+  website_url: "http://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
   api_host: "127.0.0.1"
   api_port: 5000
   run_api: true
-  # website_url: "http://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
-  website_url: "https://github.com/"
   flask_testing: false
   flask_debug: false
