@@ -19,10 +19,11 @@ class Interactions():
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
-        self.authorization = "\
-        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1\
-        hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.8yY5YhApy3o1aMD8-RivUfKzdQXX\
-        _p6HIcxhtqJV3u8"
+        self.authorization = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkt"
+            "dG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ."
+            "8yY5YhApy3o1aMD8-RivUfKzdQXX_p6HIcxhtqJV3u8"
+        )
         self.headers = {
             'content-type': 'application/json',
             'Authorization': self.authorization
