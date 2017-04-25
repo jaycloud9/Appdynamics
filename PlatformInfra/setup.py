@@ -25,7 +25,8 @@ setup(
         'python-gitlab',
         'pyyaml',
         'uwsgi',
-        'pdoc'
+        'pdoc',
+        'PyJWT'
     ],
     test_suite='tests',
     tests_require=[
