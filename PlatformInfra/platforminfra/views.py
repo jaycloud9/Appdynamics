@@ -39,6 +39,7 @@ def requires_auth(f):
     """Require Auth decorator to ensure the endpoints are authenticated."""
     @wraps(f)
     def decorated(*args, **kwargs):
+        """Get and Decode the Authorization Token."""
         try:
             token = jwt.decode(
                 request.headers.get('Authorization'),

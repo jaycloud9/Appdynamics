@@ -1080,7 +1080,7 @@ class Helpers(object):
 
     def validString(validate):
         """Given a string Validate it is 'acceptable'."""
-        pattern = re.compile("[a-zA-Z0-9-]*")
+        pattern = re.compile("[a-z0-9-]*")
         match = pattern.search(validate)
         if match.group(0) == validate:
             return True
@@ -1587,7 +1587,7 @@ class Gitlab(object):
 
     def validString(validate):
         """Given a string Validate it is 'acceptable'."""
-        pattern = re.compile("[a-zA-Z0-9-]*")
+        pattern = re.compile("[a-z0-9-]*")
         match = pattern.search(validate)
         if match.group(0) == validate:
             return True
@@ -1644,7 +1644,7 @@ class Gitlab(object):
   <div id="source-platforminfra.helpers.Helpers.validString" class="source">
     <pre><code>def validString(validate):
     """Given a string Validate it is 'acceptable'."""
-    pattern = re.compile("[a-zA-Z0-9-]*")
+    pattern = re.compile("[a-z0-9-]*")
     match = pattern.search(validate)
     if match.group(0) == validate:
         return True
