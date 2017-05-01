@@ -45,7 +45,7 @@
       "playbook_file": "../paas-config/h2image.yml",
       "inventory_file": "../paas-config/hosts",
       "role_paths": [
-        "../paas-config/roles/*"
+        "../paas-config/roles/"
       ]
     },
     {
