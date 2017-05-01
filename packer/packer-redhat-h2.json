@@ -44,7 +44,9 @@
       "type": "ansible-local",
       "playbook_file": "../paas-config/h2image.yml",
       "inventory_file": "../paas-config/hosts",
-      "role_paths": "../paas-config/roles/*"
+      "role_paths": [
+        "../paas-config/roles/*"
+      ]
     },
     {
       "type": "shell",
