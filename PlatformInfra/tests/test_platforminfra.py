@@ -144,13 +144,19 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Scale environment
-        rv = self.interactions.scale(envid, SCALE_TO)
-        response_data = self.interactions.getResponseData(rv)
-        self.checkSuccess(
-            response_data,
-            "Testing environment scale. " +
-            "Response of:"+str(response_data)
-        )
+        previous_job_running = True
+        while previous_job_running:
+            rv = self.interactions.scale(envid, SCALE_TO)
+            response_data = self.interactions.getResponseData(rv)
+            previous_job_running = self.checkPreviousJobRunning(response_data)
+            if previous_job_running:
+                time.sleep(30)
+            else:
+                self.checkSuccess(
+                    response_data,
+                    "Testing environment scale. " +
+                    "Response of:"+str(response_data)
+                )
 
         # Wait for environment
         for i in range(1, 20):
@@ -275,7 +281,7 @@ class PlatformInfraTestCase(unittest.TestCase):
                 servers = resource['loadBalancers'][0]['vms']['servers']
                 domain_name = resource['loadBalancers'][0][SERVERS]
             else:
-                servers = resource[0]["servers"]
+                servers = resource["servers"][0]
         print("Servers:", str(servers))
         if 'dns' in response_data["Resources"][0]:
             domain_name = response_data["Resources"][0]["dns"]
