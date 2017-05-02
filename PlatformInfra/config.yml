@@ -27,7 +27,7 @@ test:
     - "abcdef-ghijk8"
     - "abcdef-ghijk9"
   scale_to: 10
-  concurrent_deployments: 5
+  concurrent_deployments: 2
   application: "T24_Pipeline_H2"
   infrastructureTemplateId: "t24"
   servers: "t24"
