@@ -2,7 +2,7 @@
 	"variables": [],
 	"info": {
 		"name": "platforminfra",
-		"_postman_id": "908df017-708b-2074-2d27-2e9d03a4fb74",
+		"_postman_id": "d146d44e-adb6-14a0-7ad6-ecb6096193eb",
 		"description": "The collection for the platforminfra project",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
@@ -16,6 +16,11 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
 						"description": ""
 					}
 				],
@@ -37,6 +42,11 @@
 						"key": "Content-Type",
 						"value": "application/json",
 						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"description": ""
 					}
 				],
 				"body": {
@@ -56,6 +66,11 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
 						"description": ""
 					}
 				],
@@ -77,6 +92,11 @@
 						"key": "Content-Type",
 						"value": "application/json",
 						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"description": ""
 					}
 				],
 				"body": {
@@ -96,6 +116,11 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
 						"description": ""
 					}
 				],
@@ -117,6 +142,11 @@
 						"key": "Content-Type",
 						"value": "application/json",
 						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"description": ""
 					}
 				],
 				"body": {
@@ -137,6 +167,11 @@
 						"key": "Content-Type",
 						"value": "application/json",
 						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"description": ""
 					}
 				],
 				"body": {
@@ -156,6 +191,11 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
 						"description": ""
 					}
 				],
