@@ -19,6 +19,15 @@ class Interactions():
         self.config = Config()
         self.api_host = self.config.test["api_host"]
         self.api_port = self.config.test["api_port"]
+        self.authorization = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkt"
+            "dG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ."
+            "8yY5YhApy3o1aMD8-RivUfKzdQXX_p6HIcxhtqJV3u8"
+        )
+        self.headers = {
+            'content-type': 'application/json',
+            'Authorization': self.authorization
+        }
         self.application = self.config.test["application"]
         self.infraTemplateID = self.config.test["infrastructureTemplateId"]
         self.servers = self.config.test["servers"]
@@ -73,7 +82,7 @@ class Interactions():
         return requests.post(
             url,
             data=request_data,
-            headers={'content-type': 'application/json'}
+            headers=self.headers
         )
 
     def destroy(self, envid):
@@ -81,7 +90,10 @@ class Interactions():
         print("Destroying environment", envid)
         url = urlp.urljoin(self.base_url, "environments/" + envid)
         print("Requesting", url)
-        return requests.delete(url)
+        return requests.delete(
+            url,
+            headers=self.headers
+        )
 
     def scale(
         self,
@@ -111,7 +123,7 @@ class Interactions():
         return requests.put(
             url,
             data=request_data,
-            headers={'content-type': 'application/json'}
+            headers=self.headers
         )
 
     def status(self, envid, infrastructureTemplateID=None):
@@ -128,13 +140,16 @@ class Interactions():
         return requests.post(
             url,
             data=request_data,
-            headers={'content-type': 'application/json'}
+            headers=self.headers
         )
 
     def getEnvironments(self):
         """Return a response of environments GET request."""
         url = urlp.urljoin(self.base_url, "environments")
-        return requests.get(url)
+        return requests.get(
+            url,
+            headers=self.headers
+        )
 
     def getResponseData(self, rv):
         """Return a JSON data from a flask response."""

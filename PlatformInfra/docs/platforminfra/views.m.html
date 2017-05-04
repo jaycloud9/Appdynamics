@@ -974,9 +974,11 @@ table {
     <li class="set"><h3><a href="#header-variables">Module variables</a></h3>
       
   <ul>
+    <li class="mono"><a href="#platforminfra.views.api_token">api_token</a></li>
     <li class="mono"><a href="#platforminfra.views.api_version">api_version</a></li>
     <li class="mono"><a href="#platforminfra.views.base_path">base_path</a></li>
     <li class="mono"><a href="#platforminfra.views.root_path">root_path</a></li>
+    <li class="mono"><a href="#platforminfra.views.secret">secret</a></li>
   </ul>
 
     </li>
@@ -988,6 +990,8 @@ table {
     <li class="mono"><a href="#platforminfra.views.environmentsById">environmentsById</a></li>
     <li class="mono"><a href="#platforminfra.views.environmentsByIdAction">environmentsByIdAction</a></li>
     <li class="mono"><a href="#platforminfra.views.handle_error">handle_error</a></li>
+    <li class="mono"><a href="#platforminfra.views.requires_auth">requires_auth</a></li>
+    <li class="mono"><a href="#platforminfra.views.verifyToken">verifyToken</a></li>
   </ul>
 
     </li>
@@ -1020,10 +1024,15 @@ from platforminfra.helpers import Response
 from platforminfra.controller import Controller
 from flask import request
 from werkzeug.exceptions import HTTPException
+from functools import wraps
+
+import jwt
 
 root_path = 'api'
 api_version = '1.0'
 base_path = '/' + root_path + '/' + api_version + '/'
+api_token = "08b03d45-a342-425c-af4e-1814235d30fa"
+secret = "amsndkasndkasoacy987921y4obsdjagxYTgjhbsDbAJSHDVy"
 
 
 @app.errorhandler(Exception)
@@ -1042,11 +1051,39 @@ def handle_error(e):
     return rsp.httpResponse(code)
 
 
+def requires_auth(f):
+    """Require Auth decorator to ensure the endpoints are authenticated."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        """Get and Decode the Authorization Token."""
+        try:
+            token = jwt.decode(
+                request.headers.get('Authorization'),
+                secret,
+                algorithms=['HS256']
+            )
+        except Exception as e:
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        if not verifyToken(token):
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        return f(*args, **kwargs)
+    return decorated
+
+
+def verifyToken(token):
+    """Verify a token."""
+    if token['api-token'] == api_token:
+        return True
+    else:
+        return False
+
+
 @app.route(
     base_path + 'environments',
     strict_slashes=False,
     methods=['GET', 'POST']
 )
+@requires_auth
 def environments():
     """Get a list of environments."""
     if request.method == 'GET':
@@ -1066,6 +1103,7 @@ def environments():
     strict_slashes=False,
     methods=['DELETE']
 )
+@requires_auth
 def environmentsById(uuid):
     """DELETE a Specific env."""
     req = dict()
@@ -1084,6 +1122,7 @@ def environmentsById(uuid):
     strict_slashes=False,
     methods=['PUT', 'POST']
 )
+@requires_auth
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
     req = dict()
@@ -1125,6 +1164,14 @@ def environmentsByIdAction(uuid, action):
   <section id="section-items">
     <h2 class="section-title" id="header-variables">Module variables</h2>
       <div class="item">
+      <p id="platforminfra.views.api_token" class="name">var <span class="ident">api_token</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
+      <div class="item">
       <p id="platforminfra.views.api_version" class="name">var <span class="ident">api_version</span></p>
       
   
@@ -1148,12 +1195,20 @@ def environmentsByIdAction(uuid, action):
 </div>
 
       </div>
+      <div class="item">
+      <p id="platforminfra.views.secret" class="name">var <span class="ident">secret</span></p>
+      
+  
+  <div class="source_cont">
+</div>
+
+      </div>
 
     <h2 class="section-title" id="header-functions">Functions</h2>
       
   <div class="item">
     <div class="name def" id="platforminfra.views.environments">
-    <p>def <span class="ident">environments</span>(</p><p>)</p>
+    <p>def <span class="ident">environments</span>(</p><p>*args, **kwargs)</p>
     </div>
     
 
@@ -1168,6 +1223,7 @@ def environmentsByIdAction(uuid, action):
     strict_slashes=False,
     methods=['GET', 'POST']
 )
+@requires_auth
 def environments():
     """Get a list of environments."""
     if request.method == 'GET':
@@ -1189,7 +1245,7 @@ def environments():
       
   <div class="item">
     <div class="name def" id="platforminfra.views.environmentsById">
-    <p>def <span class="ident">environmentsById</span>(</p><p>uuid)</p>
+    <p>def <span class="ident">environmentsById</span>(</p><p>*args, **kwargs)</p>
     </div>
     
 
@@ -1204,6 +1260,7 @@ def environments():
     strict_slashes=False,
     methods=['DELETE']
 )
+@requires_auth
 def environmentsById(uuid):
     """DELETE a Specific env."""
     req = dict()
@@ -1224,7 +1281,7 @@ def environmentsById(uuid):
       
   <div class="item">
     <div class="name def" id="platforminfra.views.environmentsByIdAction">
-    <p>def <span class="ident">environmentsByIdAction</span>(</p><p>uuid, action)</p>
+    <p>def <span class="ident">environmentsByIdAction</span>(</p><p>*args, **kwargs)</p>
     </div>
     
 
@@ -1239,6 +1296,7 @@ def environmentsById(uuid):
     strict_slashes=False,
     methods=['PUT', 'POST']
 )
+@requires_auth
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
     req = dict()
@@ -1305,6 +1363,67 @@ def handle_error(e):
     else:
         rsp = Response({'error': str(e)})
     return rsp.httpResponse(code)
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="platforminfra.views.requires_auth">
+    <p>def <span class="ident">requires_auth</span>(</p><p>f)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Require Auth decorator to ensure the endpoints are authenticated.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.views.requires_auth', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.views.requires_auth" class="source">
+    <pre><code>def requires_auth(f):
+    """Require Auth decorator to ensure the endpoints are authenticated."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        """Get and Decode the Authorization Token."""
+        try:
+            token = jwt.decode(
+                request.headers.get('Authorization'),
+                secret,
+                algorithms=['HS256']
+            )
+        except Exception as e:
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        if not verifyToken(token):
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        return f(*args, **kwargs)
+    return decorated
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="platforminfra.views.verifyToken">
+    <p>def <span class="ident">verifyToken</span>(</p><p>token)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Verify a token.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.views.verifyToken', this);">Show source &equiv;</a></p>
+  <div id="source-platforminfra.views.verifyToken" class="source">
+    <pre><code>def verifyToken(token):
+    """Verify a token."""
+    if token['api-token'] == api_token:
+        return True
+    else:
+        return False
 </code></pre>
   </div>
 </div>

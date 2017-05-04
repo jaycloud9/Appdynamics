@@ -3,7 +3,7 @@
 export FLASK_APP = platforminfra
 
 setup:
-	/root/.pyenv/shims/pip install -e .
+	pip install -e .
 
 clean: clean-pyc clean-test
 

@@ -35,6 +35,13 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         APPLICATION = config.test["application"]
         INFRATEMPLATEID = config.test["infrastructureTemplateId"]
         CONCURRENT_DEPLOYMENTS = config.test["concurrent_deployments"]
+        self.authorization = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkt" \
+            "dG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ." \
+            "8yY5YhApy3o1aMD8-RivUfKzdQXX_p6HIcxhtqJV3u8"
+        self.headers = {
+            'content-type': 'application/json',
+            'Authorization': self.authorization
+        }
         self.interactions = Interactions()
 
     def tearDown(self):
@@ -68,7 +75,10 @@ class PlatformInfraThreadsTestCase(unittest.TestCase):
         print("Destroying environment", envid)
         url = urlp.urljoin(SERVER_URL + base_path, "environments/"+envid)
         print("Requesting", url)
-        r = requests.delete(url)
+        r = requests.delete(
+            url,
+            headers=self.headers
+        )
         print("Status code:", r.status_code)
 
     def creationWorker(

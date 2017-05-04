@@ -2,7 +2,11 @@
 	"variables": [],
 	"info": {
 		"name": "platforminfra",
+<<<<<<< HEAD
 		"_postman_id": "d146d44e-adb6-14a0-7ad6-ecb6096193eb",
+=======
+		"_postman_id": "e0353c9f-d5e8-af88-f3b2-deaa6cb43c25",
+>>>>>>> master
 		"description": "The collection for the platforminfra project",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
@@ -20,7 +24,7 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
@@ -45,13 +49,13 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"id\":\"w7hf6hsd34f2\",\n\t\"application\": \"testBuild\",\n\t\"infrastructureTemplateID\": \"test\",\n\t\"gitlab\": {\n\t\t\"user\": {\n\t\t\t\"sshKey\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR\",\n\t\t\t\"password\": \"S0mePa55w0rd\"\n\t\t},\n\t\t\"cloneRepos\": [\n\t\t\t\t\"customer-demo\"\n\t\t\t]\n\t}\n}"
+					"raw": "{\n\t\"id\":\"w7hf6h-sd34f2\",\n\t\"application\": \"testBuild\",\n\t\"infrastructureTemplateID\": \"test\",\n\t\"gitlab\": {\n\t\t\"user\": {\n\t\t\t\"sshKey\": \"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYgAsBhjeEM2KTkUTwQjFer2uRyBQ6qWdkC46eJt40c2YEmEer32vylVNGvaMo9/OiObxXi0PjkzEdP8vonyJiP01Xq1yZguKPRoOhrUtXWzW45NLjZqyjiJMp8MaweIs5TA19oAQL6knWCzVQjN8tiaDlqhSmkLK1l2G3gW8iVGrWt4cUz2SJJkEKp3gN3zjGlohP5J6F6qiS+ES+TXtbW7g97rfWuMxN1m+2go96GBsR+zrsAk0Wp2U/JBCghUi2vYNEZk9dmpX/C5JVzLiIOOi44mIkgxeZvzkPeo4Qo4A76ZJeC0RZwhKGWnip6UwqReDOMDYcMxba5OF2WUGR\",\n\t\t\t\"password\": \"S0mePa55w0rd\"\n\t\t},\n\t\t\"cloneRepos\": [\n\t\t\t\t\"customer-demo\"\n\t\t\t]\n\t}\n}"
 				},
 				"description": "POST"
 			},
@@ -60,7 +64,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2",
 				"method": "DELETE",
 				"header": [
 					{
@@ -70,7 +74,7 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
@@ -85,7 +89,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/status",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/status",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2/status",
 				"method": "POST",
 				"header": [
 					{
@@ -95,7 +99,7 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
@@ -110,7 +114,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/stop",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/stop",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2/stop",
 				"method": "PUT",
 				"header": [
 					{
@@ -120,13 +124,13 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"test\", \"application\": \"testBuild\"}"
+					"raw": "{\"servers\": \"test1\", \"application\": \"testBuild\"}"
 				},
 				"description": "PUT"
 			},
@@ -135,7 +139,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/start",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/start",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2/start",
 				"method": "PUT",
 				"header": [
 					{
@@ -145,13 +149,13 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"servers\": \"test\", \"application\": \"testBuild\"}"
+					"raw": "{\"servers\": \"test1\", \"application\": \"testBuild\"}"
 				},
 				"description": "PUT"
 			},
@@ -160,7 +164,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/rebuild",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/rebuild",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2/rebuild",
 				"method": "PUT",
 				"header": [
 					{
@@ -170,13 +174,13 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"application\": \"testBuild\",\n\t\"persistData\": true,\n\t\"servers\": \"test\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
+					"raw": "{\n\t\"application\": \"testBuild\",\n\t\"persistData\": true,\n\t\"servers\": \"test1\",\n\t\"infrastructureTemplateID\": \"test\"\n}"
 				},
 				"description": "PUT"
 			},
@@ -185,7 +189,7 @@
 		{
 			"name": "http://localhost:5000/api/1.0/environments/<uuid>/scale",
 			"request": {
-				"url": "http://{{host}}/api/1.0/environments/w7hf6hsd34f2/scale",
+				"url": "http://{{host}}/api/1.0/environments/w7hf6h-sd34f2/scale",
 				"method": "PUT",
 				"header": [
 					{
@@ -195,13 +199,13 @@
 					},
 					{
 						"key": "Authorization",
-						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcGktdG9rZW4iOiIwOGIwM2Q0NS1hMzQyLTQyNWMtYWY0ZS0xODE0MjM1ZDMwZmEifQ.SaN0UGOhNepMOS2xUe-c2-7odXiOkZ40YcH62OauhME",
+						"value": "{{api-token}}",
 						"description": ""
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\t\n\t\"application\": \"testBuild\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"test\"\n}"
+					"raw": "{\t\n\t\"application\": \"testBuild\",\n\t\"count\": 2,\n\t\"infrastructureTemplateID\": \"test\",\n\t\"servers\": \"test1\"\n}"
 				},
 				"description": "PUT"
 			},

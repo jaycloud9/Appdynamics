@@ -8,10 +8,15 @@ from platforminfra.helpers import Response
 from platforminfra.controller import Controller
 from flask import request
 from werkzeug.exceptions import HTTPException
+from functools import wraps
+
+import jwt
 
 root_path = 'api'
 api_version = '1.0'
 base_path = '/' + root_path + '/' + api_version + '/'
+api_token = "08b03d45-a342-425c-af4e-1814235d30fa"
+secret = "amsndkasndkasoacy987921y4obsdjagxYTgjhbsDbAJSHDVy"
 
 
 @app.errorhandler(Exception)
@@ -30,11 +35,39 @@ def handle_error(e):
     return rsp.httpResponse(code)
 
 
+def requires_auth(f):
+    """Require Auth decorator to ensure the endpoints are authenticated."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        """Get and Decode the Authorization Token."""
+        try:
+            token = jwt.decode(
+                request.headers.get('Authorization'),
+                secret,
+                algorithms=['HS256']
+            )
+        except Exception as e:
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        if not verifyToken(token):
+            raise Exception({'error': 'Authentication required', 'code': 401})
+        return f(*args, **kwargs)
+    return decorated
+
+
+def verifyToken(token):
+    """Verify a token."""
+    if token['api-token'] == api_token:
+        return True
+    else:
+        return False
+
+
 @app.route(
     base_path + 'environments',
     strict_slashes=False,
     methods=['GET', 'POST']
 )
+@requires_auth
 def environments():
     """Get a list of environments."""
     if request.method == 'GET':
@@ -54,6 +87,7 @@ def environments():
     strict_slashes=False,
     methods=['DELETE']
 )
+@requires_auth
 def environmentsById(uuid):
     """DELETE a Specific env."""
     req = dict()
@@ -72,6 +106,7 @@ def environmentsById(uuid):
     strict_slashes=False,
     methods=['PUT', 'POST']
 )
+@requires_auth
 def environmentsByIdAction(uuid, action):
     """Action on an environemnt."""
     req = dict()
