@@ -8,7 +8,7 @@ credentials:
     url: "https://gitlab.temenos.cloud"
     token: "FHcv_bHjHnAvd6uug7x_"
   jenkins:
-    url: "http://51.141.7.30:8080"
+    url: "http://51.141.7.30:6001"
     user: "admin"
     password: "Blue1Sky"
 defaults:
