@@ -25,7 +25,7 @@ services:
       image:
         os: 'redhat'
         type: 't24'
-        build: '33'
+        build: '1'
       count: 1
       service_port: 443
     - name: h2
