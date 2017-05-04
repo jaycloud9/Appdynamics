@@ -34,8 +34,7 @@ services:
     - name: t24
       be_servers: t24
       health_port: 443
-      health_protocol: 'Http'
-      health_path: '/BrowserWeb/'
+      health_protocol: 'Tcp'
       rules:
        - name: web
          protocol: 'Tcp'
