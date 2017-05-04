@@ -31,7 +31,7 @@ test:
   application: "T24_Pipeline_H2"
   infrastructureTemplateId: "t24"
   servers: "t24"
-  website_url: "http://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
+  website_url: "https://t24-{{id}}.dev.temenos.cloud/BrowserWeb/"
   api_host: "127.0.0.1"
   api_port: 5000
   run_api: true
