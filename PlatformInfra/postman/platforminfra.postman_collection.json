@@ -2,11 +2,7 @@
 	"variables": [],
 	"info": {
 		"name": "platforminfra",
-<<<<<<< HEAD
-		"_postman_id": "d146d44e-adb6-14a0-7ad6-ecb6096193eb",
-=======
 		"_postman_id": "e0353c9f-d5e8-af88-f3b2-deaa6cb43c25",
->>>>>>> master
 		"description": "The collection for the platforminfra project",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
 	},
