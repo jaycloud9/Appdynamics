@@ -1202,7 +1202,7 @@ class Controller(object):
                 running = True
         return running
 
-    def runGitlabTasks(self, gitlab):
+    def runGitlabTasks(self, gitlab, app):
         """Run the required actrions for Gitlab creation."""
         response = dict()
         print("Connecting to Gitlab")
@@ -1221,13 +1221,14 @@ class Controller(object):
             password,
             self.tags['uuid'] + '@example.net'
         )
-
+        print("Adding SSH key for User")
         if 'sshKey' in gitlab['user']:
             key = glServer.addSshKey(user, gitlab['user']['sshKey'])
             if type(key) is dict:
                 if 'error' in key:
                     raise Exception(key)
         response['user'] = user.username
+        print("Cloning Repos")
         if 'cloneRepos' in gitlab:
             response['repos'] = dict()
             for repo in gitlab['cloneRepos']:
@@ -1242,7 +1243,25 @@ class Controller(object):
                 if type(forked) is dict:
                     if 'error' in forked:
                         raise Exception(forked)
-                response['repos'][repo] = forked.web_url
+                print("Getting the SSH url for the repo")
+                response['repos'][repo] = {
+                    'ssh': forked.ssh_url_to_repo,
+                    'web': forked.http_url_to_repo
+                }
+                print("Granting access to forked repo")
+                member = glServer.addUserToProjectMembers(user, forked)
+                if type(member) is dict:
+                    if 'error' in member:
+                        raise Exception(member)
+                print("Hooking it up")
+                hook = glServer.addHook(
+                    self.config.credentials['jenkins']['url'] +
+                    "/project/{}/".format(app),
+                    forked
+                )
+                if type(hook) is dict:
+                    if 'error' in hook:
+                        raise Exception(hook)
 
         return response
 
@@ -1732,9 +1751,12 @@ class Controller(object):
         if 'application' in data:
             self.runJenkinsPipeline(data['application'])
 
-        if 'gitlab' in data:
-            glResponse = self.runGitlabTasks(data['gitlab'])
-            response.append({'gitlab': glResponse})
+            if 'gitlab' in data:
+                glResponse = self.runGitlabTasks(
+                    data['gitlab'],
+                    data['application']
+                )
+                response.append({'gitlab': glResponse})
         if self.lbs:
             response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}
@@ -2229,7 +2251,7 @@ and provider are blurred. The provider works on the resource and sometimes
                 running = True
         return running
 
-    def runGitlabTasks(self, gitlab):
+    def runGitlabTasks(self, gitlab, app):
         """Run the required actrions for Gitlab creation."""
         response = dict()
         print("Connecting to Gitlab")
@@ -2248,13 +2270,14 @@ and provider are blurred. The provider works on the resource and sometimes
             password,
             self.tags['uuid'] + '@example.net'
         )
-
+        print("Adding SSH key for User")
         if 'sshKey' in gitlab['user']:
             key = glServer.addSshKey(user, gitlab['user']['sshKey'])
             if type(key) is dict:
                 if 'error' in key:
                     raise Exception(key)
         response['user'] = user.username
+        print("Cloning Repos")
         if 'cloneRepos' in gitlab:
             response['repos'] = dict()
             for repo in gitlab['cloneRepos']:
@@ -2269,7 +2292,25 @@ and provider are blurred. The provider works on the resource and sometimes
                 if type(forked) is dict:
                     if 'error' in forked:
                         raise Exception(forked)
-                response['repos'][repo] = forked.web_url
+                print("Getting the SSH url for the repo")
+                response['repos'][repo] = {
+                    'ssh': forked.ssh_url_to_repo,
+                    'web': forked.http_url_to_repo
+                }
+                print("Granting access to forked repo")
+                member = glServer.addUserToProjectMembers(user, forked)
+                if type(member) is dict:
+                    if 'error' in member:
+                        raise Exception(member)
+                print("Hooking it up")
+                hook = glServer.addHook(
+                    self.config.credentials['jenkins']['url'] +
+                    "/project/{}/".format(app),
+                    forked
+                )
+                if type(hook) is dict:
+                    if 'error' in hook:
+                        raise Exception(hook)
 
         return response
 
@@ -2759,9 +2800,12 @@ and provider are blurred. The provider works on the resource and sometimes
         if 'application' in data:
             self.runJenkinsPipeline(data['application'])
 
-        if 'gitlab' in data:
-            glResponse = self.runGitlabTasks(data['gitlab'])
-            response.append({'gitlab': glResponse})
+            if 'gitlab' in data:
+                glResponse = self.runGitlabTasks(
+                    data['gitlab'],
+                    data['application']
+                )
+                response.append({'gitlab': glResponse})
         if self.lbs:
             response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}
@@ -3440,9 +3484,12 @@ resources are 'okay' or not.</p></div>
     # By this point an environment should be created so Execute Jenkins job
     if 'application' in data:
         self.runJenkinsPipeline(data['application'])
-    if 'gitlab' in data:
-        glResponse = self.runGitlabTasks(data['gitlab'])
-        response.append({'gitlab': glResponse})
+        if 'gitlab' in data:
+            glResponse = self.runGitlabTasks(
+                data['gitlab'],
+                data['application']
+            )
+            response.append({'gitlab': glResponse})
     if self.lbs:
         response.append({'loadBalancers': self.lbs})
     return {'msg': {'Resources': response}, 'code': 201}
@@ -4307,7 +4354,7 @@ with all of dependencies each VM needs.</p></div>
             
   <div class="item">
     <div class="name def" id="platforminfra.controller.Controller.runGitlabTasks">
-    <p>def <span class="ident">runGitlabTasks</span>(</p><p>self, gitlab)</p>
+    <p>def <span class="ident">runGitlabTasks</span>(</p><p>self, gitlab, app)</p>
     </div>
     
 
@@ -4317,7 +4364,7 @@ with all of dependencies each VM needs.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-platforminfra.controller.Controller.runGitlabTasks', this);">Show source &equiv;</a></p>
   <div id="source-platforminfra.controller.Controller.runGitlabTasks" class="source">
-    <pre><code>def runGitlabTasks(self, gitlab):
+    <pre><code>def runGitlabTasks(self, gitlab, app):
     """Run the required actrions for Gitlab creation."""
     response = dict()
     print("Connecting to Gitlab")
@@ -4335,12 +4382,14 @@ with all of dependencies each VM needs.</p></div>
         password,
         self.tags['uuid'] + '@example.net'
     )
+    print("Adding SSH key for User")
     if 'sshKey' in gitlab['user']:
         key = glServer.addSshKey(user, gitlab['user']['sshKey'])
         if type(key) is dict:
             if 'error' in key:
                 raise Exception(key)
     response['user'] = user.username
+    print("Cloning Repos")
     if 'cloneRepos' in gitlab:
         response['repos'] = dict()
         for repo in gitlab['cloneRepos']:
@@ -4355,7 +4404,25 @@ with all of dependencies each VM needs.</p></div>
             if type(forked) is dict:
                 if 'error' in forked:
                     raise Exception(forked)
-            response['repos'][repo] = forked.web_url
+            print("Getting the SSH url for the repo")
+            response['repos'][repo] = {
+                'ssh': forked.ssh_url_to_repo,
+                'web': forked.http_url_to_repo
+            }
+            print("Granting access to forked repo")
+            member = glServer.addUserToProjectMembers(user, forked)
+            if type(member) is dict:
+                if 'error' in member:
+                    raise Exception(member)
+            print("Hooking it up")
+            hook = glServer.addHook(
+                self.config.credentials['jenkins']['url'] +
+                "/project/{}/".format(app),
+                forked
+            )
+            if type(hook) is dict:
+                if 'error' in hook:
+                    raise Exception(hook)
     return response
 </code></pre>
   </div>
