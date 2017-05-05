@@ -18,9 +18,11 @@ clean-test:
 
 documents:
 	echo "Removing old Docs and regenerating"
-	rm -rf ./docs/*
-	pdoc --html-dir ./docs --html --all-submodules platforminfra
-	pdoc --html-dir ./docs --html --all-submodules tests
+	rm -f ./docs/source/*.rst
+	sphinx-apidoc -f -e -M --implicit-namespaces -o docs/source/ tests
+	sphinx-apidoc -f -e -M --implicit-namespaces -o docs/source/ platforminfra
+	sphinx-build -c docs/source/ docs/source/ docs/build/
+
 
 e2etest:
 	python -W ignore setup.py test -s tests.e2etest

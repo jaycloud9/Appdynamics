@@ -134,21 +134,24 @@ class Vm(object):
     ):
         """Create the VM parameters structure.
 
-        generateParams can take an os dictionary that containes other OS
-        versions i.e.::
-            {
-                'publisher': 'RedHat',
-                'offer': 'RHEL',
-                'sku': '7.2',
-                'version': 'latest'
-            }
+    generateParams can take an os dictionary that containes other OS
+    versions i.e.
+.. code-block:: python
 
-        if Image is passed in a custom image can be used tyo create a Vm::
-            {
-                'os': 'redhat',
-                'type': 't24',
-                'build': '32'
-            }
+        # Define a Decitionary like this
+        azureOSImage = {
+            'publisher': 'RedHat',
+            'offer': 'RHEL',
+            'sku': '7.2',
+            'version': 'latest'
+        }
+        # Define a Decitionary like for an custom image
+        customOSImage = {
+            'os': 'redhat',
+            'type': 't24',
+            'build': '32'
+        }
+
         """
         self.vmParams = {
             'location': self.config['region'],
