@@ -64,6 +64,17 @@ class PlatformInfraTestCase(unittest.TestCase):
             response, "Success", message
         )
 
+    def checkPreviousJobRunning(self, response_data):
+        """Check if the previous run test has finished running.
+
+        Ensure that the previously run job has finished before continuing.
+        """
+        if 'error' in response_data:
+            if "Jenkins build running already" == response_data['error']:
+                return True
+
+        return False
+
     def test_config_gitlab_url(self):
         """Test the gitlab URL is correct."""
         url = self.interactions.getConfigGitlabUrl()
@@ -103,10 +114,19 @@ class PlatformInfraTestCase(unittest.TestCase):
         envid = TEST_ENVIDS[0]
 
         # Create environment
-        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
-        self.assertEqual(rv.status_code, 201, "Environment creation")
-        response_data = self.interactions.getResponseData(rv)
-        self.checkSuccess(response_data, "Testing environment creation")
+        previous_job_running = True
+        while previous_job_running:
+            rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
+            self.assertEqual(rv.status_code, 201, "Environment creation")
+            response_data = self.interactions.getResponseData(rv)
+            # If the previous job is still running keep looping
+            previous_job_running = self.checkPreviousJobRunning(response_data)
+            if previous_job_running:
+                time.sleep(30)
+            else:
+                self.checkSuccess(
+                    response_data, "Testing environment creation"
+                )
 
         # Wait for environment
         for i in range(1, 20):
@@ -124,13 +144,19 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # Scale environment
-        rv = self.interactions.scale(envid, SCALE_TO)
-        response_data = self.interactions.getResponseData(rv)
-        self.checkSuccess(
-            response_data,
-            "Testing environment scale. " +
-            "Response of:"+str(response_data)
-        )
+        previous_job_running = True
+        while previous_job_running:
+            rv = self.interactions.scale(envid, SCALE_TO)
+            response_data = self.interactions.getResponseData(rv)
+            previous_job_running = self.checkPreviousJobRunning(response_data)
+            if previous_job_running:
+                time.sleep(30)
+            else:
+                self.checkSuccess(
+                    response_data,
+                    "Testing environment scale. " +
+                    "Response of:"+str(response_data)
+                )
 
         # Wait for environment
         for i in range(1, 20):
@@ -235,16 +261,30 @@ class PlatformInfraTestCase(unittest.TestCase):
         print("Create and destroy of environment", envid)
 
         # Create environment
-        rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
-        self.assertEqual(rv.status_code, 201, "Environment creation")
-        response_data = self.interactions.getResponseData(rv)
+        previous_job_running = True
+        while previous_job_running:
+            rv = self.interactions.create(envid, APPLICATION, INFRATEMPLATEID)
+            self.assertEqual(rv.status_code, 201, "Environment creation")
+            response_data = self.interactions.getResponseData(rv)
+            # If the previous job is still running keep looping
+            previous_job_running = self.checkPreviousJobRunning(response_data)
+            if previous_job_running:
+                time.sleep(30)
 
         print("Creation response data:", str(response_data))
-
+        domain_name = None
         # KeyErrors. i.e. does the response contain the fields we expect
-        servers = response_data["Resources"][0]["servers"]
+        load_balancer = None
+        for resource in response_data["Resources"]:
+            if "loadBalancers" in resource:
+                load_balancer = True
+                servers = resource['loadBalancers'][0]['vms']['servers']
+                domain_name = resource['loadBalancers'][0][SERVERS]
+            else:
+                servers = resource["servers"][0]
         print("Servers:", str(servers))
-        domain_name = response_data["Resources"][0]["dns"]
+        if 'dns' in response_data["Resources"][0]:
+            domain_name = response_data["Resources"][0]["dns"]
         public_ip = response_data["Resources"][0]["vms"][0]["public_ip"]
 
         # Test that the environment shows in environments listing
@@ -257,9 +297,12 @@ class PlatformInfraTestCase(unittest.TestCase):
         )
 
         # DNS resolves to correct IP
-        dnsq = dns.resolver.query(domain_name, 'A')
-        print("Domain name shows a DNS entry of:", dnsq.rrset[0].to_text())
-        self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
+        # Only test the DNS if it has one associated with the node directly.
+        if domain_name:
+            dnsq = dns.resolver.query(domain_name, 'A')
+            print("Domain name shows a DNS entry of:", dnsq.rrset[0].to_text())
+            if not load_balancer:
+                self.assertEqual(dnsq.rrset[0].to_text(), public_ip)
 
         # Website URL is up and running
         r = requests.get(self.interactions.getWebsiteUrl(envid))

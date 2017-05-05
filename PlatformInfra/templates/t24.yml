@@ -23,17 +23,16 @@ services:
   servers:
     - name: t24
       count: 1
-      service_port: 8080
+      service_port: 443
     - name: h2
       count: 1
   load_balancers:
     - name: t24
       be_servers: t24
-      health_port: 8080
-      health_protocol: 'Http'
-      health_path: '/BrowserWeb/'
+      health_port: 443
+      health_protocol: 'Tcp'
       rules:
        - name: web
          protocol: 'Tcp'
-         frontend_port: 80
-         backend_port: 8080
+         frontend_port: 443
+         backend_port: 443
