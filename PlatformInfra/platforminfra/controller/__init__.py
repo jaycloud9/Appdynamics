@@ -164,7 +164,7 @@ class Controller(object):
                 running = True
         return running
 
-    def runGitlabTasks(self, gitlab):
+    def runGitlabTasks(self, gitlab, app):
         """Run the required actrions for Gitlab creation."""
         response = dict()
         print("Connecting to Gitlab")
@@ -218,7 +218,7 @@ class Controller(object):
                 print("Hooking it up")
                 hook = glServer.addHook(
                     self.config.credentials['jenkins']['url'] +
-                    "/project/T24_Pipeline_H2/",
+                    "/project/{}/".format(app),
                     forked
                 )
                 if type(hook) is dict:
@@ -713,9 +713,12 @@ class Controller(object):
         if 'application' in data:
             self.runJenkinsPipeline(data['application'])
 
-        if 'gitlab' in data:
-            glResponse = self.runGitlabTasks(data['gitlab'])
-            response.append({'gitlab': glResponse})
+            if 'gitlab' in data:
+                glResponse = self.runGitlabTasks(
+                    data['gitlab'],
+                    data['application']
+                )
+                response.append({'gitlab': glResponse})
         if self.lbs:
             response.append({'loadBalancers': self.lbs})
         return {'msg': {'Resources': response}, 'code': 201}

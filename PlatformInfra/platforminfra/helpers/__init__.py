@@ -174,7 +174,11 @@ class Gitlab(object):
         print("Adding Hook to {}".format(url))
         try:
             result = self.conn.project_hooks.create(
-                {'url': url, 'push_events': 1},
+                {
+                    'url': url,
+                    'token': '148c508109eba106a4a5827122a348cd',
+                    'push_events': 1
+                },
                 project_id=project.id
             )
         except Exception as e:
