@@ -23,10 +23,22 @@ class Helpers(object):
     """Heleprs Class."""
 
     def randStr(length):
-        """Generate random string."""
-        return ''.join(
-            random.choice(string.ascii_lowercase) for i in range(length)
-        )
+        """Generate random string.
+
+        :param length: length below 300
+        :returns: string.ascii_lowercase string
+        :rtype: str
+        """
+        if length <= 300:
+            return ''.join(
+                random.choice(string.ascii_lowercase) for i in range(length)
+            )
+        else:
+            raise Exception({
+                'error': "randStr must be less than or equal to 300 "
+                "Length was {}".format(length),
+                'code': 500
+            })
 
     def validString(validate):
         """Given a string Validate it is 'acceptable'."""
