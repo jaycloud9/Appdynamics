@@ -6,7 +6,7 @@ import requests
 import dns.resolver
 import re
 import time
-from tests.interactions import Interactions
+from tests.e2etest.interactions import Interactions
 from platforminfra.config import Config
 import threading
 

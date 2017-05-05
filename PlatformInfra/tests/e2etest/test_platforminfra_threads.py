@@ -4,7 +4,7 @@ import unittest
 from platforminfra.views import base_path
 import urllib.parse as urlp
 import time
-from tests.interactions import Interactions
+from tests.e2etest.interactions import Interactions
 import threading
 import requests
 from platforminfra.config import Config

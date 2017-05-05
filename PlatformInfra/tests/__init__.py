@@ -1,1 +1,1 @@
-"""Tests module Init file."""
+"""UnitTests Module for testing the PlatformInfra App."""

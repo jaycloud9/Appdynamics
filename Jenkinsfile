@@ -12,6 +12,16 @@ def pyshell(command) {
 }
 
 if (env.BRANCH_NAME == 'master') {
+  stage('test') {
+    node {
+      milestone()
+      dir('platformInfraApi') {
+        dir('PlatformInfra') {
+          pyshell('python -W ignore setup.py test -s tests.e2etest')
+        }
+      }
+    }
+  }
   stage('package') {
     node {
       deleteDir()
@@ -69,12 +79,12 @@ if (env.BRANCH_NAME == 'master') {
         }
       }
     }
-    stage('test') {
+    stage('unit test') {
       node {
         milestone()
         dir('platformInfraApi') {
           dir('PlatformInfra') {
-            pyshell('python -W ignore setup.py test')
+            pyshell('python -W ignore setup.py test -s tests.unit')
           }
         }
       }

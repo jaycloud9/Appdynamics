@@ -22,8 +22,11 @@ documents:
 	pdoc --html-dir ./docs --html --all-submodules platforminfra
 	pdoc --html-dir ./docs --html --all-submodules tests
 
+e2etest:
+	python -W ignore setup.py test -s tests.e2etest
+
 test:
-	python -W ignore setup.py test
+	python -W ignore setup.py test -s tests.unit
 
 run:
 	flask run -h 127.0.0.1
@@ -33,4 +36,3 @@ run-dev:
 
 run-debug:
 	FLASK_DEBUG=1 flask run
-

@@ -30,6 +30,7 @@ setup(
     ],
     test_suite='tests',
     tests_require=[
-        'dnspython'
+        'dnspython',
+        'unittest-xml-reporting'
     ]
 )
