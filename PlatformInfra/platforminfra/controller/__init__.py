@@ -183,13 +183,14 @@ class Controller(object):
             password,
             self.tags['uuid'] + '@example.net'
         )
-
+        print("Adding SSH key for User")
         if 'sshKey' in gitlab['user']:
             key = glServer.addSshKey(user, gitlab['user']['sshKey'])
             if type(key) is dict:
                 if 'error' in key:
                     raise Exception(key)
         response['user'] = user.username
+        print("Cloning Repos")
         if 'cloneRepos' in gitlab:
             response['repos'] = dict()
             for repo in gitlab['cloneRepos']:
@@ -204,7 +205,25 @@ class Controller(object):
                 if type(forked) is dict:
                     if 'error' in forked:
                         raise Exception(forked)
-                response['repos'][repo] = forked.web_url
+                print("Getting the SSH url for the repo")
+                response['repos'][repo] = {
+                    'ssh': forked.ssh_url_to_repo,
+                    'web': forked.http_url_to_repo
+                }
+                print("Granting access to forked repo")
+                member = glServer.addUserToProjectMembers(user, forked)
+                if type(member) is dict:
+                    if 'error' in member:
+                        raise Exception(member)
+                print("Hooking it up")
+                hook = glServer.addHook(
+                    self.config.credentials['jenkins']['url'] +
+                    "/project/T24_Pipeline_H2/",
+                    forked
+                )
+                if type(hook) is dict:
+                    if 'error' in hook:
+                        raise Exception(hook)
 
         return response
 

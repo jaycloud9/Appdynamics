@@ -148,6 +148,44 @@ class Gitlab(object):
             }
         return result
 
+    def addUserToProjectMembers(self, user, project):
+        """Add a user to a project members group."""
+        print("Granting Permissions for user to project")
+        try:
+            print("User id {}".format(user.id))
+            print("With Access {}".format(gitlab.DEVELOPER_ACCESS))
+            result = self.conn.project_members.create(
+                {
+                    'user_id': user.id,
+                    'access_level': gitlab.DEVELOPER_ACCESS,
+                },
+                project_id=project.id
+            )
+        except Exception as e:
+            result = {
+                'error': e,
+                'code': 500
+            }
+            pass
+        return result
+
+    def addHook(self, url, project):
+        """Add Hook to Project."""
+        print("Adding Hook to {}".format(url))
+        try:
+            result = self.conn.project_hooks.create(
+                {'url': url, 'push_events': 1},
+                project_id=project.id
+            )
+        except Exception as e:
+            result = {
+                'error': e,
+                'code': 500
+            }
+            pass
+        print("hook Added")
+        return result
+
     def getProject(self, team, project):
         """Get a single project."""
         projectName = team + '/' + project
