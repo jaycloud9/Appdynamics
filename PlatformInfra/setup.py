@@ -26,7 +26,8 @@ setup(
         'pyyaml',
         'uwsgi',
         'pdoc',
-        'PyJWT'
+        'PyJWT',
+        'jinja2'
     ],
     test_suite='tests',
     tests_require=[
