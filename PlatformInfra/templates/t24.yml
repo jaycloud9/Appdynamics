@@ -22,10 +22,6 @@ services:
       subnet: 10.10.1.0/24
   servers:
     - name: t24
-      image:
-        os: 'redhat'
-        type: 't24'
-        build: '2'
       count: 1
       service_port: 443
     - name: h2
