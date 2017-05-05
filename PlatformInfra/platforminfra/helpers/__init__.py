@@ -41,7 +41,14 @@ class Helpers(object):
             })
 
     def validString(validate):
-        """Given a string Validate it is 'acceptable'."""
+        """Given a string Validate it is 'acceptable'.
+
+        :param validate: A string to be validated
+        :returns: Boolean
+        :rtype: Boolean
+        """
+        if len(validate) > 15:
+            return False
         pattern = re.compile("[a-z0-9-]*")
         match = pattern.search(validate)
         if match.group(0) == validate:

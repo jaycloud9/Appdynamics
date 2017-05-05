@@ -4,7 +4,7 @@ import unittest
 from platforminfra.helpers import Helpers
 
 
-class PlatformInfraHelpersHelpersTestCase(unittest.TestCase):
+class HelpersTestCase(unittest.TestCase):
     """PlatformInfra Helpers Helpers Test.
 
     Test the Helpers Class within the Helpers module
@@ -29,6 +29,31 @@ class PlatformInfraHelpersHelpersTestCase(unittest.TestCase):
                     'randStr must be less than or equal to 300',
                     e.args[0]['error']
                 )
+
+    def test_ValidString(self):
+        """Test a strings validity for the platform.
+
+        Ensure that any string is:
+        - 'a-z'
+        - '0-9'
+        - '-'
+        """
+        validStrings = [
+            "abcdefgh012984-",
+            "abcd-efgh-gs928",
+            "-sdwf12ggfsfs72"
+        ]
+        invalidStrings = [
+            "A8sda-a02ddaaX%",
+            "jhj*76^@1)()d+=",
+            "\'aas\"23adsaXXk2"
+        ]
+        for string in validStrings:
+            self.assertTrue(Helpers.validString(string))
+        for string in invalidStrings:
+            self.assertFalse(Helpers.validString(string))
+        longString = "thisisaverylongstring"
+        self.assertFalse(Helpers.validString(longString))
 
 
 if __name__ == '__main__':
