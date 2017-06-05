@@ -1,0 +1,18 @@
+#!/usr/bin/env groovy
+
+
+  stage('package') {
+    node {
+        sh 'echo "cloning the GIT repoA"'
+    }
+  }
+  stage('Promote') {
+    node {
+        sh 'echo "START BUILD PROCESS"'
+    }
+  }
+  stage('Deploy') {
+    node {
+        sh 'echo "START DEPLOYMENT"'
+    }
+  }
