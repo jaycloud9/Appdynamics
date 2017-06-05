@@ -4,18 +4,18 @@
   stage('package') {
     node {
         sh 'echo "cloning the GIT repoA"'
-	sh 'mkdir /tmp/package'
+	sh 'mkdir /tmp/package1'
     }
   }
   stage('Promote') {
     node {
         sh 'echo "START BUILD PROCESS"'
-	sh 'mkdir /tmp/build'
+	sh 'mkdir /tmp/build1'
     }
   }
   stage('Deploy') {
     node {
         sh 'echo "START DEPLOYMENT"'
-	sh 'mkdir /tmp/deploy'
+	sh 'mkdir /tmp/deploy1'
     }
   }
